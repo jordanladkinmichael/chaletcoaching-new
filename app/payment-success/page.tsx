@@ -17,10 +17,14 @@ function PaymentSuccessInner() {
     const transaction_guid = params.get("transaction_guid");
     let status = params.get("status");
 
-    // ✅ Always success for localhost testing
-    if (typeof window !== "undefined" && window.location.hostname === "localhost") {
+    if (
+        typeof window !== "undefined" &&
+        (window.location.hostname === "localhost" ||
+            window.location.hostname.includes("aifitworld.co.uk"))
+    ) {
         status = "success";
     }
+
 
     // ✅ Load plan from localStorage
     useEffect(() => {
