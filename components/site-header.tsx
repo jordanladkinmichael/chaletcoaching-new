@@ -79,7 +79,7 @@ export default function SiteHeader({
       className="sticky top-0 z-20 border-b backdrop-blur supports-[backdrop-filter]:bg-black/30"
       style={{ borderColor: THEME.cardBorder }}
     >
-      <div className="mx-auto max-w-6xl px-4 py-3 flex items-center justify-between">
+      <div className="mx-auto max-w-7xl px-4 py-3 flex items-center justify-between">
         {/* Лого → на главную */}
         <button 
           onClick={() => onNavigate("home")} 
@@ -109,7 +109,7 @@ export default function SiteHeader({
                   onNavigate(n.id);
                 }
               }}
-              className="rounded-lg px-3 py-2 text-sm opacity-70 hover:opacity-100 transition-opacity"
+              className="rounded-lg px-3 py-2 text-sm opacity-70 hover:opacity-100 transition-opacity whitespace-nowrap"
             >
               <span className="inline-flex items-center gap-1">
                 {!isAuthed && n.protected && <Lock size={14} />} {n.label}
@@ -152,7 +152,7 @@ export default function SiteHeader({
           {isAuthed ? (
             <button
               onClick={() => void signOut()}
-              className="inline-flex items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-semibold border"
+              className="inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold border whitespace-nowrap flex-shrink-0"
               style={{ background: "transparent", color: THEME.text, borderColor: THEME.cardBorder }}
             >
               Sign out
@@ -161,14 +161,14 @@ export default function SiteHeader({
             <>
               <button
                 onClick={() => onOpenAuth("signin")}
-                className="inline-flex items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-semibold border"
+                className="inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold border whitespace-nowrap flex-shrink-0"
                 style={{ background: "transparent", color: THEME.text, borderColor: THEME.cardBorder }}
               >
                 <LogIn size={16} /> Sign in
               </button>
               <button
                 onClick={() => onOpenAuth("signup")}
-                className="inline-flex items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-semibold shadow-[0_0_0_1px_rgba(0,0,0,0.6)]"
+                className="inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold shadow-[0_0_0_1px_rgba(0,0,0,0.6)] whitespace-nowrap flex-shrink-0"
                 style={{ background: THEME.accent, color: "#0E0E10" }}
               >
                 <UserPlus size={16} /> Create account
