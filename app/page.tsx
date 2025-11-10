@@ -2584,11 +2584,26 @@ function AuthModal({
   const [password, setPassword] = React.useState("");
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
+  const [termsAccepted, setTermsAccepted] = React.useState(false);
+
+  // Reset terms acceptance when switching modes
+  React.useEffect(() => {
+    if (mode === "signin") {
+      setTermsAccepted(false);
+    }
+  }, [mode]);
 
   if (!open) return null;
 
   async function submit() {
     setError(null);
+    
+    // Check terms acceptance for signup mode
+    if (mode === "signup" && !termsAccepted) {
+      setError("Please confirm that you have read and agree to the Terms and Conditions.");
+      return;
+    }
+    
     setLoading(true);
     try {
       if (mode === "signup") {
@@ -2637,13 +2652,37 @@ function AuthModal({
 
           {error && <div className="text-xs text-red-400">{error}</div>}
 
-          <AccentButton className="w-full" onClick={submit} disabled={loading}>
+          {mode === "signup" && (
+            <label className="flex items-center gap-2 cursor-pointer text-xs">
+              <input
+                type="checkbox"
+                checked={termsAccepted}
+                onChange={(e) => setTermsAccepted(e.target.checked)}
+                className="rounded"
+              />
+              <span className="opacity-85">
+                I have read and agree to the{' '}
+                <a 
+                  href="/legal/terms" 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  className="underline hover:opacity-100 transition-opacity"
+                  style={{ color: THEME.accent }}
+                >
+                  Terms and Conditions
+                </a>
+              </span>
+            </label>
+          )}
+
+          <AccentButton 
+            className="w-full" 
+            onClick={submit} 
+            disabled={loading || (mode === "signup" && !termsAccepted)}
+          >
             {loading ? "Please wait…" : mode === "signup" ? "Create account" : "Sign in"}
           </AccentButton>
 
-
-
-          <div className="text-xs opacity-70">By continuing you agree to our Terms and Privacy.</div>
           <button
             className="text-xs underline opacity-80"
             onClick={() => onModeChange(mode === "signup" ? "signin" : "signup")}
