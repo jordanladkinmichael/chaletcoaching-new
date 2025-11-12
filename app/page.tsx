@@ -229,39 +229,39 @@ function Pricing({ region, requireAuth: _requireAuth, openAuth: _openAuth, onCus
     const router = useRouter();
     const { symbol, unitLabel } = currencyForRegion(region);
     
-    // Курсы конвертации (базовая валюта - GBP)
-    const CONVERSION_RATE_EUR = 1.15; // 1 GBP = 1.15 EUR
-    const CONVERSION_RATE_USD = 1.25; // 1 GBP = 1.25 USD
+    // Курсы конвертации (базовая валюта - EUR)
+    const CONVERSION_RATE_USD = 1.087; // 1 EUR = 1.087 USD
+    const CONVERSION_RATE_GBP = 1 / 1.15; // 1 EUR = 0.87 GBP (для обратной совместимости)
     
     // Определяем курс для текущей валюты
     const getConversionRate = () => {
-        if (region === "UK") return 1;
-        if (region === "EU") return CONVERSION_RATE_EUR;
-        return CONVERSION_RATE_USD; // US
+        if (region === "EU") return 1; // EUR - базовая валюта
+        if (region === "US") return CONVERSION_RATE_USD; // USD
+        return CONVERSION_RATE_GBP; // UK (для обратной совместимости)
     };
     
     const conversionRate = getConversionRate();
     
-    // Базовые цены в GBP
+    // Базовые цены в EUR
     const basePrices = { Starter: 9, Builder: 19, Pro: 49 };
     
     const tiers: Tier[] = [
         {
             name: "Starter",
-            price: region === "UK" ? basePrices.Starter : Math.round(basePrices.Starter * conversionRate * 100) / 100,
+            price: region === "EU" ? basePrices.Starter : Math.round(basePrices.Starter * conversionRate * 100) / 100,
             tokens: 1000,
             tag: "Try & explore"
         },
         {
             name: "Builder",
-            price: region === "UK" ? basePrices.Builder : Math.round(basePrices.Builder * conversionRate * 100) / 100,
+            price: region === "EU" ? basePrices.Builder : Math.round(basePrices.Builder * conversionRate * 100) / 100,
             tokens: 2575,
             tag: "Most popular",
             bonus: "+3%"
         },
         {
             name: "Pro",
-            price: region === "UK" ? basePrices.Pro : Math.round(basePrices.Pro * conversionRate * 100) / 100,
+            price: region === "EU" ? basePrices.Pro : Math.round(basePrices.Pro * conversionRate * 100) / 100,
             tokens: 6600,
             tag: "Best value",
             bonus: "+10%"
@@ -270,9 +270,9 @@ function Pricing({ region, requireAuth: _requireAuth, openAuth: _openAuth, onCus
 
     const [custom, setCustom] = useState<string>("25.00");
     const customNumber = Number(custom.replace(",", "."));
-    // Конвертируем введенную сумму в GBP для расчета токенов
-    const customPriceInGBP = region === "UK" ? customNumber : customNumber / conversionRate;
-    const customTokens = Math.max(0, Math.round(customPriceInGBP * TOKENS_PER_UNIT));
+    // Конвертируем введенную сумму в EUR для расчета токенов
+    const customPriceInEUR = region === "EU" ? customNumber : customNumber / conversionRate;
+    const customTokens = Math.max(0, Math.round(customPriceInEUR * TOKENS_PER_UNIT));
     const approxWeeks = tokensToApproxWeeks(customTokens);
 
     // new: track which action is creating (tier name or "custom")
@@ -2726,7 +2726,7 @@ export default function AIFitWorldPrototype() {
   }
 
   const isAuthed = !!(session?.user as { id?: string })?.id;
-  const [region, setRegion] = useState<Region>("UK");
+  const [region, setRegion] = useState<Region>("EU");
   const [active, setActive] = useState<NavId>("home");
   const { unitLabel } = currencyForRegion(region);
   const [balance, setBalance] = React.useState<number>(0);
@@ -2898,7 +2898,7 @@ export default function AIFitWorldPrototype() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             packageId: packageId.toUpperCase(),
-            currency: region === "UK" ? "GBP" : "EUR"
+            currency: region === "US" ? "USD" : "EUR"
           }),
         });
 
@@ -3182,7 +3182,7 @@ export default function AIFitWorldPrototype() {
             {[
               {
                 q: "How do tokens work?",
-                a: "1 EUR/GBP equals 100 tokens. You spend tokens when generating previews, full courses and exporting PDFs.",
+                a: "1 EUR/USD equals 100 tokens. You spend tokens when generating previews, full courses and exporting PDFs.",
               },
               {
                 q: "Is there a refund policy?",

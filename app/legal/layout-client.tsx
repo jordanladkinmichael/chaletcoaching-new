@@ -3,10 +3,10 @@
 import React from "react";
 import SiteHeader from "@/components/site-header";
 import SiteFooter from "@/components/site-footer";
+import { RegionProvider, useRegion } from "./region-context";
 
-export default function LegalLayoutClient({ children }: { children: React.ReactNode }) {
-  // Состояние для валюты
-  const [region, setRegion] = React.useState<"EU" | "UK" | "US">("EU");
+function LegalLayoutContent({ children }: { children: React.ReactNode }) {
+  const { region, setRegion } = useRegion();
   
   // Функции для хедера
   const handleOpenAuth = (mode: "signin" | "signup") => {
@@ -48,5 +48,13 @@ export default function LegalLayoutClient({ children }: { children: React.ReactN
 
       <SiteFooter onNavigate={handleNavigate} />
     </div>
+  );
+}
+
+export default function LegalLayoutClient({ children }: { children: React.ReactNode }) {
+  return (
+    <RegionProvider>
+      <LegalLayoutContent>{children}</LegalLayoutContent>
+    </RegionProvider>
   );
 }

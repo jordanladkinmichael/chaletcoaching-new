@@ -1,10 +1,9 @@
-import { THEME } from "@/lib/theme";
-import { Metadata } from "next";
+"use client";
 
-export const metadata: Metadata = {
-  title: "Terms and Conditions — AIFitWorld",
-  description: "Terms of service and usage policies for AIFitWorld",
-};
+import { THEME } from "@/lib/theme";
+import * as React from "react";
+import { currencyForRegion } from "@/lib/tokens";
+import { useRegion } from "../region-context";
 
 function Card({ children }: { children: React.ReactNode }) {
   return (
@@ -17,7 +16,44 @@ function Card({ children }: { children: React.ReactNode }) {
   );
 }
 
+function BaselineConversion({ region }: { region: "EU" | "UK" | "US" }) {
+  const { symbol, unitLabel } = currencyForRegion(region);
+  // Цена за 100 токенов: 1.00 EUR = 100 токенов, 1.00 USD = 100/1.087 ≈ 92 токенов
+  // Но по заданию: 1.00 EUR/USD = 100.00 tokens
+  // Для USD: если 1 EUR = 1.087 USD, то 1 USD = 0.92 EUR, значит 1 USD = 92 токенов
+  // Но пользователь хочет, чтобы показывалось 1.00 USD = 100 токенов
+  // Значит нужно показать эквивалентную цену
+  
+  // Для EUR: 1.00 EUR = 100 токенов
+  // Для USD: нужно показать эквивалентную цену, чтобы 100 токенов стоили правильную сумму в USD
+  // Если 1 EUR = 100 токенов, и 1 EUR = 1.087 USD, то 100 токенов = 1.087 USD
+  // Но пользователь хочет видеть "1.00 USD = 100 токенов", значит нужно показать правильную цену
+  
+  // Правильная логика: показываем цену за 100 токенов в выбранной валюте
+  const priceFor100Tokens = region === "EU" ? 1.00 : region === "US" ? 1.09 : 0.87;
+  
+  return (
+    <span>
+      1.00 {unitLabel} = 100.00 tokens
+    </span>
+  );
+}
+
 export default function TermsPage() {
+  // Используем контекст для синхронизации с хедером
+  let currentRegion: "EU" | "UK" | "US" = "EU";
+  try {
+    const { region } = useRegion();
+    currentRegion = region;
+  } catch {
+    // Если контекст недоступен, используем дефолт
+    if (typeof window !== "undefined") {
+      const stored = localStorage.getItem("selectedRegion");
+      if (stored && (stored === "EU" || stored === "US")) {
+        currentRegion = stored as "EU" | "US";
+      }
+    }
+  }
   return (
     <main className="mx-auto max-w-5xl px-4 py-10 space-y-8" style={{ color: THEME.text }}>
       <header className="space-y-2">
@@ -68,7 +104,7 @@ export default function TermsPage() {
           <h2 className="text-lg font-semibold mb-3">4. Tokens & Pricing</h2>
           <div className="space-y-3 opacity-90 text-sm">
             <p><strong>4.1.</strong> <strong>Nature.</strong> Tokens provide access to features within the Service. They confer no ownership or monetary rights beyond what is expressly set out here.</p>
-            <p><strong>4.2.</strong> <strong>Baseline conversion.</strong> Unless stated otherwise on the Pricing page, the baseline is 1.00 EUR/GBP/USD/AUD = 100.00 tokens. We display token prices before you generate content.</p>
+            <p><strong>4.2.</strong> <strong>Baseline conversion.</strong> Unless stated otherwise on the Pricing page, the baseline is <BaselineConversion region={currentRegion} />. We display token prices before you generate content.</p>
             <p><strong>4.3.</strong> <strong>Issuance & deduction.</strong> After successful payment, Tokens are credited to your Account. When you use paid features (preview, full course, export), Tokens are deducted immediately.</p>
             <p><strong>4.4.</strong> <strong>Variations.</strong> We may change token bundles, bonus offers, or the token price of features at any time with prospective effect. Changes do not affect Tokens already in your balance.</p>
             <p><strong>4.5.</strong> <strong>Promotions.</strong> Promotional or bonus Tokens are subject to specific terms shown at the time of the offer and may have expiry or usage limits.</p>

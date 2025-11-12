@@ -11,7 +11,7 @@ export async function POST(req: NextRequest) {
   }
 
   const body = await req.json();
-  const { packageId, currency = 'GBP' } = body as { packageId: TokenPackageId; currency?: Currency };
+  const { packageId, currency = 'EUR' } = body as { packageId: TokenPackageId; currency?: Currency };
 
   const pkg = getTokenPackage(packageId);
   if (!pkg) {

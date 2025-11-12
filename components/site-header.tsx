@@ -22,7 +22,6 @@ function RegionToggle({
   onChange: (r: Region) => void;
 }) {
   const regions: Array<{ value: Region; label: string }> = [
-    { value: "UK", label: "GBP" },
     { value: "EU", label: "EUR" },
     { value: "US", label: "USD" },
   ];

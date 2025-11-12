@@ -8,7 +8,7 @@ import { TOKEN_PACKAGES, TokenPackageId, getPackagePrice, Currency } from "@/lib
 // ✅ Validation schema
 const TopupSchema = z.object({
     packageId: z.enum(["STARTER", "POPULAR", "PRO", "ENTERPRISE"] as const),
-    currency: z.enum(["EUR", "GBP", "USD"]).default("GBP"),
+    currency: z.enum(["EUR", "GBP", "USD"]).default("EUR"),
     amount: z.string().optional(), // for custom payments
 });
 
