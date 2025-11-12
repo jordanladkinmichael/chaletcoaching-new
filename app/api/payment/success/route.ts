@@ -22,8 +22,8 @@ export async function POST(req: Request) {
         } else {
             const planMap: Record<string, number> = {
                 starter: 1000,
-                builder: 2500,
-                pro: 5000,
+                builder: 2060, // 2000 + 3% bonus
+                pro: 5390, // 4900 + 10% bonus
             };
             if (planName && planMap[planName.toLowerCase()]) {
                 tokensAdded = planMap[planName.toLowerCase()];

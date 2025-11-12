@@ -241,7 +241,7 @@ function Pricing({ region, requireAuth: _requireAuth, openAuth: _openAuth, onCus
     const conversionRate = getConversionRate();
     
     // Базовые цены в EUR
-    const basePrices = { Starter: 9, Builder: 19, Pro: 49 };
+    const basePrices = { Starter: 10, Builder: 20, Pro: 49 };
     
     const tiers: Tier[] = [
         {
@@ -253,14 +253,14 @@ function Pricing({ region, requireAuth: _requireAuth, openAuth: _openAuth, onCus
         {
             name: "Builder",
             price: region === "EU" ? basePrices.Builder : Math.round(basePrices.Builder * conversionRate * 100) / 100,
-            tokens: 2575,
+            tokens: 2060, // 2000 + 3% bonus
             tag: "Most popular",
             bonus: "+3%"
         },
         {
             name: "Pro",
             price: region === "EU" ? basePrices.Pro : Math.round(basePrices.Pro * conversionRate * 100) / 100,
-            tokens: 6600,
+            tokens: 5390, // 4900 + 10% bonus
             tag: "Best value",
             bonus: "+10%"
         },
