@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import nodemailer from "nodemailer";
+import { Resend } from "resend";
+
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function POST(req: NextRequest) {
   console.log("=== FEEDBACK API CALLED ===");
@@ -7,29 +9,19 @@ export async function POST(req: NextRequest) {
     const { name, email, message, page } = await req.json();
     console.log("Received data:", { name, email, message, page });
 
-    // Создаем транспортер
-    console.log("SMTP Config:", {
-      host: process.env.SMTP_HOST,
-      port: process.env.SMTP_PORT,
-      user: process.env.SMTP_USER,
-      pass: process.env.SMTP_PASS ? "***" : "NOT SET"
-    });
-    
-    const transporter = nodemailer.createTransport({
-      host: process.env.SMTP_HOST,
-      port: parseInt(process.env.SMTP_PORT || "587"),
-      secure: false, // true для 465, false для других портов
-      auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS,
-      },
-    });
+    if (!process.env.RESEND_API_KEY) {
+      console.error("RESEND_API_KEY is not set");
+      return NextResponse.json(
+        { error: "Email service not configured" },
+        { status: 500 }
+      );
+    }
 
-    // Отправляем письмо
-    await transporter.sendMail({
-      from: `"AIFitWorld Contact Form" <info@aifitworld.co.uk>`,
-      to: "info@aifitworld.co.uk",
-      replyTo: `"${name}" <${email}>`,
+    // Отправляем письмо через Resend
+    const { data, error } = await resend.emails.send({
+      from: "Chaletcoaching Contact Form <info@chaletcoaching.co.uk>",
+      to: ["info@chaletcoaching.co.uk"],
+      replyTo: email,
       subject: `Новое сообщение с сайта - ${page}`,
       html: `
         <h3>Новое сообщение с сайта</h3>
@@ -43,7 +35,16 @@ export async function POST(req: NextRequest) {
       `,
     });
 
-    return NextResponse.json({ success: true });
+    if (error) {
+      console.error("Resend error:", error);
+      return NextResponse.json(
+        { error: "Failed to send email", details: error },
+        { status: 500 }
+      );
+    }
+
+    console.log("Email sent successfully:", data);
+    return NextResponse.json({ success: true, id: data?.id });
   } catch (error) {
     console.error("Email error:", error);
     return NextResponse.json(
