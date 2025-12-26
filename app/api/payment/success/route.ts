@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getUserBalance } from "@/lib/balance";
+import { TOKEN_PACKS } from "@/lib/token-packages";
 
 const TOKENS_PER_UNIT = Number(process.env.TOKENS_PER_UNIT) || 100;
 
@@ -20,10 +21,11 @@ export async function POST(req: Request) {
         } else if (amount != null && !Number.isNaN(Number(amount))) {
             tokensAdded = Math.max(0, Math.round(Number(amount) * TOKENS_PER_UNIT));
         } else {
+            // Use single source of truth from token-packages.ts
             const planMap: Record<string, number> = {
-                starter: 1000,
-                builder: 2060, // 2000 + 3% bonus
-                pro: 5390, // 4900 + 10% bonus
+                starter: TOKEN_PACKS.find(p => p.uiId === "starter")?.tokens ?? 10_000,
+                builder: TOKEN_PACKS.find(p => p.uiId === "momentum")?.tokens ?? 20_000, // POPULAR
+                pro: TOKEN_PACKS.find(p => p.uiId === "elite")?.tokens ?? 30_000,
             };
             if (planName && planMap[planName.toLowerCase()]) {
                 tokensAdded = planMap[planName.toLowerCase()];

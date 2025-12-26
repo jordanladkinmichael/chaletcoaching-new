@@ -429,7 +429,7 @@ export default function PaymentsTokensPage() {
                   <div>
                     <H3 className="mb-2" style={{ fontSize: "1rem" }}>Tip</H3>
                     <Paragraph className="opacity-85 mb-0">
-                      If you don't have enough tokens for an action, you'll be prompted to top up.
+                      If you don&apos;t have enough tokens for an action, you&apos;ll be prompted to top up.
                     </Paragraph>
                   </div>
                 </div>

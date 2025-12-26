@@ -53,7 +53,7 @@ export async function POST(req: Request) {
                         from_first_name: fullName?.split(" ")[0] || "",
                         from_last_name: fullName?.split(" ")[1] || "",
                         from_country: country,
-                        referer_domain: "aifitworld.co.uk",
+                        referer_domain: "chaletcoaching.co.uk",
                         locale_lang: "en",
                     },
                 },

@@ -1,0 +1,456 @@
+[
+  {
+    "id": "c01",
+    "slug": "maya-kalnina-yoga-flow",
+    "name": "Maya Kalnina",
+    "avatar": "coach_maya_kalnina.webp",
+    "specialties": [
+      "Yoga Flow",
+      "Breathwork",
+      "Flexibility"
+    ],
+    "goals": [
+      "Mobility",
+      "Posture"
+    ],
+    "level": "beginner",
+    "trainingType": "home",
+    "languages": [
+      "EN",
+      "LV",
+      "RU"
+    ],
+    "focusAreas": [
+      "Mobility",
+      "Stress reset",
+      "Flexibility"
+    ],
+    "rating": 4.9,
+    "coursesCount": 128,
+    "featured": true,
+    "bio": "Vinyasa-focused yoga coach with simple routines you can actually stick to. Calm structure, clear cues, zero fluff."
+  },
+  {
+    "id": "c02",
+    "slug": "marco-rinaldi-powerlifting",
+    "name": "Marco Rinaldi",
+    "avatar": "coach_marco_rinaldi.webp",
+    "specialties": [
+      "Powerlifting",
+      "Strength Programming",
+      "Technique"
+    ],
+    "goals": [
+      "Strength",
+      "Muscle gain"
+    ],
+    "level": "advanced",
+    "trainingType": "gym",
+    "languages": [
+      "EN",
+      "IT"
+    ],
+    "focusAreas": [
+      "Squat",
+      "Bench",
+      "Deadlift"
+    ],
+    "rating": 4.8,
+    "coursesCount": 212,
+    "featured": true,
+    "bio": "Experienced strength coach focused on safe progression and clean technique. Plans are structured, measurable, and realistic."
+  },
+  {
+    "id": "c03",
+    "slug": "lena-berg-calisthenics",
+    "name": "Lena Berg",
+    "avatar": "coach_lena_berg.webp",
+    "specialties": [
+      "Calisthenics",
+      "Bodyweight Strength",
+      "Skill Progressions"
+    ],
+    "goals": [
+      "Strength",
+      "Endurance"
+    ],
+    "level": "intermediate",
+    "trainingType": "mixed",
+    "languages": [
+      "EN",
+      "SV"
+    ],
+    "focusAreas": [
+      "Pull-ups",
+      "Core",
+      "Handstand basics"
+    ],
+    "rating": 4.7,
+    "coursesCount": 96,
+    "featured": false,
+    "bio": "Bodyweight training that scales with you. Strong fundamentals, clean progressions, and skill work without injury drama."
+  },
+  {
+    "id": "c04",
+    "slug": "elise-dumont-pilates-core",
+    "name": "Elise Dumont",
+    "avatar": "coach_elise_dumont.webp",
+    "specialties": [
+      "Pilates",
+      "Core Stability",
+      "Posture"
+    ],
+    "goals": [
+      "Posture",
+      "Mobility"
+    ],
+    "level": "beginner",
+    "trainingType": "home",
+    "languages": [
+      "EN",
+      "FR"
+    ],
+    "focusAreas": [
+      "Core",
+      "Back-friendly training",
+      "Alignment"
+    ],
+    "rating": 4.9,
+    "coursesCount": 141,
+    "featured": true,
+    "bio": "Pilates coach focused on core control and alignment. Clear sessions, gentle progress, and a stronger daily posture."
+  },
+  {
+    "id": "c05",
+    "slug": "tomasz-nowak-hiit-conditioning",
+    "name": "Tomasz Nowak",
+    "avatar": "coach_tomasz_nowak.webp",
+    "specialties": [
+      "HIIT",
+      "Conditioning",
+      "Fat Loss Training"
+    ],
+    "goals": [
+      "Fat loss",
+      "Endurance"
+    ],
+    "level": "intermediate",
+    "trainingType": "home",
+    "languages": [
+      "EN",
+      "PL"
+    ],
+    "focusAreas": [
+      "HIIT",
+      "Cardio",
+      "Full body"
+    ],
+    "rating": 4.6,
+    "coursesCount": 83,
+    "featured": false,
+    "bio": "High-intensity plans with sensible recovery. Short sessions, clear pacing, and progress you can feel week to week."
+  },
+  {
+    "id": "c06",
+    "slug": "greta-silva-run-coach",
+    "name": "Greta Silva",
+    "avatar": "coach_greta_silva.webp",
+    "specialties": [
+      "Running",
+      "5K–Half Marathon",
+      "Endurance Planning"
+    ],
+    "goals": [
+      "Endurance",
+      "Fat loss"
+    ],
+    "level": "beginner",
+    "trainingType": "mixed",
+    "languages": [
+      "EN",
+      "PT",
+      "ES"
+    ],
+    "focusAreas": [
+      "Running plan",
+      "Pacing",
+      "Injury-prep basics"
+    ],
+    "rating": 4.8,
+    "coursesCount": 119,
+    "featured": false,
+    "bio": "Run plans that start where you are. Simple pacing, smart build-up, and routines that fit real life schedules."
+  },
+  {
+    "id": "c07",
+    "slug": "johan-lind-cycling-performance",
+    "name": "Johan Lind",
+    "avatar": "coach_johan_lind.webp",
+    "specialties": [
+      "Cycling",
+      "Performance",
+      "Zone Training"
+    ],
+    "goals": [
+      "Endurance",
+      "Strength"
+    ],
+    "level": "advanced",
+    "trainingType": "mixed",
+    "languages": [
+      "EN",
+      "SV",
+      "DE"
+    ],
+    "focusAreas": [
+      "FTP build",
+      "Intervals",
+      "Leg strength"
+    ],
+    "rating": 4.7,
+    "coursesCount": 67,
+    "featured": false,
+    "bio": "Cycling-focused programming with clear weekly structure. Smart intervals, recovery blocks, and strength support."
+  },
+  {
+    "id": "c08",
+    "slug": "nadia-kovac-boxing-fitness",
+    "name": "Nadia Kovac",
+    "avatar": "coach_nadia_kovac.webp",
+    "specialties": [
+      "Boxing Fitness",
+      "Footwork",
+      "Conditioning"
+    ],
+    "goals": [
+      "Fat loss",
+      "Endurance"
+    ],
+    "level": "intermediate",
+    "trainingType": "home",
+    "languages": [
+      "EN",
+      "HR",
+      "DE"
+    ],
+    "focusAreas": [
+      "Cardio",
+      "Coordination",
+      "Footwork"
+    ],
+    "rating": 4.8,
+    "coursesCount": 102,
+    "featured": true,
+    "bio": "Boxing-inspired fitness that builds stamina and confidence. Clean drills, smart progressions, and no ego."
+  },
+  {
+    "id": "c09",
+    "slug": "alex-kent-kettlebell",
+    "name": "Alex Kent",
+    "avatar": "coach_alex_kent.webp",
+    "specialties": [
+      "Kettlebells",
+      "Functional Strength",
+      "Mobility Strength"
+    ],
+    "goals": [
+      "Strength",
+      "Mobility"
+    ],
+    "level": "intermediate",
+    "trainingType": "mixed",
+    "languages": [
+      "EN"
+    ],
+    "focusAreas": [
+      "Kettlebell basics",
+      "Hinge pattern",
+      "Grip strength"
+    ],
+    "rating": 4.6,
+    "coursesCount": 58,
+    "featured": false,
+    "bio": "Functional training with kettlebells that keeps you athletic. Strong basics, clean technique cues, and practical sessions."
+  },
+  {
+    "id": "c10",
+    "slug": "sara-van-dijk-mobility-posture",
+    "name": "Sara van Dijk",
+    "avatar": "coach_sara_van_dijk.webp",
+    "specialties": [
+      "Mobility",
+      "Posture",
+      "Desk Worker Routines"
+    ],
+    "goals": [
+      "Posture",
+      "Mobility"
+    ],
+    "level": "beginner",
+    "trainingType": "home",
+    "languages": [
+      "EN",
+      "NL"
+    ],
+    "focusAreas": [
+      "Neck & shoulders",
+      "Hips",
+      "Back-friendly training"
+    ],
+    "rating": 4.9,
+    "coursesCount": 176,
+    "featured": true,
+    "bio": "Mobility and posture plans for desk life. Short routines, clear progressions, and strong habits without complexity."
+  },
+  {
+    "id": "c11",
+    "slug": "pavel-ivanov-olympic-lifting",
+    "name": "Pavel Ivanov",
+    "avatar": "coach_pavel_ivanov.webp",
+    "specialties": [
+      "Olympic Lifting",
+      "Barbell Technique",
+      "Explosiveness"
+    ],
+    "goals": [
+      "Strength",
+      "Muscle gain"
+    ],
+    "level": "advanced",
+    "trainingType": "gym",
+    "languages": [
+      "EN",
+      "RU"
+    ],
+    "focusAreas": [
+      "Snatch",
+      "Clean & Jerk",
+      "Power development"
+    ],
+    "rating": 4.7,
+    "coursesCount": 74,
+    "featured": false,
+    "bio": "Barbell technique coach for explosive strength. Structured blocks, technical drills, and realistic progression."
+  },
+  {
+    "id": "c12",
+    "slug": "chiara-conti-dance-cardio",
+    "name": "Chiara Conti",
+    "avatar": "coach_chiara_conti.webp",
+    "specialties": [
+      "Dance Cardio",
+      "Rhythm Training",
+      "Full-Body Conditioning"
+    ],
+    "goals": [
+      "Fat loss",
+      "Endurance"
+    ],
+    "level": "beginner",
+    "trainingType": "home",
+    "languages": [
+      "EN",
+      "IT",
+      "ES"
+    ],
+    "focusAreas": [
+      "Coordination",
+      "Cardio",
+      "Fun adherence"
+    ],
+    "rating": 4.6,
+    "coursesCount": 64,
+    "featured": false,
+    "bio": "Dance-based cardio that’s fun and effective. Simple combos, steady progress, and routines that keep you coming back."
+  },
+  {
+    "id": "c13",
+    "slug": "mikael-otto-climbing-conditioning",
+    "name": "Mikael Otto",
+    "avatar": "coach_mikael_otto.webp",
+    "specialties": [
+      "Climbing Conditioning",
+      "Grip Strength",
+      "Shoulder Health"
+    ],
+    "goals": [
+      "Strength",
+      "Mobility"
+    ],
+    "level": "intermediate",
+    "trainingType": "mixed",
+    "languages": [
+      "EN",
+      "DE"
+    ],
+    "focusAreas": [
+      "Grip",
+      "Pull strength",
+      "Shoulder stability"
+    ],
+    "rating": 4.7,
+    "coursesCount": 51,
+    "featured": false,
+    "bio": "Climbing-focused strength and stability. Grip, pulling power, and shoulder-friendly programming."
+  },
+  {
+    "id": "c14",
+    "slug": "irina-petrescu-low-impact",
+    "name": "Irina Petrescu",
+    "avatar": "coach_irina_petrescu.webp",
+    "specialties": [
+      "Low-Impact Fitness",
+      "Balance",
+      "Joint-Friendly Strength"
+    ],
+    "goals": [
+      "Mobility",
+      "Strength"
+    ],
+    "level": "beginner",
+    "trainingType": "home",
+    "languages": [
+      "EN",
+      "RO"
+    ],
+    "focusAreas": [
+      "Balance",
+      "Joint-friendly",
+      "Daily function"
+    ],
+    "rating": 4.9,
+    "coursesCount": 92,
+    "featured": false,
+    "bio": "Low-impact strength and balance sessions designed for consistency. Gentle progress, clear cues, and safer movement habits."
+  },
+  {
+    "id": "c15",
+    "slug": "benoit-martin-swim-technique",
+    "name": "Benoit Martin",
+    "avatar": "coach_benoit_martin.webp",
+    "specialties": [
+      "Swimming Technique",
+      "Endurance",
+      "Triathlon Support"
+    ],
+    "goals": [
+      "Endurance",
+      "Posture"
+    ],
+    "level": "intermediate",
+    "trainingType": "mixed",
+    "languages": [
+      "EN",
+      "FR"
+    ],
+    "focusAreas": [
+      "Stroke efficiency",
+      "Breathing",
+      "Shoulder mobility"
+    ],
+    "rating": 4.6,
+    "coursesCount": 45,
+    "featured": false,
+    "bio": "Swim technique and endurance plans with clear weekly structure. Better efficiency, smoother breathing, and stronger mobility."
+  }
+]

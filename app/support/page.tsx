@@ -596,7 +596,7 @@ export default function SupportPage() {
             >
               <H2 className="mb-4">Still need help?</H2>
               <Paragraph className="mb-6">
-                If you can't find an answer, contact us and include as much detail as possible.
+                If you can&apos;t find an answer, contact us and include as much detail as possible.
               </Paragraph>
 
               <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8">

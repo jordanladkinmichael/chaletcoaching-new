@@ -59,7 +59,7 @@ export async function POST(request: NextRequest) {
       injurySafe,
       specialEquipment,
       nutritionTips,
-      pdf: pdf || "none",
+      pdf: pdf || "text", // PDF always included, default to "text"
       images: images || 0,
       workoutTypes,
       targetMuscles,
@@ -92,7 +92,7 @@ export async function POST(request: NextRequest) {
       createdAt: new Date().toISOString(),
       type: "full",
       userId: session.user.id,
-      pdf: pdf || "none",
+      pdf: pdf || "text", // PDF always included, default to "text"
     };
 
     // Сохраняем курс в базу данных

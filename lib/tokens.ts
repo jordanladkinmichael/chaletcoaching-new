@@ -159,9 +159,9 @@ export function calcFullCourseTokens(opts: GeneratorOpts) {
     injurySafe = false,
     specialEquipment = false,
     nutritionTips = false,
-    pdf = "none",
+    pdf = "text", // PDF always included, default to "text"
     images = 0,
-    videoPlan = false,
+    videoPlan = false, // Video guide removed, kept for backward compatibility
     gender: _gender = "male",
     workoutTypes = [],
     targetMuscles = [],
@@ -171,10 +171,17 @@ export function calcFullCourseTokens(opts: GeneratorOpts) {
   if (injurySafe) total += Math.round(120 * 1.3);
   if (specialEquipment) total += Math.round(80 * 1.3);
   if (nutritionTips) total += Math.round(100 * 1.3);
-  if (videoPlan) total += Math.round(250 * 1.3);
+  // videoPlan removed - no longer used
 
-  if (pdf === "text") total += Math.round(60 * 1.3);
-  if (pdf === "illustrated") total += Math.round((60 + images * 10) * 1.3);
+  // PDF always included (no "none" option)
+  if (pdf === "text") {
+    total += Math.round(60 * 1.3);
+  } else if (pdf === "illustrated") {
+    total += Math.round((60 + images * 10) * 1.3);
+  } else {
+    // Fallback for backward compatibility (treat "none" as "text")
+    total += Math.round(60 * 1.3);
+  }
 
   // Additional costs for new options
   if (workoutTypes.length > 0) total += Math.round(workoutTypes.length * 15 * 1.3);
@@ -263,4 +270,87 @@ export function generateShortCourseTitle(opts: GeneratorOpts): string {
   }
   
   return title;
+}
+
+// Coach request pricing
+export interface CoachRequestInput {
+  level: string; // "beginner" | "intermediate" | "advanced" (will be normalized)
+  trainingType: string; // "home" | "gym" | "mixed" (will be normalized)
+  equipment: string; // "none" | "basic" | "full_gym" (will be normalized)
+  daysPerWeek: number; // 2 | 3 | 4 | 5 | 6
+}
+
+export interface CoachRequestCostBreakdown {
+  base: number;
+  levelAdd: number;
+  trainingTypeAdd: number;
+  equipmentAdd: number;
+  daysAdd: number;
+  total: number;
+}
+
+export function calcCoachRequestTokens(input: CoachRequestInput): CoachRequestCostBreakdown {
+  const BASE = 10_000;
+  
+  // Normalize input values: lowercase + trim
+  const level = input.level.toLowerCase().trim();
+  const trainingType = input.trainingType.toLowerCase().trim();
+  
+  // Normalize equipment: handle synonyms for "full gym"
+  let equipment = input.equipment.toLowerCase().trim();
+  // Map synonyms: "full gym" | "fullgym" | "full_gym" -> "full_gym"
+  if (equipment === "full gym" || equipment === "fullgym" || equipment === "full_gym") {
+    equipment = "full_gym";
+  } else {
+    // Replace spaces with underscores for other values
+    equipment = equipment.replace(/\s+/g, '_');
+  }
+  
+  const daysPerWeek = input.daysPerWeek;
+  
+  // Level add-on mapping
+  const levelAddMap: Record<string, number> = {
+    beginner: 0,
+    intermediate: 5_000,
+    advanced: 12_000,
+  };
+  
+  // Training type add-on mapping
+  const trainingTypeAddMap: Record<string, number> = {
+    home: 0,
+    gym: 0,
+    mixed: 4_000,
+  };
+  
+  // Equipment add-on mapping
+  const equipmentAddMap: Record<string, number> = {
+    none: 0,
+    basic: 3_000,
+    full_gym: 6_000,
+  };
+  
+  // Days per week add-on mapping
+  const daysAddMap: Record<number, number> = {
+    2: 0,
+    3: 0,
+    4: 4_000,
+    5: 8_000,
+    6: 12_000,
+  };
+  
+  const levelAdd = levelAddMap[level] ?? 0;
+  const trainingTypeAdd = trainingTypeAddMap[trainingType] ?? 0;
+  const equipmentAdd = equipmentAddMap[equipment] ?? 0;
+  const daysAdd = daysAddMap[daysPerWeek] ?? 0;
+  
+  const total = BASE + levelAdd + trainingTypeAdd + equipmentAdd + daysAdd;
+  
+  return {
+    base: BASE,
+    levelAdd,
+    trainingTypeAdd,
+    equipmentAdd,
+    daysAdd,
+    total,
+  };
 }

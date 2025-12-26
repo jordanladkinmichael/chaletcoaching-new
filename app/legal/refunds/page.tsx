@@ -2,8 +2,8 @@ import { THEME } from "@/lib/theme";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Refund & Returns Policy — AIFitWorld",
-  description: "Refund policy and token system information for AIFitWorld",
+  title: "Refund & Returns Policy — Chaletcoaching",
+  description: "Refund policy and token system information for Chaletcoaching",
 };
 
 function Card({ children }: { children: React.ReactNode }) {
@@ -35,11 +35,11 @@ export default function RefundsPage() {
       <Card>
         <h2 className="text-lg font-semibold mb-3">Company Information</h2>
         <div className="opacity-90 text-sm space-y-1">
-          <p><strong>Company:</strong> BREATHE FRESH LTD (Company No. 15954655)</p>
-          <p><strong>Registered office:</strong> Dept 6157 43 Owston Road, Carcroft, Doncaster, United Kingdom, DN6 8DA</p>
-          <p><strong>Support email:</strong> info@aifitworld.co.uk</p>
-          <p><strong>Phone:</strong> +44 7418604319</p>
-          <p><strong>Service:</strong> https://www.aifitworld.co.uk</p>
+          <p><strong>Company:</strong> CHALET AQUARIUS LTD (Company No. 15587263)</p>
+          <p><strong>Registered office:</strong> 20 Wenlock Road, London, England, N1 7GU</p>
+          <p><strong>Support email:</strong> info@chaletcoaching.co.uk</p>
+          <p><strong>Phone:</strong> +44 7441 392840</p>
+          <p><strong>Service:</strong> https://www.chaletcoaching.co.uk</p>
         </div>
       </Card>
 
@@ -53,7 +53,7 @@ export default function RefundsPage() {
           <p><strong>Spent Tokens</strong> (used for previews, full course generation, or PDF exports) are non-refundable, except where the supplied digital Service is defective, materially not as described, or not supplied as contracted.</p>
           <p>Tokens are account-bound, non-transferable and are not exchangeable for cash, except where required by law.</p>
           <p><strong>Promotional/bonus Tokens</strong> are non-refundable unless the promotion&apos;s terms expressly state otherwise.</p>
-          <p><strong>Submit requests to:</strong> info@aifitworld.co.uk with your order reference and details.</p>
+          <p><strong>Submit requests to:</strong> info@chaletcoaching.co.uk with your order reference and details.</p>
           <p>This Policy may be updated; material changes will be notified as in section 8.</p>
           <p>If you consented at checkout to immediate supply of digital content (e.g., downloadable Training Plan) and then accessed/downloaded it, you may lose your statutory right to cancel for that transaction (see 4.7).</p>
         </div>
@@ -63,7 +63,7 @@ export default function RefundsPage() {
       <Card>
         <h2 className="text-lg font-semibold mb-3">2. Scope and legal note</h2>
         <div className="space-y-3 opacity-90 text-sm">
-          <p>This Policy covers refunds for Tokens (internal account units) and digital/online Services provided by BREATHE FRESH LTD via AIFitWorld, including Training Plans (on-screen content, previews, exports), downloadable files (e.g., PDF/DOCX), and any bespoke materials.</p>
+          <p>This Policy covers refunds for Tokens (internal account units) and digital/online Services provided by CHALET AQUARIUS LTD via Chaletcoaching, including Training Plans (on-screen content, previews, exports), downloadable files (e.g., PDF/DOCX), and any bespoke materials.</p>
           <p>Nothing here limits mandatory consumer rights under UK law, including the Consumer Contracts Regulations 2013 and the Consumer Rights Act 2015.</p>
         </div>
       </Card>
@@ -106,7 +106,7 @@ export default function RefundsPage() {
         <Card>
           <h2 className="text-lg font-semibold mb-3">5. How to request a refund (procedure)</h2>
           <div className="space-y-3 opacity-90 text-sm">
-            <p>Email info@aifitworld.co.uk (or use the in-app support form, if available) and include:</p>
+            <p>Email info@chaletcoaching.co.uk (or use the in-app support form, if available) and include:</p>
             <ul className="list-disc pl-5 space-y-1">
               <li>Order reference (mandatory);</li>
               <li>Account email used for the purchase;</li>
@@ -166,7 +166,7 @@ export default function RefundsPage() {
       <Card>
         <h2 className="text-lg font-semibold mb-3">10. Escalation and disputes</h2>
         <p className="opacity-90 text-sm">
-          If you disagree with a decision, escalate by emailing info@aifitworld.co.uk with your reasons and order reference. We will review within 10 business days. This Policy does not affect your statutory rights; where applicable, you may use alternative dispute resolution or court proceedings.
+          If you disagree with a decision, escalate by emailing info@chaletcoaching.co.uk with your reasons and order reference. We will review within 10 business days. This Policy does not affect your statutory rights; where applicable, you may use alternative dispute resolution or court proceedings.
         </p>
       </Card>
 
@@ -185,9 +185,9 @@ export default function RefundsPage() {
       <Card>
         <h2 className="text-lg font-semibold mb-3">12. Contact details</h2>
         <div className="opacity-90 text-sm space-y-1">
-          <p><strong>Email (support):</strong> info@aifitworld.co.uk</p>
-          <p><strong>Phone:</strong> +44 7418604319</p>
-          <p><strong>Postal:</strong> BREATHE FRESH LTD, Dept 6157 43 Owston Road, Carcroft, Doncaster, United Kingdom, DN6 8DA</p>
+          <p><strong>Email (support):</strong> info@chaletcoaching.co.uk</p>
+          <p><strong>Phone:</strong> +44 7441 392840</p>
+          <p><strong>Postal:</strong> CHALET AQUARIUS LTD, 20 Wenlock Road, London, England, N1 7GU</p>
         </div>
       </Card>
     </main>

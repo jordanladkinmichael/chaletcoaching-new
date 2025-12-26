@@ -115,7 +115,7 @@ export default function SiteHeader({
                   } else if (n.id === "generator") {
                     router.push("/generator");
                   } else if (n.id === "dashboard") {
-                    router.push("/dashboard" as any);
+                    router.push("/dashboard");
                   } else if (n.id === "how-it-works") {
                     router.push("/how-it-works");
                   } else if (n.id === "home") {
@@ -286,7 +286,7 @@ export default function SiteHeader({
                       } else if (n.id === "generator") {
                         router.push("/generator");
                       } else if (n.id === "dashboard") {
-                        router.push("/dashboard" as any);
+                        router.push("/dashboard");
                       } else if (n.id === "how-it-works") {
                         router.push("/how-it-works");
                       } else if (n.id === "home") {

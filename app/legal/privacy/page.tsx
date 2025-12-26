@@ -4,8 +4,8 @@ import { Metadata } from "next";
 import { THEME } from "@/lib/theme";
 
 export const metadata: Metadata = {
-  title: "Privacy Policy — AIFitWorld",
-  description: "Privacy policy and data handling practices for AIFitWorld",
+  title: "Privacy Policy — Chaletcoaching",
+  description: "Privacy policy and data handling practices for Chaletcoaching",
 };
 
 const EFFECTIVE_DATE = "12 August 2025";
@@ -40,10 +40,10 @@ export default function PrivacyPage() {
       <Card>
         <h2 className="text-lg font-semibold mb-3">Data Controller Information</h2>
         <div className="opacity-90 text-sm space-y-1">
-          <p><strong>Data controller:</strong> BREATHE FRESH LTD (Company No. 15954655)</p>
-          <p><strong>Registered office:</strong> Dept 6157 43 Owston Road, Carcroft, Doncaster, United Kingdom, DN6 8DA</p>
-          <p><strong>Contact (Privacy / Support):</strong> info@aifitworld.co.uk • +44 7418604319</p>
-          <p><strong>Service:</strong> https://www.aifitworld.co.uk</p>
+          <p><strong>Data controller:</strong> CHALET AQUARIUS LTD (Company No. 15587263)</p>
+          <p><strong>Registered office:</strong> 20 Wenlock Road, London, England, N1 7GU</p>
+          <p><strong>Contact (Privacy / Support):</strong> info@chaletcoaching.co.uk • +44 7441 392840</p>
+          <p><strong>Service:</strong> https://www.chaletcoaching.co.uk</p>
         </div>
       </Card>
 
@@ -51,7 +51,7 @@ export default function PrivacyPage() {
       <Card>
         <h2 className="text-lg font-semibold mb-3">1. Introduction</h2>
         <p className="opacity-90 text-sm">
-          We respect your privacy. This Privacy Policy explains what personal data we collect, how we use it, how long we keep it, with whom we share it, &quot;and how you can exercise your rights. It applies when you use the AIFitWorld website, app and services (the &quot;Service&quot;).
+          We respect your privacy. This Privacy Policy explains what personal data we collect, how we use it, how long we keep it, with whom we share it, &quot;and how you can exercise your rights. It applies when you use the Chaletcoaching website, app and services (the &quot;Service&quot;).
         </p>
       </Card>
 
@@ -152,7 +152,7 @@ export default function PrivacyPage() {
           <p>• Withdraw consent at any time (e.g., marketing or health-related inputs).</p>
         </div>
         <p className="mt-3 opacity-90 text-sm">
-          To exercise your rights, contact info@aifitworld.co.uk. We may need to verify your identity. We respond within statutory timeframes (normally one month). Some rights may be limited by law (e.g., where we must retain records).
+          To exercise your rights, contact info@chaletcoaching.co.uk. We may need to verify your identity. We respond within statutory timeframes (normally one month). Some rights may be limited by law (e.g., where we must retain records).
         </p>
       </Card>
 
@@ -168,7 +168,7 @@ export default function PrivacyPage() {
         <Card>
           <h2 className="text-lg font-semibold mb-3">10. Children</h2>
           <p className="opacity-90 text-sm">
-            The Service is intended for adults (18+). We do not knowingly collect data from children under 18. If you believe a child has provided data, contact info@aifitworld.co.uk and we will delete it.
+            The Service is intended for adults (18+). We do not knowingly collect data from children under 18. If you believe a child has provided data, contact info@chaletcoaching.co.uk and we will delete it.
           </p>
         </Card>
       </div>
@@ -185,7 +185,7 @@ export default function PrivacyPage() {
       <Card>
         <h2 className="text-lg font-semibold mb-3">12. Contact & complaints</h2>
         <div className="opacity-90 text-sm space-y-1">
-          <p><strong>Questions or requests:</strong> info@aifitworld.co.uk • +44 7418604319 • BREATHE FRESH LTD, Dept 6157 43 Owston Road, Carcroft, Doncaster, United Kingdom, DN6 8DA.</p>
+          <p><strong>Questions or requests:</strong> info@chaletcoaching.co.uk • +44 7441 392840 • CHALET AQUARIUS LTD, 20 Wenlock Road, London, England, N1 7GU.</p>
         </div>
       </Card>
     </main>

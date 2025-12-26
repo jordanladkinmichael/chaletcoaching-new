@@ -20,7 +20,7 @@ function PaymentSuccessInner() {
     if (
         typeof window !== "undefined" &&
         (window.location.hostname === "localhost" ||
-            window.location.hostname.includes("aifitworld.co.uk"))
+            window.location.hostname.includes("chaletcoaching.co.uk"))
     ) {
         status = "success";
     }

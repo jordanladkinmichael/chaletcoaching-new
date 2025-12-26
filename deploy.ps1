@@ -1,6 +1,6 @@
-# Скрипт для деплоя AIFitWorld на Vercel
+# Скрипт для деплоя Chaletcoaching на Vercel
 
-Write-Host "🚀 AIFitWorld Deployment Script" -ForegroundColor Green
+Write-Host "🚀 Chaletcoaching Deployment Script" -ForegroundColor Green
 Write-Host "================================" -ForegroundColor Green
 
 # Проверяем, что мы в правильной папке

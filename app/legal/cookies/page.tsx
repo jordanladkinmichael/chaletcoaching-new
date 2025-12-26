@@ -2,7 +2,7 @@
 import React from "react";
 import { THEME } from "@/lib/theme";
 
-export const metadata = { title: "Cookies Policy — AIFitWorld" };
+export const metadata = { title: "Cookies Policy — Chaletcoaching" };
 
 const EFFECTIVE_DATE = "12 August 2025";
 
@@ -36,10 +36,10 @@ export default function CookiesPage() {
       <Card>
         <h2 className="text-lg font-semibold mb-3">Data Controller Information</h2>
         <div className="opacity-90 text-sm space-y-1">
-          <p><strong>Data controller:</strong> BREATHE FRESH LTD (Company No. 15954655)</p>
-          <p><strong>Registered office:</strong> Dept 6157 43 Owston Road, Carcroft, Doncaster, United Kingdom, DN6 8DA</p>
-          <p><strong>Site / Service:</strong> https://www.aifitworld.co.uk</p>
-          <p><strong>Contact:</strong> info@aifitworld.co.uk • +44 7418604319</p>
+          <p><strong>Data controller:</strong> CHALET AQUARIUS LTD (Company No. 15587263)</p>
+          <p><strong>Registered office:</strong> 20 Wenlock Road, London, England, N1 7GU</p>
+          <p><strong>Site / Service:</strong> https://www.chaletcoaching.co.uk</p>
+          <p><strong>Contact:</strong> info@chaletcoaching.co.uk • +44 7441 392840</p>
         </div>
       </Card>
 
@@ -47,7 +47,7 @@ export default function CookiesPage() {
       <Card>
         <h2 className="text-lg font-semibold mb-3">1. Overview</h2>
         <p className="opacity-90 text-sm">
-          This Cookies Policy explains how AIFitWorld (operated by BREATHE FRESH LTD, &quot;we&quot;, &quot;us&quot;, &quot;our&quot;) uses cookies and similar technologies (including localStorage, sessionStorage, pixels and SDKs) on the Service. It complements our Privacy Policy. Through the banner and settings, you can accept, decline, or customise non-essential cookies as described below.
+          This Cookies Policy explains how Chaletcoaching (operated by CHALET AQUARIUS LTD, &quot;we&quot;, &quot;us&quot;, &quot;our&quot;) uses cookies and similar technologies (including localStorage, sessionStorage, pixels and SDKs) on the Service. It complements our Privacy Policy. Through the banner and settings, you can accept, decline, or customise non-essential cookies as described below.
         </p>
       </Card>
 
@@ -193,8 +193,8 @@ export default function CookiesPage() {
       <Card>
         <h2 className="text-lg font-semibold mb-3">11. Contact</h2>
         <div className="opacity-90 text-sm space-y-1">
-          <p><strong>Questions about cookies or this Policy:</strong> info@aifitworld.co.uk • +44 7418604319</p>
-          <p><strong>Postal enquiries:</strong> BREATHE FRESH LTD, Dept 6157 43 Owston Road, Carcroft, Doncaster, United Kingdom, DN6 8DA</p>
+          <p><strong>Questions about cookies or this Policy:</strong> info@chaletcoaching.co.uk • +44 7441 392840</p>
+          <p><strong>Postal enquiries:</strong> CHALET AQUARIUS LTD, 20 Wenlock Road, London, England, N1 7GU</p>
         </div>
       </Card>
     </main>

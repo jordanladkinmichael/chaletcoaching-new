@@ -191,7 +191,7 @@ export default function WhatYouReceivePage() {
       content: (
         <p>
           Instant AI previews cost 50 tokens. You can generate a preview to see the plan structure before committing 
-          to the full plan cost. If you're satisfied, you can publish the full plan.
+          to the full plan cost. If you&apos;re satisfied, you can publish the full plan.
         </p>
       ),
     },

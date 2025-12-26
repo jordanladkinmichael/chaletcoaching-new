@@ -1,12 +1,23 @@
 import "./globals.css";
-import { Inter } from "next/font/google";
+import { Inter, Space_Grotesk } from "next/font/google";
 import Providers from "./providers";
 import { Metadata } from "next";
 
-const inter = Inter({ subsets: ["latin"] });
+const inter = Inter({ 
+  subsets: ["latin"],
+  variable: "--font-inter",
+  display: "swap",
+});
+
+const spaceGrotesk = Space_Grotesk({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-space-grotesk",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
-  title: "AIFitWorld",
+  title: "Chaletcoaching",
   description: "AI-powered fitness course generator",
 };
 
@@ -14,14 +25,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en">
       <body
-        className={inter.className}
-        style={{
-          color: "#F4F4F5",
-          // глобальный градиент для всех страниц (как на главной)
-          background: `radial-gradient(60% 80% at 85% -10%, rgba(255,214,10,0.10) 0%, rgba(255,214,10,0.02) 40%, transparent 60%),
-                       radial-gradient(60% 80% at 0% 100%, rgba(255,214,10,0.06) 0%, rgba(255,214,10,0.02) 30%, transparent 60%)`,
-          backgroundColor: "#0E0E10",
-        }}
+        className={`${inter.variable} ${spaceGrotesk.variable} ${inter.className} bg-bg text-text`}
       >
         <Providers>
           {children}

@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { z } from "zod";
 import { TOKEN_PACKAGES, TokenPackageId, getPackagePrice, Currency } from "@/lib/payment";
+import { calculateTokensFromAmount, Currency as TokenCurrency } from "@/lib/token-packages";
 
 // ✅ Validation schema
 const TopupSchema = z.object({
@@ -36,19 +37,8 @@ export async function POST(req: Request) {
             const numericAmount = Number(amount);
             if (!isNaN(numericAmount) && numericAmount > 0) {
                 price = numericAmount;
-
-                // Find which tier this amount corresponds to
-                if (numericAmount <= TOKEN_PACKAGES.STARTER.price) {
-                    tokensToCredit = TOKEN_PACKAGES.STARTER.tokens;
-                } else if (numericAmount <= TOKEN_PACKAGES.POPULAR.price) {
-                    tokensToCredit = TOKEN_PACKAGES.POPULAR.tokens;
-                } else if (numericAmount <= TOKEN_PACKAGES.PRO.price) {
-                    tokensToCredit = TOKEN_PACKAGES.PRO.tokens;
-                } else {
-                    // For larger custom payments, estimate proportionally
-                    const baseRate = TOKEN_PACKAGES.PRO.tokens / TOKEN_PACKAGES.PRO.price;
-                    tokensToCredit = Math.round(numericAmount * baseRate);
-                }
+                // Use exact calculation: tokens = amount * TOKEN_RATES[currency]
+                tokensToCredit = calculateTokensFromAmount(numericAmount, currency as TokenCurrency);
             } else {
                 return NextResponse.json({ error: "Invalid custom amount" }, { status: 400 });
             }

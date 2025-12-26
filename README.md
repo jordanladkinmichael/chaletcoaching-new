@@ -1,8 +1,8 @@
-# AIFitWorld - AI-Powered Fitness Course Generator
+# Chaletcoaching - AI-Powered Fitness Course Generator
 
 ## 🚀 Overview
 
-AIFitWorld is an AI-powered fitness application that generates personalized workout plans using OpenAI's GPT-4 and DALL-E 3. Users can create custom fitness programs based on their preferences, goals, and equipment availability.
+Chaletcoaching is an AI-powered fitness application that generates personalized workout plans using OpenAI's GPT-4 and DALL-E 3. Users can create custom fitness programs based on their preferences, goals, and equipment availability.
 
 ## ✨ Features
 

@@ -50,9 +50,9 @@ export default function TermsPage() {
       <Card>
         <h2 className="text-lg font-semibold mb-3">1. Introduction</h2>
         <div className="space-y-3 opacity-90 text-sm">
-          <p><strong>1.1.</strong> These Terms and Conditions (&quot;Terms&quot;) govern your access to and use of the AIFitWorld website, app and related services (the &quot;Service&quot;) operated by BREATHE FRESH LTD (Company No. 15954655; registered address: Dept 6157 43 Owston Road, Carcroft, Doncaster, United Kingdom, DN6 8DA) (&quot;we&quot;, &quot;us&quot;, &quot;our&quot;).</p>
+          <p><strong>1.1.</strong> These Terms and Conditions (&quot;Terms&quot;) govern your access to and use of the Chaletcoaching website, app and related services (the &quot;Service&quot;) operated by CHALET AQUARIUS LTD (Company No. 15587263; registered address: 20 Wenlock Road, London, England, N1 7GU) (&quot;we&quot;, &quot;us&quot;, &quot;our&quot;).</p>
           <p><strong>1.2.</strong> By accessing or using the Service, creating an account, purchasing or redeeming tokens, or generating/ downloading any content, you agree to be bound by these Terms. If you do not agree, you must not use the Service.</p>
-          <p><strong>1.3.</strong> These Terms form a legally binding agreement between you (&quot;you&quot;, &quot;User&quot;, &quot;Customer&quot;) and BREATHE FRESH LTD.</p>
+          <p><strong>1.3.</strong> These Terms form a legally binding agreement between you (&quot;you&quot;, &quot;User&quot;, &quot;Customer&quot;) and CHALET AQUARIUS LTD.</p>
         </div>
       </Card>
 
@@ -75,7 +75,7 @@ export default function TermsPage() {
           <div className="space-y-3 opacity-90 text-sm">
             <p><strong>3.1.</strong> You must be 18+ to create an Account and use paid features. If you use the Service for a company, you confirm you are authorised to bind that entity.</p>
             <p><strong>3.2.</strong> You must provide accurate and up-to-date information and keep your credentials secure. You are responsible for all activity under your Account.</p>
-            <p><strong>3.3.</strong> Notify us immediately of any unauthorised use or security incident at info@aifitworld.co.uk (and consider changing your password).</p>
+            <p><strong>3.3.</strong> Notify us immediately of any unauthorised use or security incident at info@chaletcoaching.co.uk (and consider changing your password).</p>
           </div>
         </Card>
 
@@ -109,8 +109,8 @@ export default function TermsPage() {
         <div className="space-y-3 opacity-90 text-sm">
           <p><strong>6.1.</strong> <strong>Immediate digital supply.</strong> Many features (previews, generation, exports) start immediately after you confirm. By proceeding, you request immediate supply and acknowledge you lose any statutory cancellation right for that specific supply under UK consumer law.</p>
           <p><strong>6.2.</strong> <strong>Unused Tokens.</strong> We may refund unused Tokens at the original purchase price (less any non-refundable payment processor fees) if requested before Tokens are spent.</p>
-          <p><strong>6.3.</strong> <strong>Faulty/Not-as-described.</strong> If content is not delivered, is materially not as described, or a technical issue prevents access, contact info@aifitworld.co.uk with your order details. Where appropriate, we will re-deliver, repair, replace or refund as required by law.</p>
-          <p><strong>6.4.</strong> <strong>How to request.</strong> Email info@aifitworld.co.uk (from your Account email) with your name, Account email and receipt/transaction ID. We will acknowledge and respond within a reasonable time.</p>
+          <p><strong>6.3.</strong> <strong>Faulty/Not-as-described.</strong> If content is not delivered, is materially not as described, or a technical issue prevents access, contact info@chaletcoaching.co.uk with your order details. Where appropriate, we will re-deliver, repair, replace or refund as required by law.</p>
+          <p><strong>6.4.</strong> <strong>How to request.</strong> Email info@chaletcoaching.co.uk (from your Account email) with your name, Account email and receipt/transaction ID. We will acknowledge and respond within a reasonable time.</p>
           <p><strong>6.5.</strong> Nothing in this section affects your mandatory consumer rights.</p>
         </div>
       </Card>
@@ -220,7 +220,7 @@ export default function TermsPage() {
         <Card>
           <h2 className="text-lg font-semibold mb-3">17. Notices</h2>
           <div className="space-y-3 opacity-90 text-sm">
-            <p><strong>17.1.</strong> Contact us at info@aifitworld.co.uk or by post to BREATHE FRESH LTD, Dept 6157 43 Owston Road, Carcroft, Doncaster, United Kingdom, DN6 8DA. Phone: +44 7418604319.</p>
+            <p><strong>17.1.</strong> Contact us at info@chaletcoaching.co.uk or by post to CHALET AQUARIUS LTD, 20 Wenlock Road, London, England, N1 7GU. Phone: +44 7441 392840.</p>
             <p><strong>17.2.</strong> We may provide notices to you by email to your Account address or by posting within the Service.</p>
           </div>
         </Card>
@@ -250,9 +250,9 @@ export default function TermsPage() {
       <Card>
         <h2 className="text-lg font-semibold mb-3">Company details</h2>
         <div className="opacity-90 text-sm space-y-1">
-          <p><strong>BREATHE FRESH LTD</strong> (Company No. 15954655)</p>
-          <p>Dept 6157 43 Owston Road, Carcroft, Doncaster, United Kingdom, DN6 8DA</p>
-          <p>Email: info@aifitworld.co.uk • Phone: +44 7418604319</p>
+          <p><strong>CHALET AQUARIUS LTD</strong> (Company No. 15587263)</p>
+          <p>20 Wenlock Road, London, England, N1 7GU</p>
+          <p>Email: info@chaletcoaching.co.uk • Phone: +44 7441 392840</p>
         </div>
       </Card>
     </main>

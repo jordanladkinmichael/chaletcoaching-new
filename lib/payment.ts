@@ -33,18 +33,18 @@ export interface PaymentVerificationResult {
 export const TOKEN_PACKAGES = {
     STARTER: {
         name: "Starter",
-        price: 10,
-        tokens: 1000,
+        price: 100, // €100 for 10,000 tokens (100 tokens = €1)
+        tokens: 10_000,
     },
     POPULAR: {
         name: "Builder",
-        price: 20,
-        tokens: 2060, // 2000 + 3% bonus
+        price: 200, // €200 for 20,000 tokens
+        tokens: 20_000,
     },
     PRO: {
         name: "Pro",
-        price: 49,
-        tokens: 5390, // 4900 + 10% bonus
+        price: 300, // €300 for 30,000 tokens
+        tokens: 30_000,
     },
     ENTERPRISE: {
         name: "Custom",

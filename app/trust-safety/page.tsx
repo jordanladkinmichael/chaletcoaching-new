@@ -242,7 +242,7 @@ export default function TrustSafetyPage() {
               <div className="space-y-6">
                 <H1>Trust and safety</H1>
                 <Paragraph className="text-lg">
-                  Training guidance is informational and should be used with common sense. If you're unsure, consult a qualified professional.
+                  Training guidance is informational and should be used with common sense. If you&apos;re unsure, consult a qualified professional.
                 </Paragraph>
                 <div className="flex flex-col sm:flex-row gap-4">
                   <Button variant="primary" asChild>

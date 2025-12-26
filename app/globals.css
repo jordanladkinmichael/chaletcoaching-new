@@ -4,14 +4,77 @@
 
 :root {
   color-scheme: dark;
+  
+  /* Surfaces */
+  --bg: #050505;
+  --surface: #121212;
+  --surface-hover: #1E1E1E;
+
+  /* Text */
+  --text: #E5E7EB;
+  --text-muted: #B7C0CC;   /* slightly stronger than #94A3B8 for readability */
+  --text-subtle: #94A3B8;
+
+  /* Borders */
+  --border: rgba(255, 255, 255, 0.08);
+  --border-strong: rgba(255, 255, 255, 0.14);
+
+  /* Brand */
+  --primary: #D9F99D;
+  --primary-hover: #BEF264;
+  --on-primary: #050505;
+
+  /* AI */
+  --ai: #A78BFA;
+  --ai-soft: rgba(167, 139, 250, 0.16);
+
+  /* States */
+  --danger: #EF4444;
+  --success: #10B981;
+  --warning: #F59E0B;
+  --verified: #D97706; /* subtle amber/gold accent */
+
+  /* Focus */
+  --focus: rgba(217, 249, 157, 0.45); /* lime focus ring */
+  
+  /* Glass (for navbar/hero only) */
+  --glass: rgba(255, 255, 255, 0.03);
+  --glass-border: rgba(255, 255, 255, 0.08);
 }
 
 html, body {
   @apply bg-background text-foreground;
+  font-family: var(--font-inter), sans-serif;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-space-grotesk), sans-serif;
 }
 
 input, textarea, button {
   font: inherit;
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* --- Glassmorphism utilities (navbar/hero only) --- */
+@layer utilities {
+  .glass-panel {
+    background: var(--glass);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid var(--glass-border);
+  }
 }
 
 /* --- Legal pages typography --- */
@@ -23,3 +86,38 @@ input, textarea, button {
 .legal li { @apply leading-relaxed; }
 .legal hr { @apply my-6 border-t border-white/10; }
 .legal .small { @apply text-xs opacity-70; }
+
+/* --- Focus states (WCAG 2.2 AA) --- */
+@layer base {
+  *:focus-visible {
+    outline: 2px solid var(--focus);
+    outline-offset: 2px;
+  }
+}
+
+/* --- Marquee animation --- */
+@keyframes marquee {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+@layer utilities {
+  .animate-marquee {
+    animation: marquee 30s linear infinite;
+  }
+  .group:hover .animate-marquee,
+  .group:focus-within .animate-marquee {
+    animation-play-state: paused;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .animate-marquee {
+      animation: none;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+  }
+}
