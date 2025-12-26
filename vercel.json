@@ -1,9 +1,4 @@
 {
-  "functions": {
-    "app/api/inngest/route.ts": {
-      "maxDuration": 300
-    }
-  },
   "env": {
   },
   "buildCommand": "npm run build",
