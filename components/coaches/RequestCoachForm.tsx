@@ -152,7 +152,7 @@ export function RequestCoachForm({ coachId, coachSlug, className }: RequestCoach
     });
   }, [formData.level, formData.trainingType, formData.equipment, formData.daysPerWeek]);
 
-  const hasInsufficientBalance = session?.user && costBreakdown && balance < costBreakdown.total;
+  const hasInsufficientBalance = Boolean(session?.user && costBreakdown && balance < costBreakdown.total);
 
   const validate = (): boolean => {
     const newErrors: Partial<FormData> = {};

@@ -30,10 +30,11 @@ import type { GeneratorOpts } from "@/lib/tokens";
 import { formatNumber } from "@/lib/tokens";
 import SiteHeader from "@/components/site-header";
 import SiteFooter from "@/components/site-footer";
-import { ToastContainer, Toast, ToastType, Container, Card, CardHeader, CardContent, CardFooter, Button, H1, H2, H3, Paragraph, CurrencyToggle, Badge, Accordion, SearchInput } from "@/components/ui";
+import { ToastContainer, Toast, ToastType, Container, CardHeader, CardContent, CardFooter, Button, H1, H2, H3, Paragraph, CurrencyToggle, Badge, Accordion, SearchInput } from "@/components/ui";
 import { useCurrencyStore } from "@/lib/stores/currency-store";
 import { TOKEN_PACKS, TOKEN_RATES, QUICK_AMOUNTS, calculateTokensFromAmount, wasRounded, type UiPackId, type Currency as TokenCurrency } from "@/lib/token-packages";
 import { cardHoverLift } from "@/lib/animations";
+import type { Route } from "next";
 
 
 /* ============================== Types & helpers ============================== */
@@ -875,7 +876,7 @@ function HeroSection() {
                 <Link href="/coaches">Find a Coach</Link>
               </Button>
               <Button variant="ai" size="lg" asChild>
-                <Link href="/generate">Generate Instantly (AI)</Link>
+                <Link href="/generator">Generate Instantly (AI)</Link>
               </Button>
             </div>
 
@@ -3345,13 +3346,13 @@ export default function ChaletcoachingPrototype() {
     
     // Используем обычные роуты вместо hash
     if (pageId === 'generator') {
-      router.push('/generator');
+      router.push('/generator' as Route);
     } else if (pageId === 'pricing') {
-      router.push('/pricing');
+      router.push('/pricing' as Route);
     } else if (pageId === 'home') {
-      router.push('/');
+      router.push('/' as Route);
     } else if (pageId === 'dashboard') {
-      router.push('/dashboard');
+      router.push('/dashboard' as Route);
     } else {
       setActive(pageId);
     }

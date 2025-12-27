@@ -142,7 +142,7 @@ export const generatePDF = inngest.createFunction(
       // Генерируем HTML используя компактный шаблон
       const html = generatePDFTemplate({
         title: course.title || "Fitness Program",
-        createdAt: course.createdAt,
+        createdAt: new Date(course.createdAt),
         weeks: options.weeks || 4,
         sessionsPerWeek: options.sessionsPerWeek || 4,
         workoutTypes: Array.isArray(options.workoutTypes) ? options.workoutTypes : [],
@@ -160,7 +160,7 @@ export const generatePDF = inngest.createFunction(
     });
 
     // Шаг 5: Генерируем PDF через Puppeteer
-    const pdfBuffer = await step.run("generate-pdf", async () => {
+    const pdfBuffer = (await step.run("generate-pdf", async () => {
       const browser = await puppeteer.launch({
         args: [
           ...chromium.args,
@@ -186,7 +186,7 @@ export const generatePDF = inngest.createFunction(
         // Минимальная пауза для рендеринга (изображения встроены, поэтому быстро)
         await new Promise(resolve => setTimeout(resolve, 500));
 
-        const pdfBuffer = await page.pdf({
+        const generatedPdfBuffer = await page.pdf({
           format: 'A4',
           printBackground: true,
           margin: {
@@ -199,21 +199,21 @@ export const generatePDF = inngest.createFunction(
           displayHeaderFooter: false, // Без заголовков/футеров для компактности
         });
 
-        if (pdfBuffer.length < 1000) {
+        if (generatedPdfBuffer.length < 1000) {
           throw new Error('Generated PDF is too small, likely corrupted');
         }
 
-        const pdfSizeKB = Math.round(pdfBuffer.length / 1024);
+        const pdfSizeKB = Math.round(generatedPdfBuffer.length / 1024);
         console.log(`PDF generated successfully: ${pdfSizeKB} KB`);
         
-        return pdfBuffer;
+        return generatedPdfBuffer;
       } catch (error) {
         console.error('PDF generation error:', error);
         throw error;
       } finally {
         await browser.close();
       }
-    });
+    })) as unknown as Buffer;
 
     // Шаг 6: Загружаем PDF в Vercel Blob Storage
     const blobResult = await step.run("upload-pdf-to-blob", async () => {

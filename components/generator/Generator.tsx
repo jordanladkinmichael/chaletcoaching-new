@@ -116,12 +116,20 @@ export function Generator({
     const searchLower = debouncedMuscleSearch.toLowerCase();
     return MUSCLE_GROUPS.map((group) => ({
       ...group,
-      items: group.items.filter(
-        (muscle) =>
+      items: group.items.filter((muscle) => {
+        const aliasesMatch =
+          "aliases" in muscle && Array.isArray((muscle as { aliases?: readonly string[] }).aliases)
+            ? ((muscle as { aliases?: readonly string[] }).aliases ?? []).some((alias) =>
+                alias.toLowerCase().includes(searchLower)
+              )
+            : false;
+
+        return (
           muscle.label.toLowerCase().includes(searchLower) ||
           muscle.id.toLowerCase().includes(searchLower) ||
-          (muscle.aliases && muscle.aliases.some((alias) => alias.toLowerCase().includes(searchLower)))
-      ),
+          aliasesMatch
+        );
+      }),
     })).filter((group) => group.items.length > 0);
   }, [debouncedMuscleSearch]);
 

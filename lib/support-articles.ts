@@ -652,7 +652,7 @@ export function searchArticles(query: string): SupportArticle[] {
     
     // Search in body paragraphs
     return article.body.some((section) =>
-      section.paragraphs.some((para) => para.toLowerCase().includes(lowerQuery))
+      (section.paragraphs ?? []).some((para) => para.toLowerCase().includes(lowerQuery))
     );
   });
 }

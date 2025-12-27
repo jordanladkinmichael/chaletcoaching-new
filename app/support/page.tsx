@@ -1,10 +1,10 @@
 "use client";
 
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, Suspense } from "react";
 import { useSession, signIn } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { motion } from "framer-motion";
+import { motion, type Variants } from "framer-motion";
 import {
   Coins,
   UserRound,
@@ -37,14 +37,16 @@ import {
   getPopularArticles,
   CATEGORY_LABELS,
   type SupportCategory,
+  type SupportArticle,
 } from "@/lib/support-articles";
+import type { Route } from "next";
 import { SupportSearch } from "@/components/support/support-search";
 import { ArticleList } from "@/components/support/article-list";
 import { ArticleViewer } from "@/components/support/article-viewer";
 
 type Region = "EU" | "UK" | "US";
 
-export default function SupportPage() {
+function SupportPageContent() {
   const { data: session } = useSession();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -110,7 +112,8 @@ export default function SupportPage() {
       } else {
         params.delete("q");
       }
-      router.replace(`/support?${params.toString()}`, { scroll: false });
+      const target = `/support?${params.toString()}` as Route;
+      router.replace(target, { scroll: false });
     }
   }, [debouncedSearch, queryParam, searchParams, router]);
 
@@ -122,7 +125,8 @@ export default function SupportPage() {
         // Slug not found - reset parameter
         const params = new URLSearchParams(searchParams.toString());
         params.delete("article");
-        router.replace(`/support?${params.toString()}`, { scroll: false });
+        const target = `/support?${params.toString()}` as Route;
+        router.replace(target, { scroll: false });
       } else {
         // Scroll to viewer on mobile
         if (window.innerWidth < 768) {
@@ -142,31 +146,13 @@ export default function SupportPage() {
 
   // Navigation handler
   const handleNavigate = (page: string) => {
-    if (page === "home") {
-      router.push("/");
-    } else if (page === "dashboard") {
-      router.push("/dashboard");
-    } else if (page === "generator") {
-      router.push("/generator");
-    } else if (page === "coaches") {
-      router.push("/coaches");
-    } else if (page === "pricing") {
-      router.push("/pricing");
-    } else if (page === "contact") {
-      router.push("/contact");
-    } else if (page === "how-it-works") {
-      router.push("/how-it-works");
-    } else if (page === "what-you-receive") {
-      router.push("/what-you-receive");
-    } else if (page === "trust-safety") {
-      router.push("/trust-safety");
-    } else if (page === "payments-tokens") {
-      router.push("/payments-tokens");
-    } else if (page === "support") {
-      router.push("/support");
-    } else {
-      router.push(`/${page}`);
-    }
+    const target =
+      page === "home"
+        ? "/"
+        : page.startsWith("/")
+          ? page
+          : `/${page}`;
+    router.push(target as Route);
   };
 
   // Format number helper
@@ -183,31 +169,33 @@ export default function SupportPage() {
   };
 
   // Filter articles
-  const activeCategory = (categoryParam as SupportCategory) || "all";
+  const activeCategory: SupportCategory | "all" = categoryParam ? (categoryParam as SupportCategory) : "all";
   const filteredArticles = useMemo(() => {
-    let articles = categoryParam
-      ? getArticlesByCategory(activeCategory as SupportCategory)
-      : SUPPORT_ARTICLES;
+    let articles =
+      activeCategory === "all"
+        ? SUPPORT_ARTICLES
+        : getArticlesByCategory(activeCategory);
 
     if (debouncedSearch) {
       articles = searchArticles(debouncedSearch).filter((article) =>
-        categoryParam
-          ? article.category === activeCategory
-          : true
+        activeCategory === "all"
+          ? true
+          : article.category === activeCategory
       );
     }
 
     return articles;
-  }, [debouncedSearch, categoryParam, activeCategory]);
+  }, [debouncedSearch, activeCategory]);
 
   // Selected article
-  const selectedArticle = articleSlug ? getArticleBySlug(articleSlug) : null;
+  const selectedArticle: SupportArticle | null = articleSlug ? getArticleBySlug(articleSlug) ?? null : null;
 
   // Handle article selection
   const handleSelectArticle = (slug: string) => {
     const params = new URLSearchParams(searchParams.toString());
     params.set("article", slug);
-    router.push(`/support?${params.toString()}`, { scroll: false });
+    const target = `/support?${params.toString()}` as Route;
+    router.push(target, { scroll: false });
     
     // Scroll to viewer on mobile
     if (window.innerWidth < 768) {
@@ -229,7 +217,8 @@ export default function SupportPage() {
       params.set("category", category);
     }
     params.delete("article"); // Clear selected article when changing category
-    router.push(`/support?${params.toString()}`, { scroll: false });
+    const target = `/support?${params.toString()}` as Route;
+    router.push(target, { scroll: false });
     
     // Scroll to articles section
     setTimeout(() => {
@@ -241,14 +230,14 @@ export default function SupportPage() {
   };
 
   // Animation variants
-  const sectionVariants = prefersReducedMotion
+  const sectionVariants: Variants = prefersReducedMotion
     ? fadeIn
     : {
         hidden: { opacity: 0, y: 8 },
         visible: {
           opacity: 1,
           y: 0,
-          transition: { duration: 0.18, ease: [0.2, 0.8, 0.2, 1] },
+          transition: { duration: 0.18, ease: [0.2, 0.8, 0.2, 1] as const },
         },
       };
 
@@ -647,3 +636,10 @@ export default function SupportPage() {
   );
 }
 
+export default function SupportPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-background" />}>
+      <SupportPageContent />
+    </Suspense>
+  );
+}

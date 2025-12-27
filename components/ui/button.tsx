@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { motion } from "framer-motion";
+import { motion, type HTMLMotionProps } from "framer-motion";
 import { LucideIcon } from "lucide-react";
 import { Slot } from "@radix-ui/react-slot";
 import { cn } from "@/lib/utils";
@@ -9,7 +9,7 @@ import { buttonHover, buttonHoverLift } from "@/lib/animations";
 
 export type ButtonVariant = "primary" | "outline" | "ghost" | "ai" | "danger";
 
-export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+export interface ButtonProps extends HTMLMotionProps<"button"> {
   variant?: ButtonVariant;
   isLoading?: boolean;
   icon?: LucideIcon;
@@ -45,8 +45,6 @@ export function Button({
     danger: "bg-transparent text-danger border border-danger hover:bg-danger/10",
   };
 
-  const Comp = asChild ? Slot : motion.button;
-
   // When asChild is true, Slot expects a single child element
   // If we have icon or loading, we need to wrap everything in a span
   // Otherwise, just render children directly
@@ -76,31 +74,47 @@ export function Button({
     </>
   );
 
+  const baseClassName = cn(
+    "inline-flex items-center justify-center gap-2 rounded-xl font-semibold",
+    "transition-colors duration-fast",
+    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus focus-visible:ring-offset-2 focus-visible:ring-offset-bg",
+    "disabled:pointer-events-none disabled:opacity-50",
+    sizeClasses[size],
+    variantClasses[variant],
+    fullWidth && "w-full",
+    className
+  );
+
+  const { style, ...restProps } = props;
+
+  if (asChild) {
+    return (
+      <Slot
+        className={baseClassName}
+        aria-disabled={disabled || isLoading}
+        {...(restProps as React.ButtonHTMLAttributes<HTMLButtonElement>)}
+      >
+        {content}
+      </Slot>
+    );
+  }
+
+  const shouldReduceMotion =
+    typeof window !== "undefined" &&
+    window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
   return (
-    <Comp
-      className={cn(
-        "inline-flex items-center justify-center gap-2 rounded-xl font-semibold",
-        "transition-colors duration-fast",
-        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus focus-visible:ring-offset-2 focus-visible:ring-offset-bg",
-        "disabled:pointer-events-none disabled:opacity-50",
-        sizeClasses[size],
-        variantClasses[variant],
-        fullWidth && "w-full",
-        className
-      )}
+    <motion.button
+      className={baseClassName}
       disabled={disabled || isLoading}
-      {...(!asChild && {
-        variants: typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches 
-          ? { rest: {}, hover: {}, tap: {} } // Disable lift for reduced motion
-          : buttonHoverLift,
-        initial: "rest",
-        whileHover: "hover",
-        whileTap: "tap",
-      })}
-      {...props}
+      variants={shouldReduceMotion ? { rest: {}, hover: {}, tap: {} } : buttonHoverLift}
+      initial="rest"
+      whileHover="hover"
+      whileTap="tap"
+      style={style}
+      {...restProps}
     >
       {content}
-    </Comp>
+    </motion.button>
   );
 }
-

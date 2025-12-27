@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Container, H1, Paragraph, Button, SearchInput, Select } from "@/components/ui";
 import { CoachCard, type CoachCardData } from "@/components/coaches/CoachCard";
@@ -12,6 +12,7 @@ import Link from "next/link";
 import { cn } from "@/lib/utils";
 import SiteHeader from "@/components/site-header";
 import SiteFooter from "@/components/site-footer";
+import type { Route } from "next";
 
 const SORT_OPTIONS = [
   { value: "recommended", label: "Recommended" },
@@ -29,7 +30,7 @@ const QUICK_FILTERS = [
   { label: "Gym", type: "trainingType", value: "Gym" },
 ];
 
-export default function CoachesPage() {
+function CoachesPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [coaches, setCoaches] = React.useState<CoachCardData[]>([]);
@@ -94,7 +95,8 @@ export default function CoachesPage() {
     }
 
     const queryString = params.toString();
-    router.replace(`/coaches${queryString ? `?${queryString}` : ""}`, { scroll: false });
+    const target = `/coaches${queryString ? `?${queryString}` : ""}` as Route;
+    router.replace(target, { scroll: false });
   }, [filters, debouncedSearch, sort, router]);
 
   // Fetch coaches
@@ -174,21 +176,13 @@ export default function CoachesPage() {
   };
 
   const handleNavigate = (page: string) => {
-    if (page === "home") {
-      router.push("/");
-    } else if (page === "coaches") {
-      router.push("/coaches");
-    } else if (page === "pricing") {
-      router.push("/pricing");
-    } else if (page === "contact") {
-      router.push("/contact");
-    } else if (page === "dashboard") {
-      router.push("/dashboard");
-    } else if (page === "generator") {
-      router.push("/generator");
-    } else {
-      router.push(`/${page}`);
-    }
+    const target =
+      page === "home"
+        ? "/"
+        : page.startsWith("/")
+          ? page
+          : `/${page}`;
+    router.push(target as Route);
   };
 
   return (
@@ -347,6 +341,14 @@ export default function CoachesPage() {
       </div>
       <SiteFooter onNavigate={handleNavigate} />
     </>
+  );
+}
+
+export default function CoachesPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-background" />}>
+      <CoachesPageContent />
+    </Suspense>
   );
 }
 

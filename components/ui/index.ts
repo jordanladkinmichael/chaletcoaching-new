@@ -18,7 +18,7 @@ export { CurrencyDropdown } from "./currency-dropdown";
 export { CurrencyToggle } from "./currency-toggle";
 export { Logo } from "./logo";
 export { Skeleton, CourseSkeleton } from "./skeleton";
-export { Toast, ToastContainer, type ToastType, type Toast } from "./toast";
+export { Toast, ToastContainer, type ToastType } from "./toast";
 export { AccentButton, GhostButton } from "./legacy-buttons";
 export { Pill, Spinner, Quote } from "./misc";
 export { LazyImage } from "./lazy-image";

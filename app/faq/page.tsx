@@ -4,7 +4,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import { useSession, signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { motion } from "framer-motion";
+import { motion, type Variants } from "framer-motion";
 import SiteHeader from "@/components/site-header";
 import SiteFooter from "@/components/site-footer";
 import {
@@ -30,6 +30,7 @@ import {
   CATEGORY_LABELS,
   type FaqCategory,
 } from "@/lib/faq-data";
+import type { Route } from "next";
 
 type Region = "EU" | "UK" | "US";
 
@@ -92,33 +93,13 @@ export default function FAQPage() {
 
   // Navigation handler
   const handleNavigate = (page: string) => {
-    if (page === "home") {
-      router.push("/");
-    } else if (page === "dashboard") {
-      router.push("/dashboard");
-    } else if (page === "generator") {
-      router.push("/generator");
-    } else if (page === "coaches") {
-      router.push("/coaches");
-    } else if (page === "pricing") {
-      router.push("/pricing");
-    } else if (page === "contact") {
-      router.push("/contact");
-    } else if (page === "how-it-works") {
-      router.push("/how-it-works");
-    } else if (page === "what-you-receive") {
-      router.push("/what-you-receive");
-    } else if (page === "trust-safety") {
-      router.push("/trust-safety");
-    } else if (page === "payments-tokens") {
-      router.push("/payments-tokens");
-    } else if (page === "support") {
-      router.push("/support");
-    } else if (page === "faq") {
-      router.push("/faq");
-    } else {
-      router.push(`/${page}`);
-    }
+    const target =
+      page === "home"
+        ? "/"
+        : page.startsWith("/")
+          ? page
+          : `/${page}`;
+    router.push(target as Route);
   };
 
   // Format number helper
@@ -209,14 +190,14 @@ export default function FAQPage() {
   const rightColumn = accordionItems.slice(Math.ceil(accordionItems.length / 2));
 
   // Animation variants
-  const sectionVariants = prefersReducedMotion
+  const sectionVariants: Variants = prefersReducedMotion
     ? fadeIn
     : {
         hidden: { opacity: 0, y: 8 },
         visible: {
           opacity: 1,
           y: 0,
-          transition: { duration: 0.18, ease: [0.2, 0.8, 0.2, 1] },
+          transition: { duration: 0.18, ease: [0.2, 0.8, 0.2, 1] as const },
         },
       };
 

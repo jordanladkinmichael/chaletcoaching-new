@@ -9,6 +9,7 @@ import { formatNumber as formatNumberLocal } from "@/lib/tokens";
 import { Skeleton } from "@/components/ui";
 import { CurrencyDropdown } from "@/components/ui/currency-dropdown";
 import Image from "next/image";
+import type { Route } from "next";
 
 type Region = "EU" | "UK" | "US";
 
@@ -108,19 +109,19 @@ export default function SiteHeader({
               <button
                 key={n.id}
                 onClick={() => {
-                  if (n.id === "coaches") {
-                    router.push("/coaches");
-                  } else if (n.id === "pricing") {
-                    router.push("/pricing");
-                  } else if (n.id === "generator") {
-                    router.push("/generator");
-                  } else if (n.id === "dashboard") {
-                    router.push("/dashboard");
-                  } else if (n.id === "how-it-works") {
-                    router.push("/how-it-works");
-                  } else if (n.id === "home") {
-                    router.push("/");
-                  } else {
+              if (n.id === "coaches") {
+                router.push("/coaches");
+              } else if (n.id === "pricing") {
+                router.push("/pricing");
+              } else if (n.id === "generator") {
+                router.push("/generator");
+              } else if (n.id === "dashboard") {
+                router.push("/dashboard" as Route);
+              } else if (n.id === "how-it-works") {
+                router.push("/how-it-works");
+              } else if (n.id === "home") {
+                router.push("/");
+              } else {
                     onNavigate(n.id);
                   }
                 }}
@@ -286,7 +287,7 @@ export default function SiteHeader({
                       } else if (n.id === "generator") {
                         router.push("/generator");
                       } else if (n.id === "dashboard") {
-                        router.push("/dashboard");
+                        router.push("/dashboard" as Route);
                       } else if (n.id === "how-it-works") {
                         router.push("/how-it-works");
                       } else if (n.id === "home") {

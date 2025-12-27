@@ -24,7 +24,7 @@ interface CoachHeroProps {
 export function CoachHero({ coach, onRequestClick, className }: CoachHeroProps) {
   // Show "Top coach" badge if featured=true OR (rating>=4.8 AND coursesCount>=50)
   const showTopCoachBadge = coach.featured === true || 
-    (coach.rating >= 4.8 && coach.coursesCount >= 50);
+    ((coach.rating ?? 0) >= 4.8 && (coach.coursesCount ?? 0) >= 50);
 
   // Show "New coach" if no rating
   const isNewCoach = !coach.rating;

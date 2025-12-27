@@ -13,6 +13,7 @@ import {
   calcFullCourseTokens,
   type GeneratorOpts,
 } from "@/lib/tokens";
+import type { Route } from "next";
 
 type Region = "EU" | "UK" | "US";
 
@@ -142,31 +143,13 @@ export default function GeneratorPage() {
 
   // Navigation handler
   const handleNavigate = (page: string) => {
-    if (page === "home") {
-      router.push("/");
-    } else if (page === "dashboard") {
-      router.push("/dashboard");
-    } else if (page === "generator") {
-      router.push("/generator");
-    } else if (page === "coaches") {
-      router.push("/coaches");
-    } else if (page === "pricing") {
-      router.push("/pricing");
-    } else if (page === "contact") {
-      router.push("/contact");
-    } else if (page === "how-it-works") {
-      router.push("/how-it-works");
-    } else if (page === "what-you-receive") {
-      router.push("/what-you-receive");
-    } else if (page === "trust-safety") {
-      router.push("/trust-safety");
-    } else if (page === "payments-tokens") {
-      router.push("/payments-tokens");
-    } else if (page === "support") {
-      router.push("/support");
-    } else {
-      router.push(`/${page}`);
-    }
+    const target =
+      page === "home"
+        ? "/"
+        : page.startsWith("/")
+          ? page
+          : `/${page}`;
+    router.push(target as Route);
   };
 
   return (

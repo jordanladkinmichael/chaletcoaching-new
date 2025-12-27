@@ -43,8 +43,9 @@ export function CoachCard({ coach, className }: CoachCardProps) {
   }, []);
 
   // Show "Top coach" badge if featured=true OR (rating>=4.8 AND coursesCount>=50)
-  const showTopCoachBadge = coach.featured === true || 
-    (coach.rating >= 4.8 && coach.coursesCount >= 50);
+  const showTopCoachBadge =
+    coach.featured === true ||
+    ((coach.rating ?? 0) >= 4.8 && (coach.coursesCount ?? 0) >= 50);
 
   // Show 2-3 tags max
   const tags = coach.specialties.slice(0, 3);

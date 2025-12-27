@@ -142,7 +142,8 @@ export async function validateImageUrl(imageUrl: string, timeout = 5000): Promis
 
     clearTimeout(timeoutId);
 
-    return response.ok && response.headers.get('content-type')?.startsWith('image/');
+    const contentType = response.headers.get('content-type') ?? '';
+    return response.ok && contentType.startsWith('image/');
   } catch (error) {
     return false;
   }

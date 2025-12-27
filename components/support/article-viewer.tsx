@@ -1,7 +1,6 @@
 "use client";
 
 import React from "react";
-import Link from "next/link";
 import { Card } from "@/components/ui";
 import { H2, H3, Paragraph } from "@/components/ui";
 import { Info } from "lucide-react";
@@ -35,13 +34,13 @@ function parseMarkdownLinks(text: string): React.ReactNode {
     
     // Add the link
     parts.push(
-      <Link
+      <a
         key={match.index}
         href={match[2]}
         className="underline opacity-80 hover:opacity-100 transition-opacity"
       >
         {match[1]}
-      </Link>
+      </a>
     );
     
     lastIndex = match.index + match[0].length;

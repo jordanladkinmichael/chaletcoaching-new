@@ -19,6 +19,7 @@ import { RelatedCoachesRow } from "@/components/coaches/RelatedCoachesRow";
 import { SkeletonCoachProfile } from "@/components/coaches/SkeletonCoachProfile";
 import { Button } from "@/components/ui/button";
 import type { CoachCardData } from "@/components/coaches/CoachCard";
+import type { Route } from "next";
 
 interface Coach extends CoachCardData {
   level: string;
@@ -45,21 +46,13 @@ export default function CoachProfilePage() {
   };
 
   const handleNavigate = (page: string) => {
-    if (page === "home") {
-      router.push("/");
-    } else if (page === "coaches") {
-      router.push("/coaches");
-    } else if (page === "pricing") {
-      router.push("/pricing");
-    } else if (page === "contact") {
-      router.push("/contact");
-    } else if (page === "dashboard") {
-      router.push("/dashboard");
-    } else if (page === "generator") {
-      router.push("/generator");
-    } else {
-      router.push(`/${page}`);
-    }
+    const target =
+      page === "home"
+        ? "/"
+        : page.startsWith("/")
+          ? page
+          : `/${page}`;
+    router.push(target as Route);
   };
 
   // Fetch coach data

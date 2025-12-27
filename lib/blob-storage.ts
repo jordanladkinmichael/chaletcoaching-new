@@ -34,11 +34,13 @@ export async function uploadPDF(
       token: process.env.BLOB_READ_WRITE_TOKEN,
     });
 
+    const uploadedAt = new Date();
+
     return {
       url: blob.url,
       pathname: blob.pathname,
-      size: blob.size,
-      uploadedAt: blob.uploadedAt,
+      size: buffer.length,
+      uploadedAt,
     };
   } catch (error) {
     console.error("Failed to upload PDF to Blob Storage:", error);

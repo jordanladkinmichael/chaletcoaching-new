@@ -1,12 +1,13 @@
 "use client";
 
 import React from "react";
-import { motion } from "framer-motion";
+import { motion, type HTMLMotionProps } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { cardHoverLift } from "@/lib/animations";
 
 interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
   interactive?: boolean;
+  children?: React.ReactNode;
 }
 
 export function Card({
@@ -30,9 +31,10 @@ export function Card({
   }, []);
   
   if (interactive && !prefersReducedMotion) {
+    const motionProps = rest as HTMLMotionProps<"div">;
     return (
       <motion.div
-        {...rest}
+        {...motionProps}
         className={cn(
           "rounded-2xl border border-border bg-surface p-5 md:p-6 cursor-pointer",
           className
