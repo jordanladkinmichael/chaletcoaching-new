@@ -7,6 +7,7 @@ import { Container } from "@/components/ui";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useCurrencyStore } from "@/lib/stores/currency-store";
+import type { Route } from "next";
 
 type Region = "EU" | "UK" | "US";
 
@@ -70,7 +71,7 @@ export function AuthShell({ children, title }: AuthShellProps) {
         : page.startsWith("/")
           ? page
           : `/${page}`;
-    router.push(target as any);
+    router.push(target as Route);
   }, [router]);
 
   // Format number helper

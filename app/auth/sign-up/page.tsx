@@ -6,7 +6,7 @@ import { signIn } from "next-auth/react";
 import Link from "next/link";
 import { AuthShell } from "@/components/auth/AuthShell";
 import { Card, CardContent, H1, Paragraph, Button, Input } from "@/components/ui";
-import { AlertCircle, CheckCircle } from "lucide-react";
+import { AlertCircle } from "lucide-react";
 import { THEME } from "@/lib/theme";
 
 export default function SignUpPage() {
