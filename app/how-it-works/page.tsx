@@ -187,7 +187,7 @@ export default function HowItWorksPage() {
       content: (
         <div className="space-y-2">
           <p>
-            If you don't have enough tokens, you'll see a message indicating insufficient balance. 
+            If you don&apos;t have enough tokens, you&apos;ll see a message indicating insufficient balance. 
             You can top up your tokens at any time from the Pricing page.
           </p>
           <p>

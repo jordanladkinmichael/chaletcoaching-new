@@ -179,7 +179,7 @@ export default function ContactForm() {
           <div className="flex-1">
             <div className="font-medium text-green-400 text-sm mb-1">Success</div>
             <div className="text-sm" style={{ color: "rgba(34, 197, 94, 0.9)" }}>
-              We received your message. We'll reply by email.
+              We received your message. We&apos;ll reply by email.
             </div>
           </div>
         </div>

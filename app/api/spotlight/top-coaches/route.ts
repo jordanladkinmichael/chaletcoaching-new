@@ -9,7 +9,23 @@ import coachesSeedData from "@/coaches_seed_15.json";
 export async function GET() {
   try {
     // Get featured coaches or top-rated coaches from seed data
-    const allCoaches = (coachesSeedData as any[]).map((coach: any) => ({
+    interface CoachSeedData {
+      id: string;
+      slug: string;
+      name: string;
+      avatar: string;
+      bio: string;
+      rating?: number;
+      coursesCount?: number;
+      featured?: boolean;
+      goals: string[];
+      level: string;
+      trainingType: string;
+      languages: string[];
+      focusAreas: string[];
+      specialties: string[];
+    }
+    const allCoaches = (coachesSeedData as CoachSeedData[]).map((coach: CoachSeedData) => ({
       id: coach.id,
       slug: coach.slug,
       name: coach.name,

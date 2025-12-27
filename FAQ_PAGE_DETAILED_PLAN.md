@@ -365,3 +365,5 @@ const accordionItems = filteredFaqs.map((faq) => ({
 
 **Готов к реализации после вашего одобрения!**
 
+
+

@@ -60,7 +60,7 @@ export default function SiteFooter({ onNavigate }: SiteFooterProps) {
           <div>
             <div className="font-semibold mb-2">Links</div>
             <ul className="text-sm space-y-1 opacity-85">
-              <li><a href="/coaches" onClick={(e) => { e.preventDefault(); handleNavigate('coaches'); }} className="hover:opacity-100">Coaches</a></li>
+              <li><Link href="/coaches" onClick={(e) => { e.preventDefault(); handleNavigate('coaches'); }} className="hover:opacity-100">Coaches</Link></li>
               <li><a href="/generator" onClick={(e) => { e.preventDefault(); handleNavigate('generator'); }} className="hover:opacity-100">Courses</a></li>
               <li><a href="/how-it-works" onClick={(e) => { e.preventDefault(); handleNavigate('how-it-works'); }} className="hover:opacity-100">How it Works</a></li>
               <li><a href="/payments-tokens" onClick={(e) => { e.preventDefault(); handleNavigate('payments-tokens'); }} className="hover:opacity-100">Payments & tokens</a></li>

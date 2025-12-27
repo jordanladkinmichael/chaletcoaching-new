@@ -3,6 +3,7 @@
 import React from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
+import Link from "next/link";
 import { Container } from "@/components/ui";
 import SiteHeader from "@/components/site-header";
 import SiteFooter from "@/components/site-footer";
@@ -129,10 +130,10 @@ export default function CoachProfilePage() {
             <div className="max-w-2xl mx-auto text-center">
               <h1 className="text-3xl font-bold mb-4">Coach not found</h1>
               <p className="text-text-muted mb-8">
-                The coach you're looking for doesn't exist or has been removed.
+                The coach you&apos;re looking for doesn&apos;t exist or has been removed.
               </p>
               <Button variant="primary" size="lg" asChild>
-                <a href="/coaches">Back to coaches</a>
+                <Link href="/coaches">Back to coaches</Link>
               </Button>
             </div>
           </Container>

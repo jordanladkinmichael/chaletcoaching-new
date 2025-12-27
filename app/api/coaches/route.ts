@@ -26,8 +26,26 @@ interface Coach {
 // Import seed data
 import coachesSeedData from "@/coaches_seed_15.json";
 
+// Type for seed data structure
+interface CoachSeedData {
+  id: string;
+  slug: string;
+  name: string;
+  avatar: string;
+  bio: string;
+  rating?: number;
+  coursesCount?: number;
+  featured?: boolean;
+  goals: string[];
+  level: string;
+  trainingType: string;
+  languages: string[];
+  focusAreas: string[];
+  specialties: string[];
+}
+
 // Transform seed data to match Coach interface
-const allCoaches: Coach[] = (coachesSeedData as any[]).map((coach: any) => ({
+const allCoaches: Coach[] = (coachesSeedData as CoachSeedData[]).map((coach: CoachSeedData) => ({
   id: coach.id,
   slug: coach.slug,
   name: coach.name,

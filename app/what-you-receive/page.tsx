@@ -311,7 +311,7 @@ export default function WhatYouReceivePage() {
         {/* What's inside the plan (3 cards) */}
         <section className="py-12 md:py-16">
           <Container>
-            <H2 className="mb-8 text-center">What's inside the plan</H2>
+            <H2 className="mb-8 text-center">What&apos;s inside the plan</H2>
             <div className="grid md:grid-cols-3 gap-6">
               {[
                 {

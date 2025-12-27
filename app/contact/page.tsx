@@ -186,7 +186,7 @@ export default function ContactPage() {
               <div className="text-center space-y-4 max-w-3xl mx-auto">
                 <H1>Contact us</H1>
                 <Paragraph className="text-lg">
-                  Need help with tokens, coach requests, or Instant AI? We're here to help.
+                  Need help with tokens, coach requests, or Instant AI? We&apos;re here to help.
                 </Paragraph>
               </div>
 

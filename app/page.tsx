@@ -2702,8 +2702,19 @@ function HowItWorksSection() {
 }
 
 // Coach Spotlight section (swiper on mobile, grid on desktop)
+interface SpotlightCoach {
+  id: string;
+  slug: string;
+  name: string;
+  avatar: string;
+  specialties: string[];
+  rating?: number;
+  coursesCount?: number;
+  bio: string;
+}
+
 function CoachSpotlightSection() {
-  const [coaches, setCoaches] = React.useState<any[]>([]);
+  const [coaches, setCoaches] = React.useState<SpotlightCoach[]>([]);
   const [loading, setLoading] = React.useState(true);
 
   React.useEffect(() => {
@@ -2875,7 +2886,7 @@ function QualityPromiseSection() {
 
 // Mini FAQ section (2 columns, animated accordion)
 function MiniFAQSection() {
-  const [faqs, setFaqs] = React.useState<any[]>([]);
+  const [faqs, setFaqs] = React.useState<import("@/lib/faq-data").FAQItem[]>([]);
 
   React.useEffect(() => {
     // Import MINI_FAQS from lib/faq-data
