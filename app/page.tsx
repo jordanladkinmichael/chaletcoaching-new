@@ -36,6 +36,7 @@ import type { Route } from "next";
 
 /* ============================== Types & helpers ============================== */
 type Region = "EU" | "UK" | "US";
+type NavId = "home" | "dashboard" | "generator" | "pricing" | "consultations" | "blog" | "faq" | "contact";
 
 function Card({
   className = "",
