@@ -40,7 +40,6 @@ export type PricingProps = {
 };
 
 export function Pricing({
-  region,
   requireAuth: _requireAuth,
   openAuth: _openAuth,
   onCustomTopUp: _onCustomTopUp,

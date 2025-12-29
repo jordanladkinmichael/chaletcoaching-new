@@ -6,8 +6,9 @@ type SearchParams = Record<string, string | string[] | undefined>;
 export default async function DashboardPage({
   searchParams,
 }: {
-  searchParams?: SearchParams;
+  searchParams?: Promise<SearchParams>;
 }) {
-  await requireSession("/dashboard", searchParams);
+  const resolvedSearchParams = searchParams ? await searchParams : undefined;
+  await requireSession("/dashboard", resolvedSearchParams);
   return <DashboardClient />;
 }

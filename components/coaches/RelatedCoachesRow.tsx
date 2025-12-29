@@ -3,7 +3,7 @@
 import React from "react";
 import { CoachCard, type CoachCardData } from "./CoachCard";
 import { SkeletonCoachCard } from "./SkeletonCoachCard";
-import { Container, H3 } from "@/components/ui";
+import { H3 } from "@/components/ui";
 import { cn } from "@/lib/utils";
 
 interface RelatedCoachesRowProps {

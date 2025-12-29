@@ -6,8 +6,9 @@ type SearchParams = Record<string, string | string[] | undefined>;
 export default async function AccountPage({
   searchParams,
 }: {
-  searchParams?: SearchParams;
+  searchParams?: Promise<SearchParams>;
 }) {
-  await requireSession("/account", searchParams);
+  const resolvedSearchParams = searchParams ? await searchParams : undefined;
+  await requireSession("/account", resolvedSearchParams);
   return <AccountClient />;
 }

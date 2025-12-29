@@ -81,7 +81,7 @@ export default function TrustSafetyPage() {
   }, [isAuthed]);
 
   // Auth handler
-  const openAuth = (mode?: "signup" | "signin") => {
+  const openAuth = () => {
     void signIn("credentials", { callbackUrl: "/trust-safety" });
   };
 

@@ -5,7 +5,7 @@ import { motion, type HTMLMotionProps } from "framer-motion";
 import { LucideIcon } from "lucide-react";
 import { Slot } from "@radix-ui/react-slot";
 import { cn } from "@/lib/utils";
-import { buttonHover, buttonHoverLift } from "@/lib/animations";
+import { buttonHoverLift } from "@/lib/animations";
 
 export type ButtonVariant = "primary" | "outline" | "ghost" | "ai" | "danger";
 

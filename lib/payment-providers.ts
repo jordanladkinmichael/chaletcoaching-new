@@ -8,6 +8,7 @@ export class PayPalPaymentProvider implements PaymentProvider {
   name = 'paypal';
 
   async createPaymentSession(_data: PaymentSessionData): Promise<PaymentSessionResult> {
+    void _data;
     try {
       // Здесь будет интеграция с PayPal API
       // const paypal = new PayPal(process.env.PAYPAL_CLIENT_ID!);
@@ -28,6 +29,7 @@ export class PayPalPaymentProvider implements PaymentProvider {
   }
 
   async verifyPayment(_sessionId: string): Promise<PaymentVerificationResult> {
+    void _sessionId;
     try {
       // Здесь будет проверка платежа через PayPal API
       // const order = await paypal.orders.get(sessionId);
@@ -53,6 +55,7 @@ export class RazorpayPaymentProvider implements PaymentProvider {
   name = 'razorpay';
 
   async createPaymentSession(_data: PaymentSessionData): Promise<PaymentSessionResult> {
+    void _data;
     try {
       // Здесь будет интеграция с Razorpay API
       return {
@@ -70,6 +73,7 @@ export class RazorpayPaymentProvider implements PaymentProvider {
   }
 
   async verifyPayment(_sessionId: string): Promise<PaymentVerificationResult> {
+    void _sessionId;
     try {
       // Здесь будет проверка платежа через Razorpay API
       return {

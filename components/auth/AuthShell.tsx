@@ -60,7 +60,8 @@ export function AuthShell({ children, title }: AuthShellProps) {
       ? currentPath
       : "/dashboard";
     const query = returnTo ? `?returnTo=${encodeURIComponent(returnTo)}` : "";
-    router.push(`/auth/${mode || "signin"}${query}`);
+    const target = `/auth/${mode || "signin"}${query}`;
+    router.push(target as Route);
   }, [router]);
 
   // Navigation handler

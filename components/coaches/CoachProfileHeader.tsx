@@ -14,23 +14,12 @@ interface CoachProfileHeaderProps {
 
 export function CoachProfileHeader({ coachSlug, coachName, className }: CoachProfileHeaderProps) {
   const [isSaved, setIsSaved] = React.useState(false);
-  const [prefersReducedMotion, setPrefersReducedMotion] = React.useState(false);
 
   React.useEffect(() => {
     // Check if coach is saved
     const savedCoaches = JSON.parse(localStorage.getItem("savedCoaches") || "[]");
     setIsSaved(savedCoaches.includes(coachSlug));
 
-    // Check prefers-reduced-motion
-    const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
-    setPrefersReducedMotion(mediaQuery.matches);
-    
-    const handleChange = (e: MediaQueryListEvent) => {
-      setPrefersReducedMotion(e.matches);
-    };
-    
-    mediaQuery.addEventListener('change', handleChange);
-    return () => mediaQuery.removeEventListener('change', handleChange);
   }, [coachSlug]);
 
   const handleSave = () => {
@@ -58,7 +47,7 @@ export function CoachProfileHeader({ coachSlug, coachName, className }: CoachPro
           url,
         });
         return;
-      } catch (err) {
+      } catch {
         // User cancelled or error, fall back to copy
       }
     }
@@ -67,8 +56,8 @@ export function CoachProfileHeader({ coachSlug, coachName, className }: CoachPro
     try {
       await navigator.clipboard.writeText(url);
       // You could show a toast here
-    } catch (err) {
-      console.error("Failed to copy link:", err);
+    } catch {
+      console.error("Failed to copy link");
     }
   };
 

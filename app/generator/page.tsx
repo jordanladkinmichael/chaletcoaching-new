@@ -5,7 +5,6 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import SiteHeader from "@/components/site-header";
 import SiteFooter from "@/components/site-footer";
-import { Container } from "@/components/ui";
 import { useCurrencyStore } from "@/lib/stores/currency-store";
 import { Generator } from "@/components/generator/Generator";
 import {
@@ -178,4 +177,3 @@ export default function GeneratorPage() {
     </div>
   );
 }
-

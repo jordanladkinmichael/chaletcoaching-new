@@ -3,8 +3,6 @@
 import React from "react";
 import { Card } from "@/components/ui";
 import { H2, H3, Paragraph } from "@/components/ui";
-import { Info } from "lucide-react";
-import { THEME } from "@/lib/theme";
 import type { SupportArticle } from "@/lib/support-articles";
 
 interface ArticleViewerProps {

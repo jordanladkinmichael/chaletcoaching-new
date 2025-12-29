@@ -13,10 +13,6 @@ import type { Route } from "next";
 
 type Region = "EU" | "UK" | "US";
 
-function cn(...cls: Array<string | false | undefined>) {
-  return cls.filter(Boolean).join(" ");
-}
-
 export default function SiteHeader({ 
   onOpenAuth,
   onNavigate,
@@ -54,7 +50,7 @@ export default function SiteHeader({
       ? currentPath
       : "/dashboard";
     const query = returnTo ? `?returnTo=${encodeURIComponent(returnTo)}` : "";
-    router.push(`/auth/${mode}${query}`);
+    router.push(`/auth/${mode}${query}` as Route);
   }, [onOpenAuth, router]);
 
   // Навигация (используем те же ID, что и в главном приложении)

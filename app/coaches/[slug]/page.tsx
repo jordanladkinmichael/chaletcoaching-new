@@ -2,7 +2,6 @@
 
 import React from "react";
 import { useParams, useRouter } from "next/navigation";
-import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { Container } from "@/components/ui";
 import SiteHeader from "@/components/site-header";
@@ -32,7 +31,6 @@ interface Coach extends CoachCardData {
 export default function CoachProfilePage() {
   const params = useParams();
   const router = useRouter();
-  const { data: session } = useSession();
   const slug = params.slug as string;
 
   const [coach, setCoach] = React.useState<Coach | null>(null);

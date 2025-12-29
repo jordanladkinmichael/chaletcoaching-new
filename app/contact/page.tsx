@@ -77,7 +77,7 @@ export default function ContactPage() {
   }, [isAuthed]);
 
   // Auth handler
-  const openAuth = (mode?: "signup" | "signin") => {
+  const openAuth = () => {
     void signIn("credentials", { callbackUrl: "/contact" });
   };
 
@@ -123,7 +123,7 @@ export default function ContactPage() {
       setCopiedAddress(true);
       addToast("success", "Copied", undefined, 2000);
       setTimeout(() => setCopiedAddress(false), 2000);
-    } catch (err) {
+    } catch {
       addToast("error", "Failed to copy", "Please try again", 3000);
     }
   };

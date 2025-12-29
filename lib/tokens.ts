@@ -161,8 +161,6 @@ export function calcFullCourseTokens(opts: GeneratorOpts) {
     nutritionTips = false,
     pdf = "text", // PDF always included, default to "text"
     images = 0,
-    videoPlan = false, // Video guide removed, kept for backward compatibility
-    gender: _gender = "male",
     workoutTypes = [],
     targetMuscles = [],
   } = opts;

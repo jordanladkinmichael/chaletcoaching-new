@@ -7,7 +7,6 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Select } from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { calcCoachRequestTokens, formatNumber } from "@/lib/tokens";
 import { THEME } from "@/lib/theme";
@@ -76,7 +75,6 @@ export function RequestCoachForm({ coachId, coachSlug, className }: RequestCoach
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [isSuccess, setIsSuccess] = React.useState(false);
   const [balance, setBalance] = React.useState<number>(0);
-  const [balanceLoading, setBalanceLoading] = React.useState(false);
 
   // Load draft from localStorage on mount
   React.useEffect(() => {

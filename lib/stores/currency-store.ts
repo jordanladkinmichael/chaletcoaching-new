@@ -24,11 +24,6 @@ const EXCHANGE_RATES = {
   USD: 1.35,
 } as const;
 
-const CURRENCY_SYMBOLS: Record<Currency, string> = {
-  GBP: "£",
-  EUR: "€",
-  USD: "$",
-};
 
 export const useCurrencyStore = create<CurrencyStore>()(
   persist(
@@ -39,7 +34,6 @@ export const useCurrencyStore = create<CurrencyStore>()(
       formatPrice: (priceInEUR: number) => {
         const { currency, convertPrice } = get();
         const convertedPrice = convertPrice(priceInEUR);
-        const symbol = CURRENCY_SYMBOLS[currency];
         return new Intl.NumberFormat("en-GB", {
           style: "currency",
           currency,

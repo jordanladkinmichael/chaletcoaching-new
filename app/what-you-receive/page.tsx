@@ -83,7 +83,7 @@ export default function WhatYouReceivePage() {
   }, [isAuthed]);
 
   // Auth handler
-  const openAuth = (mode?: "signup" | "signin") => {
+  const openAuth = () => {
     void signIn("credentials", { callbackUrl: "/what-you-receive" });
   };
 

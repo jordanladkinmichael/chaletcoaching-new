@@ -37,7 +37,6 @@ function CoachesPageContent() {
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
   const [filtersDrawerOpen, setFiltersDrawerOpen] = React.useState(false);
-  const [prefersReducedMotion, setPrefersReducedMotion] = React.useState(false);
   const [region, setRegion] = React.useState<"EU" | "UK" | "US">("EU");
 
   // Parse URL params to initial state
@@ -54,19 +53,6 @@ function CoachesPageContent() {
   const [search, setSearch] = React.useState(searchParams.get("search") || "");
   const [sort, setSort] = React.useState(searchParams.get("sort") || "recommended");
   const [debouncedSearch, setDebouncedSearch] = React.useState(search);
-
-  // Check prefers-reduced-motion
-  React.useEffect(() => {
-    const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
-    setPrefersReducedMotion(mediaQuery.matches);
-    
-    const handleChange = (e: MediaQueryListEvent) => {
-      setPrefersReducedMotion(e.matches);
-    };
-    
-    mediaQuery.addEventListener('change', handleChange);
-    return () => mediaQuery.removeEventListener('change', handleChange);
-  }, []);
 
   // Debounce search
   React.useEffect(() => {

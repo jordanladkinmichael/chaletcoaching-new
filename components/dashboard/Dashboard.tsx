@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import Image from "next/image";
 import {
   Dumbbell,
   Eye,
@@ -14,7 +15,7 @@ import {
   X,
 } from "lucide-react";
 import { THEME } from "@/lib/theme";
-import { TOKENS_PER_UNIT, formatNumber, type GeneratorOpts } from "@/lib/tokens";
+import { TOKENS_PER_UNIT, formatNumber, generateCourseTitle, type GeneratorOpts } from "@/lib/tokens";
 
 const cn = (...classes: Array<string | false | undefined>) =>
   classes.filter(Boolean).join(" ");
@@ -485,11 +486,14 @@ export function Dashboard({ requireAuth, openAuth, balance, currentPreview, onDi
                 <div className="text-sm font-medium mb-2">Generated Images:</div>
                 <div className="grid grid-cols-2 gap-2">
                   {currentPreview.images.map((imageUrl: string, index: number) => (
-                    <img 
+                    <Image 
                       key={index}
                       src={imageUrl} 
                       alt={`Fitness image ${index + 1}`}
+                      width={320}
+                      height={96}
                       className="w-full h-24 object-cover rounded-lg"
+                      unoptimized
                     />
                   ))}
                 </div>

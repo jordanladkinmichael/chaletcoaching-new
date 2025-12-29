@@ -24,7 +24,7 @@ import {
   type AccordionItem,
 } from "@/components/ui";
 import { useCurrencyStore } from "@/lib/stores/currency-store";
-import { cardHoverLift, fadeIn, slideUp } from "@/lib/animations";
+import { cardHoverLift, fadeIn } from "@/lib/animations";
 import { THEME } from "@/lib/theme";
 import type { Route } from "next";
 
@@ -78,7 +78,7 @@ export default function HowItWorksPage() {
   }, [isAuthed]);
 
   // Auth handler
-  const openAuth = (mode?: "signup" | "signin") => {
+  const openAuth = () => {
     void signIn("credentials", { callbackUrl: "/how-it-works" });
   };
 

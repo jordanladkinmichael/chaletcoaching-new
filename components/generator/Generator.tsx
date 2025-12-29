@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo, useCallback } from "react";
+import React, { useState } from "react";
 import Link from "next/link";
 import {
   Settings2,
@@ -64,7 +64,6 @@ export function Generator({
   const [nutrition, setNutrition] = useState<boolean>(false);
   const [pdf, setPdf] = useState<"text" | "illustrated">("text");
   const [images, setImages] = useState<number>(12);
-  const [videoPlan, setVideoPlan] = useState<boolean>(false);
   const [gender, setGender] = useState<"male" | "female">("male");
   const [workoutTypes, setWorkoutTypes] = useState<string[]>([]);
   const [targetMuscles, setTargetMuscles] = useState<string[]>([]);

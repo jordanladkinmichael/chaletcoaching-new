@@ -30,7 +30,7 @@ export default function TokenPurchase() {
         } else {
           setError('Failed to load token packages');
         }
-      } catch (_err) {
+      } catch {
         setError('Failed to load token packages');
       }
     };

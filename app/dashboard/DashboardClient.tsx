@@ -54,7 +54,8 @@ export default function DashboardClient() {
   const openAuth = useCallback((mode?: "signup" | "signin") => {
     const currentPath = "/dashboard";
     const returnTo = encodeURIComponent(currentPath);
-    router.push(`/auth/${mode || "signin"}?returnTo=${returnTo}`);
+    const target = `/auth/${mode || "signin"}?returnTo=${returnTo}`;
+    router.push(target as Route);
   }, [router]);
 
   // Navigation handler

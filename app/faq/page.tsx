@@ -87,7 +87,7 @@ export default function FAQPage() {
   }, [isAuthed]);
 
   // Auth handler
-  const openAuth = (mode?: "signup" | "signin") => {
+  const openAuth = () => {
     void signIn("credentials", { callbackUrl: "/faq" });
   };
 

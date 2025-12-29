@@ -140,7 +140,7 @@ function SupportPageContent() {
   }, [articleSlug, searchParams, router]);
 
   // Auth handler
-  const openAuth = (mode?: "signup" | "signin") => {
+  const openAuth = () => {
     void signIn("credentials", { callbackUrl: "/support" });
   };
 

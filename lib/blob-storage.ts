@@ -84,7 +84,7 @@ export async function pdfExists(url: string): Promise<boolean> {
       token: process.env.BLOB_READ_WRITE_TOKEN,
     });
     return true;
-  } catch (error) {
+  } catch {
     return false;
   }
 }

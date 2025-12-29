@@ -11,9 +11,6 @@ import {
   Zap,
   Wallet,
   Info,
-  CreditCard,
-  Lock,
-  Shield,
 } from "lucide-react";
 import SiteHeader from "@/components/site-header";
 import SiteFooter from "@/components/site-footer";
@@ -83,7 +80,7 @@ export default function PaymentsTokensPage() {
   }, [isAuthed]);
 
   // Auth handler
-  const openAuth = (mode?: "signup" | "signin") => {
+  const openAuth = () => {
     void signIn("credentials", { callbackUrl: "/payments-tokens" });
   };
 

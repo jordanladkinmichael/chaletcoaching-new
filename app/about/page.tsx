@@ -33,7 +33,7 @@ import {
   type ToastType,
 } from "@/components/ui";
 import { useCurrencyStore } from "@/lib/stores/currency-store";
-import { cardHoverLift, fadeIn, slideUp, buttonHoverLift } from "@/lib/animations";
+import { cardHoverLift, fadeIn } from "@/lib/animations";
 import { THEME } from "@/lib/theme";
 import type { Route } from "next";
 
@@ -103,7 +103,7 @@ export default function AboutPage() {
   }, [isAuthed]);
 
   // Auth handler
-  const openAuth = (mode?: "signup" | "signin") => {
+  const openAuth = () => {
     void signIn("credentials", { callbackUrl: "/about" });
   };
 
@@ -148,7 +148,7 @@ export default function AboutPage() {
       setCopiedField(fieldId);
       addToast("success", "Copied", undefined, 2000);
       setTimeout(() => setCopiedField(null), 2000);
-    } catch (err) {
+    } catch {
       addToast("error", "Failed to copy", "Please try again", 3000);
     }
   };
@@ -586,4 +586,3 @@ export default function AboutPage() {
     </div>
   );
 }
-
