@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 
 import { THEME } from "@/lib/theme";
+import { cn } from "@/lib/utils";
 import { calcFullCourseTokens } from "@/lib/tokens";
 
 import type { GeneratorOpts } from "@/lib/tokens";
