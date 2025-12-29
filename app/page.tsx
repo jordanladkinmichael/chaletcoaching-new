@@ -35,6 +35,8 @@ import type { Route } from "next";
 
 
 /* ============================== Types & helpers ============================== */
+type Region = "EU" | "UK" | "US";
+
 function Card({
   className = "",
   children,
