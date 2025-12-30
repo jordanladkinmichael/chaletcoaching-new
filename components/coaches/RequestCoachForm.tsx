@@ -75,6 +75,7 @@ export function RequestCoachForm({ coachId, coachSlug, className }: RequestCoach
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [isSuccess, setIsSuccess] = React.useState(false);
   const [balance, setBalance] = React.useState<number>(0);
+  const [balanceLoading, setBalanceLoading] = React.useState(false);
 
   // Load draft from localStorage on mount
   React.useEffect(() => {
@@ -389,6 +390,12 @@ export function RequestCoachForm({ coachId, coachSlug, className }: RequestCoach
                     <span className="font-mono font-semibold text-lg">◎ {formatNumber(costBreakdown.total)}</span>
                   </div>
                 </div>
+
+                {session?.user && (
+                  <div className="mt-2 text-xs opacity-70">
+                    {balanceLoading ? "Loading balance..." : `Balance: ?-? ${formatNumber(balance)}`}
+                  </div>
+                )}
 
                 {/* Insufficient balance error */}
                 {hasInsufficientBalance && (
