@@ -38,6 +38,19 @@ import type { Route } from "next";
 type Region = "EU" | "UK" | "US";
 type NavId = "home" | "dashboard" | "generator" | "pricing" | "consultations" | "blog" | "faq" | "contact";
 
+type NavItem = {
+  id: NavId;
+  label: string;
+  protected?: boolean;
+};
+
+const NAV: NavItem[] = [
+  { id: "dashboard", label: "Dashboard", protected: true },
+  { id: "generator", label: "Generator", protected: false },
+  { id: "pricing", label: "Pricing" },
+  { id: "consultations", label: "Consultations" },
+] as const;
+
 function Card({
   className = "",
   children,
