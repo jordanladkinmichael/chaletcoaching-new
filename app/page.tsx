@@ -21,6 +21,7 @@ import {
 import { THEME } from "@/lib/theme";
 import { cn } from "@/lib/utils";
 import { calcFullCourseTokens } from "@/lib/tokens";
+import { calculateTokensFromAmount } from "@/lib/token-packages";
 
 import type { GeneratorOpts } from "@/lib/tokens";
 import { formatNumber } from "@/lib/tokens";
@@ -1342,69 +1343,65 @@ export default function ChaletcoachingPrototype() {
   const { currency: currentCurrency, convertPrice } = useCurrencyStore();
   const onTopUp = React.useCallback(
     async (pack: UiPackId | "custom", customAmount?: number) => {
-      console.log("onTopUp called with:", { pack, customAmount, isAuthed });
-
       if (!isAuthed) {
-        console.log("User not authenticated, opening auth");
         openAuth("signup");
         return;
       }
 
       setTopUpLoading(true);
       try {
-        console.log("Processing token topup");
-
+        const currency: "EUR" | "GBP" | "USD" = currentCurrency;
         let packageId: string;
         let amount: number | undefined;
-        const currency: "EUR" | "GBP" | "USD" = currentCurrency;
+        let tokens: number;
+        let description = "";
 
         if (pack === "custom") {
-          // Custom Load: send ENTERPRISE with explicit amount
+          if (!customAmount || Number(customAmount) <= 0) {
+            addToast("error", "Top-up Failed", "Please enter a valid amount.");
+          setTopUpLoading(false);
+          return;
+          }
           packageId = "ENTERPRISE";
-          amount = customAmount;
+          amount = Number(customAmount);
+          tokens = calculateTokensFromAmount(amount, currency);
+          description = "Custom top-up";
         } else {
-          // Tier pack: get pack info and calculate amount
-          const packInfo = TOKEN_PACKS.find(p => p.uiId === pack);
+          const packInfo = TOKEN_PACKS.find((p) => p.uiId === pack);
           if (!packInfo) {
             throw new Error("Invalid pack");
           }
           packageId = packInfo.apiId;
-          // Calculate amount from tokens using current currency
+          tokens = packInfo.tokens;
           const priceInEUR = packInfo.tokens / TOKEN_RATES.EUR;
-          // Convert to current currency
           amount = convertPrice(priceInEUR);
+          description = packInfo.title;
         }
 
-        const res = await fetch("/api/tokens/topup", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
+        if (typeof window !== "undefined") {
+          const checkoutData = {
             packageId,
+            amount,
             currency,
-            amount: amount?.toString(),
-          }),
-        });
-
-        const data = await res.json().catch(() => ({}));
-        console.log("Topup API response:", { status: res.status, data });
-
-        if (!res.ok) {
-          throw new Error(data?.error ?? "Failed to process token topup");
+            tokens,
+            description,
+            email: session?.user?.email ?? undefined,
+          };
+          localStorage.setItem("checkoutData", JSON.stringify(checkoutData));
+          router.push("/checkout");
         }
-
-        addToast("success", "Tokens Added!", `Successfully added ${data.tokensAdded.toLocaleString()} tokens! Your new balance is ${data.newBalance.toLocaleString()} tokens.`);
-
-        // Перезагружаем баланс
-        void loadBalance();
-
       } catch (error) {
         console.error("Top-up failed:", error);
-        addToast("error", "Top-up Failed", error instanceof Error ? error.message : "Failed to process token topup");
+        addToast(
+          "error",
+          "Top-up Failed",
+          error instanceof Error ? error.message : "Failed to start checkout"
+        );
       } finally {
         setTopUpLoading(false);
       }
     },
-    [isAuthed, openAuth, currentCurrency, convertPrice, addToast, loadBalance]
+    [isAuthed, openAuth, currentCurrency, convertPrice, addToast, session?.user?.email, router]
   );
 
   const handlePublishCourse = async (opts: GeneratorOpts) => {

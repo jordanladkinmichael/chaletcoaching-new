@@ -8,6 +8,7 @@ import SiteFooter from "@/components/site-footer";
 import { useCurrencyStore } from "@/lib/stores/currency-store";
 import { calcFullCourseTokens, type GeneratorOpts } from "@/lib/tokens";
 import { Dashboard } from "@/components/dashboard/Dashboard";
+import { Container } from "@/components/ui";
 import type { Route } from "next";
 
 type Region = "EU" | "UK" | "US";
@@ -126,16 +127,18 @@ export default function DashboardClient() {
         setRegion={setRegion}
       />
       <main className="flex-1 py-8 md:py-12">
-        <Dashboard
-          requireAuth={!isAuthed}
-          openAuth={openAuth}
-          balance={balance}
-          currentPreview={currentPreview}
-          onDismissPreview={() => setCurrentPreview(null)}
-          onPublishCourse={handlePublishCourse}
-          loadBalance={loadBalance}
-          balanceLoading={balanceLoading}
-        />
+        <Container>
+          <Dashboard
+            requireAuth={!isAuthed}
+            openAuth={openAuth}
+            balance={balance}
+            currentPreview={currentPreview}
+            onDismissPreview={() => setCurrentPreview(null)}
+            onPublishCourse={handlePublishCourse}
+            loadBalance={loadBalance}
+            balanceLoading={balanceLoading}
+          />
+        </Container>
       </main>
       <SiteFooter onNavigate={handleNavigate} />
     </div>

@@ -7,7 +7,7 @@ import SiteHeader from "@/components/site-header";
 import SiteFooter from "@/components/site-footer";
 import { Container, H1, Paragraph } from "@/components/ui";
 import { useCurrencyStore } from "@/lib/stores/currency-store";
-import { TOKEN_PACKS, TOKEN_RATES, type UiPackId } from "@/lib/token-packages";
+import { TOKEN_PACKS, TOKEN_RATES, calculateTokensFromAmount, type UiPackId } from "@/lib/token-packages";
 import { Pricing } from "@/components/pricing/Pricing";
 import type { Route } from "next";
 
@@ -89,52 +89,50 @@ export default function PricingPage() {
 
     setTopUpLoading(true);
     try {
+      const currencyForApi: "EUR" | "GBP" | "USD" = currency;
       let packageId: string;
       let amount: number | undefined;
-      const currencyForApi: "EUR" | "GBP" | "USD" = currency;
+      let tokens: number;
+      let description = "";
 
       if (pack === "custom") {
+        if (!customAmount || Number(customAmount) <= 0) {
+          alert("Please enter a valid amount.");
+          setTopUpLoading(false);
+          return;
+        }
         packageId = "ENTERPRISE";
-        amount = customAmount;
+        amount = Number(customAmount);
+        tokens = calculateTokensFromAmount(amount, currencyForApi);
+        description = "Custom top-up";
       } else {
-        const packInfo = TOKEN_PACKS.find(p => p.uiId === pack);
+        const packInfo = TOKEN_PACKS.find((p) => p.uiId === pack);
         if (!packInfo) {
           throw new Error("Invalid pack");
         }
         packageId = packInfo.apiId;
+        tokens = packInfo.tokens;
         const priceInEUR = packInfo.tokens / TOKEN_RATES.EUR;
         const { convertPrice } = useCurrencyStore.getState();
         amount = convertPrice(priceInEUR);
+        description = packInfo.title;
       }
 
-      const res = await fetch("/api/tokens/topup", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
+      if (typeof window !== "undefined") {
+        const checkoutData = {
           packageId,
+          amount,
           currency: currencyForApi,
-          amount: amount?.toString(),
-        }),
-      });
-
-      const data = await res.json().catch(() => ({}));
-
-      if (!res.ok) {
-        throw new Error(data?.error ?? "Failed to process token topup");
+          tokens,
+          description,
+          email: session?.user?.email ?? undefined,
+        };
+        localStorage.setItem("checkoutData", JSON.stringify(checkoutData));
+        router.push("/checkout");
       }
-
-      // Reload balance
-      const balanceRes = await fetch("/api/tokens/balance");
-      if (balanceRes.ok) {
-        const balanceData: { balance?: number } = await balanceRes.json();
-        setBalance(balanceData.balance ?? 0);
-      }
-
-      // Show success message
-      alert(`Successfully added ${data.tokensAdded?.toLocaleString() ?? 0} tokens!`);
     } catch (error) {
       console.error("Top-up failed:", error);
-      alert(error instanceof Error ? error.message : "Failed to process token topup");
+      alert(error instanceof Error ? error.message : "Failed to start checkout");
     } finally {
       setTopUpLoading(false);
     }
