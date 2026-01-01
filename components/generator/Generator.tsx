@@ -46,6 +46,12 @@ export type GeneratorProps = {
   onPublishCourse: (opts: GeneratorOpts) => Promise<void> | void;
   balance: number;
   loading: "preview" | "publish" | null;
+  // Optional status props (used by GeneratorPageContent)
+  errorMsg?: string | null;
+  errorType?: "insufficient_tokens" | "api_error" | null;
+  successMsg?: string | null;
+  onClearError?: () => void;
+  onClearSuccess?: () => void;
 };
 
 export function Generator({
@@ -56,6 +62,11 @@ export function Generator({
   onPublishCourse,
   balance,
   loading,
+  errorMsg,
+  errorType,
+  successMsg,
+  onClearError,
+  onClearSuccess,
 }: GeneratorProps) {
   const [weeks, setWeeks] = useState<number>(4);
   const [sessions, setSessions] = useState<number>(4);
@@ -227,6 +238,54 @@ export function Generator({
         {/* Main Form and Cost Panel */}
         <div className="space-y-6">
           <Card>
+            {(errorMsg || successMsg) && (
+              <div className="mb-4 space-y-3">
+                {errorMsg && (
+                  <div
+                    className="rounded-lg border px-3 py-2 text-sm flex items-start gap-2"
+                    style={{ borderColor: THEME.danger, background: "#2a1618" }}
+                  >
+                    <ShieldAlert size={16} className="mt-0.5 text-danger" />
+                    <div className="flex-1">
+                      <div className="font-semibold">
+                        Error{errorType ? ` (${errorType.replace("_", " ")})` : ""}
+                      </div>
+                      <div className="opacity-80">{errorMsg}</div>
+                    </div>
+                    {onClearError && (
+                      <button
+                        type="button"
+                        className="text-xs underline opacity-80 hover:opacity-100"
+                        onClick={onClearError}
+                      >
+                        Dismiss
+                      </button>
+                    )}
+                  </div>
+                )}
+                {successMsg && (
+                  <div
+                    className="rounded-lg border px-3 py-2 text-sm flex items-start gap-2"
+                    style={{ borderColor: THEME.success, background: "#13271d" }}
+                  >
+                    <Sparkles size={16} className="mt-0.5" />
+                    <div className="flex-1">
+                      <div className="font-semibold">Success</div>
+                      <div className="opacity-80">{successMsg}</div>
+                    </div>
+                    {onClearSuccess && (
+                      <button
+                        type="button"
+                        className="text-xs underline opacity-80 hover:opacity-100"
+                        onClick={onClearSuccess}
+                      >
+                        Dismiss
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
             <h3 className="text-xl font-semibold flex items-center gap-2">
               <Settings2 size={18} /> Generator
             </h3>

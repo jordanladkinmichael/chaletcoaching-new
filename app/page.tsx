@@ -73,26 +73,6 @@ function Card({
   );
 }
 
-// Компонент спиннера для загрузки
-function AccentButton({
-                          children,
-                          className = "",
-                          ...props
-                      }: React.ButtonHTMLAttributes<HTMLButtonElement>) {
-    return (
-        <button
-            {...props}
-            className={cn(
-                "inline-flex items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-semibold shadow-[0_0_0_1px_rgba(0,0,0,0.6)]",
-                className
-            )}
-            style={{ background: THEME.accent, color: "#0E0E10" }}
-        >
-            {children}
-        </button>
-    );
-}
-
 
 function GhostButton({
   children,
