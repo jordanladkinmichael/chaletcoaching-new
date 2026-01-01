@@ -99,11 +99,12 @@ export default function SiteHeader({
           className="flex items-center gap-3 hover:opacity-80 transition-opacity"
         >
           <Image 
-            src="/images/logo.svg" 
-            alt="Chaletcoaching Logo" 
-            width={24}
-            height={24}
-            className="h-6 w-6"
+            src="/logo.webp" 
+            alt="Chalet Coaching" 
+            width={28}
+            height={28}
+            className="h-7 w-7"
+            priority
           />
           <div className="font-extrabold tracking-tight">
             Chalet<span style={{ color: THEME.accent }}>coaching</span>

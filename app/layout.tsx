@@ -19,6 +19,28 @@ const spaceGrotesk = Space_Grotesk({
 export const metadata: Metadata = {
   title: "Chaletcoaching",
   description: "AI-powered fitness course generator",
+  metadataBase: new URL("https://chaletcoaching.co.uk"),
+  openGraph: {
+    title: "Chaletcoaching",
+    description: "AI-powered fitness course generator",
+    images: [
+      {
+        url: "/logo.webp",
+        alt: "Chalet Coaching",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Chaletcoaching",
+    description: "AI-powered fitness course generator",
+    images: ["/logo.webp"],
+  },
+  icons: {
+    icon: "/favicon.ico",
+    shortcut: "/favicon.ico",
+    apple: "/apple-touch-icon.png",
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

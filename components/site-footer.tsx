@@ -26,11 +26,12 @@ export default function SiteFooter({ onNavigate }: SiteFooterProps) {
           <div className="space-y-3">
             <div className="flex items-center justify-center md:justify-start gap-3">
               <Image
-                src="/images/logo.svg"
-                alt="Chaletcoaching Logo"
-                width={24}
-                height={24}
-                className="h-6 w-6"
+                src="/logo.webp"
+                alt="Chalet Coaching"
+                width={28}
+                height={28}
+                className="h-7 w-7"
+                priority
               />
               <div className="font-extrabold tracking-tight">
                 Chalet<span style={{ color: THEME.accent }}>coaching</span>
