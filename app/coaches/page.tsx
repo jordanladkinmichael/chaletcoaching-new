@@ -158,7 +158,12 @@ function CoachesPageContent() {
 
   // Navigation handlers for header
   const handleOpenAuth = (mode: "signin" | "signup") => {
-    router.push(`/?auth=${mode}`);
+    const currentPath = typeof window !== "undefined" ? window.location.pathname : "";
+    const returnTo = currentPath !== "/auth/sign-in" && currentPath !== "/auth/sign-up" && currentPath !== "/auth/reset-password"
+      ? currentPath
+      : "/dashboard";
+    const query = returnTo ? `?returnTo=${encodeURIComponent(returnTo)}` : "";
+    router.push(`/auth/${mode}${query}` as Route);
   };
 
   const handleNavigate = (page: string) => {

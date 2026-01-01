@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import Image from "next/image";
-import { useSession, signIn } from "next-auth/react";
+import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
@@ -10,7 +10,6 @@ import {
   Sparkles,
   ChevronRight,
   Lock,
-  X,
   Calendar,
   Target,
   Coins,
@@ -1173,7 +1172,7 @@ function MiniFAQSection() {
       <p className="text-sm text-text-muted">
         {faq.answer}
         {faq.id === "refund-policy" && (
-          <> {' '}
+          <>{" "}
             <Link href="/legal/refunds" className="text-primary hover:underline">
               Read our Refund Policy
             </Link>
@@ -1271,165 +1270,18 @@ function Home({
 
 /* ============================== Page (App Shell) ============================== */
 /* ---- Auth Modal ---- */
-function AuthModal({
-  open,
-  mode,
-  onModeChange,
-  onClose,
-  onRegister,
-  onSignIn,
-}: {
-  open: boolean;
-  mode: "signup" | "signin";
-  onModeChange: (m: "signup" | "signin") => void;
-  onClose: () => void;
-  onRegister: (email: string, password: string) => Promise<void>;
-  onSignIn: (email: string, password: string) => Promise<void>;
-}) {
-  const [email, setEmail] = React.useState("");
-  const [password, setPassword] = React.useState("");
-  const [loading, setLoading] = React.useState(false);
-  const [error, setError] = React.useState<string | null>(null);
-  const [termsAccepted, setTermsAccepted] = React.useState(false);
-
-  // Reset terms acceptance when switching modes
-  React.useEffect(() => {
-    if (mode === "signin") {
-      setTermsAccepted(false);
-    }
-  }, [mode]);
-
-  if (!open) return null;
-
-  async function submit() {
-    setError(null);
-    
-    // Check terms acceptance for signup mode
-    if (mode === "signup" && !termsAccepted) {
-      setError("Please confirm that you have read and agree to the Terms and Conditions.");
-      return;
-    }
-    
-    setLoading(true);
-    try {
-      if (mode === "signup") {
-        await onRegister(email.trim(), password);
-      } else {
-        await onSignIn(email.trim(), password);
-      }
-      onClose();
-    } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : "Something went wrong");
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  return (
-    <div className="fixed inset-0 z-40 grid place-items-center p-4" style={{ background: "rgba(0,0,0,0.5)" }}>
-      <div className="w-full max-w-md rounded-2xl border p-6 relative" style={{ background: THEME.card, borderColor: THEME.cardBorder }}>
-        <button className="absolute right-3 top-3 opacity-70" onClick={onClose} aria-label="Close">
-          <X size={18} />
-        </button>
-        <div className="text-2xl font-extrabold">
-          {mode === "signup" ? "Create your account" : "Welcome back"}
-        </div>
-        <p className="mt-1 text-sm opacity-80">
-          Use your email to {mode === "signup" ? "create an account" : "sign in"}.
-        </p>
-
-        <div className="mt-4 space-y-3">
-          <input
-            placeholder="Email"
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="w-full rounded-lg border px-3 py-2 bg-transparent"
-            style={{ borderColor: THEME.cardBorder }}
-          />
-          <input
-            placeholder="Password"
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="w-full rounded-lg border px-3 py-2 bg-transparent"
-            style={{ borderColor: THEME.cardBorder }}
-          />
-
-          {error && <div className="text-xs text-red-400">{error}</div>}
-
-          {mode === "signup" && (
-            <label className="flex items-center gap-2 cursor-pointer text-xs">
-              <input
-                type="checkbox"
-                checked={termsAccepted}
-                onChange={(e) => setTermsAccepted(e.target.checked)}
-                className="rounded"
-              />
-              <span className="opacity-85">
-                I have read and agree to the{' '}
-                <a 
-                  href="/legal/terms" 
-                  target="_blank" 
-                  rel="noopener noreferrer" 
-                  className="underline hover:opacity-100 transition-opacity"
-                  style={{ color: THEME.accent }}
-                >
-                  Terms and Conditions
-                </a>
-              </span>
-            </label>
-          )}
-
-          <AccentButton 
-            className="w-full" 
-            onClick={submit} 
-            disabled={loading || (mode === "signup" && !termsAccepted)}
-          >
-            {loading ? "Please wait…" : mode === "signup" ? "Create account" : "Sign in"}
-          </AccentButton>
-
-          <button
-            className="text-xs underline opacity-80"
-            onClick={() => onModeChange(mode === "signup" ? "signin" : "signup")}
-          >
-            {mode === "signup" ? "Have an account? Sign in" : "New here? Create account"}
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 export default function ChaletcoachingPrototype() {
   const { data: session } = useSession();
-  type AuthMode = "signup" | "signin";
+  const router = useRouter();
 
-  const [authOpen, setAuthOpen] = useState(false);
-  const [authMode, setAuthMode] = useState<AuthMode>("signup");
-
-  const openAuth = React.useCallback((mode: AuthMode = "signup") => {
-    setAuthMode(mode);
-    setAuthOpen(true);
-  }, []);
-
-  async function handleRegister(email: string, password: string) {
-    const r = await fetch("/api/auth/register", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password }),
-    });
-    const j = await r.json().catch(() => ({}));
-    if (!r.ok) throw new Error(j?.error ?? "Registration failed");
-
-    const res = await signIn("credentials", { email, password, redirect: false });
-    if (res?.error) throw new Error(res.error);
-  }
-
-  async function handleSignIn(email: string, password: string) {
-    const res = await signIn("credentials", { email, password, redirect: false });
-    if (res?.error) throw new Error(res.error);
-  }
+  const openAuth = React.useCallback((mode: "signin" | "signup" = "signup") => {
+    const currentPath = typeof window !== "undefined" ? window.location.pathname : "";
+    const returnTo = currentPath !== "/auth/sign-in" && currentPath !== "/auth/sign-up" && currentPath !== "/auth/reset-password"
+      ? currentPath
+      : "/dashboard";
+    const query = returnTo ? `?returnTo=${encodeURIComponent(returnTo)}` : "";
+    router.push(`/auth/${mode}${query}` as Route);
+  }, [router]);
 
   const isAuthed = !!(session?.user as { id?: string })?.id;
   const [region, setRegion] = useState<Region>("EU");
@@ -1646,8 +1498,6 @@ export default function ChaletcoachingPrototype() {
     return !isAuthed && !!navItem?.protected;
   };
 
-  const router = useRouter();
-  
   // Redirect handler for old hash routes (backward compatibility)
   React.useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -1772,15 +1622,6 @@ export default function ChaletcoachingPrototype() {
 
       <SiteFooter />
 
-      {/* --- Auth modal mount --- */}
-      <AuthModal
-        open={authOpen}
-        mode={authMode}
-        onModeChange={setAuthMode}
-        onClose={() => setAuthOpen(false)}
-        onRegister={handleRegister}
-        onSignIn={handleSignIn}
-      />
       {/* --- Toast notifications --- */}
       <ToastContainer toasts={toasts} onClose={removeToast} />
     </div>
