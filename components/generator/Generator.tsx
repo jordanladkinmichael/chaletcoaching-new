@@ -196,17 +196,23 @@ export function Generator({
     [weeks, sessions, injurySafe, specEq, nutrition, pdf, images, gender, workoutTypes, targetMuscles]
   );
 
-  const handlePreview = async () => {
-    try {
-      const opts = buildOpts();
-      console.log("Sending preview options:", opts);
-      await onGeneratePreview(opts);
-    } catch (error) {
-      console.error("Preview generation failed:", error);
-    }
-  };
+  const [errorsMap, setErrorsMap] = React.useState<{
+    gender?: string;
+    workoutTypes?: string;
+    targetMuscles?: string;
+  }>({});
 
   const handlePublish = async () => {
+    const nextErrors: typeof errorsMap = {};
+    if (!gender) nextErrors.gender = "Select gender";
+    if (workoutTypes.length === 0) nextErrors.workoutTypes = "Select at least one workout type";
+    if (targetMuscles.length === 0) nextErrors.targetMuscles = "Select at least one target muscle";
+
+    setErrorsMap(nextErrors);
+    if (Object.keys(nextErrors).length > 0) {
+      return;
+    }
+
     try {
       const opts = buildOpts();
       console.log("Sending publish options:", opts);
@@ -356,7 +362,14 @@ export function Generator({
 
                         {/* Выбор пола */}
                         <div>
-                          <label className="text-sm font-medium opacity-80">Gender</label>
+                        <label
+                          className={cn(
+                            "text-sm font-medium",
+                            errorsMap.gender ? "text-red-400" : "opacity-80"
+                          )}
+                        >
+                          Gender
+                        </label>
                           <div className="flex items-center gap-4 mt-2">
                             {(["male", "female"] as const).map((g) => (
                               <label key={g} className="flex items-center gap-2 cursor-pointer">
@@ -372,12 +385,22 @@ export function Generator({
                               </label>
                             ))}
                           </div>
+                        {errorsMap.gender && (
+                          <div className="text-xs text-red-400 mt-1">{errorsMap.gender}</div>
+                        )}
                         </div>
 
                         {/* Выбор типов тренировок */}
                         <div>
                           <div className="flex items-center justify-between mb-2">
-                            <label className="text-sm font-medium opacity-80">Workout Types</label>
+                            <label
+                              className={cn(
+                                "text-sm font-medium",
+                                errorsMap.workoutTypes ? "text-red-400" : "opacity-80"
+                              )}
+                            >
+                              Workout Types
+                            </label>
                             {workoutTypes.length > 0 && (
                               <div className="text-xs opacity-70">Selected ({workoutTypes.length})</div>
                             )}
@@ -433,7 +456,7 @@ export function Generator({
                           {/* Workout types list */}
                           <div
                             className="max-h-48 overflow-y-auto border rounded-lg p-3"
-                            style={{ borderColor: THEME.cardBorder }}
+                            style={{ borderColor: errorsMap.workoutTypes ? THEME.danger : THEME.cardBorder }}
                           >
                             {filteredWorkoutTypes.length === 0 ? (
                               <div className="text-sm text-text-muted text-center py-4">
@@ -713,10 +736,10 @@ export function Generator({
                   )}
 
                   {targetMuscles.length > 0 && (
-                    <div className="flex justify-between items-center text-sm">
-                      <span className="opacity-80">
-                        Target muscles ({targetMuscles.length} selected)
-                      </span>
+                        <div className="flex justify-between items-center text-sm">
+                          <span className={cn("opacity-80", errorsMap.targetMuscles && "text-red-400")}>
+                            Target muscles ({targetMuscles.length} selected)
+                          </span>
                       <span className="font-mono">◎ {Math.round(targetMuscles.length * 8 * 1.3)}</span>
                     </div>
                   )}
@@ -810,33 +833,6 @@ export function Generator({
                         </div>
                       )}
 
-                      <AccentButton
-                        onClick={handlePreview}
-                        disabled={
-                          loading !== null ||
-                          balance < PREVIEW_COST ||
-                          !gender ||
-                          workoutTypes.length === 0 ||
-                          targetMuscles.length === 0
-                        }
-                        className="w-full justify-center"
-                      >
-                        {loading === "preview" ? (
-                          <>
-                            <Spinner size={16} className="text-current" />
-                            <span>Generating preview...</span>
-                          </>
-                        ) : !gender || workoutTypes.length === 0 || targetMuscles.length === 0 ? (
-                          <>Fill required fields</>
-                        ) : balance < PREVIEW_COST ? (
-                          <>
-                            Insufficient tokens ({balance}/{PREVIEW_COST})
-                          </>
-                        ) : (
-                          <>Generate Preview ({PREVIEW_COST} tokens)</>
-                        )}
-                      </AccentButton>
-
                       <GhostButton
                         onClick={handlePublish}
                         disabled={
@@ -846,7 +842,8 @@ export function Generator({
                           workoutTypes.length === 0 ||
                           targetMuscles.length === 0
                         }
-                        className="w-full justify-center"
+                        className="w-full justify-center bg-primary text-on-primary hover:bg-primary hover:text-on-primary"
+                        style={{ borderColor: "transparent" }}
                       >
                         {loading === "publish" ? (
                           <>
@@ -860,7 +857,7 @@ export function Generator({
                             Insufficient tokens ({balance}/{courseCost})
                           </>
                         ) : (
-                          <>Publish Full Plan ({courseCost} tokens)</>
+                          <>Generate Plan ({courseCost} tokens)</>
                         )}
                       </GhostButton>
                     </>
