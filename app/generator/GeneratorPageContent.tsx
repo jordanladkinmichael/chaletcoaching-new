@@ -100,7 +100,7 @@ export default function GeneratorPageContent() {
       const res = await fetch("/api/generator/preview", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ options: opts }),
+        body: JSON.stringify(opts),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data?.error ?? "Preview failed");
@@ -150,7 +150,7 @@ export default function GeneratorPageContent() {
       const res = await fetch("/api/generator/publish", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ options: opts }),
+        body: JSON.stringify(opts),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data?.error ?? "Publish failed");

@@ -6,7 +6,6 @@ import {
   Settings2,
   Sparkles,
   ShieldAlert,
-  Image as ImageIcon,
   Lock,
   Info,
 } from "lucide-react";
@@ -58,7 +57,7 @@ export function Generator({
   region,
   requireAuth,
   openAuth,
-  onGeneratePreview,
+  onGeneratePreview: _onGeneratePreview,
   onPublishCourse,
   balance,
   loading,
@@ -564,109 +563,6 @@ export function Generator({
                               ))
                             )}
                           </div>
-                        </div>
-                      </div>
-                    ),
-                  },
-                  {
-                    id: "optional",
-                    title: "Optional upgrades",
-                    content: (
-                      <div className="space-y-3">
-                        <div className="text-sm font-medium opacity-80">Additional Features</div>
-
-                        <div className="flex items-center gap-3">
-                          <input
-                            id="injury"
-                            type="checkbox"
-                            checked={injurySafe}
-                            onChange={(e) => setInjurySafe(e.target.checked)}
-                            className="rounded"
-                          />
-                          <label htmlFor="injury" className="text-sm flex items-center gap-2 cursor-pointer">
-                            <ShieldAlert size={16} style={{ color: THEME.accent }} />
-                            Injury-safe modifications
-                          </label>
-                        </div>
-
-                        <div className="flex items-center gap-3">
-                          <input
-                            id="specEq"
-                            type="checkbox"
-                            checked={specEq}
-                            onChange={(e) => setSpecEq(e.target.checked)}
-                            className="rounded"
-                          />
-                          <label htmlFor="specEq" className="text-sm flex items-center gap-2 cursor-pointer">
-                            Special equipment / rare sport
-                          </label>
-                        </div>
-
-                        <div className="flex items-center gap-3">
-                          <input
-                            id="nutrition"
-                            type="checkbox"
-                            checked={nutrition}
-                            onChange={(e) => setNutrition(e.target.checked)}
-                            className="rounded"
-                          />
-                          <label htmlFor="nutrition" className="text-sm flex items-center gap-2 cursor-pointer">
-                            Nutrition tips & meal planning
-                          </label>
-                        </div>
-
-                        {/* PDF Export (moved from Export section) */}
-                        <div className="pt-4 border-t" style={{ borderColor: THEME.cardBorder }}>
-                          <div className="text-sm font-medium opacity-80 mb-3">PDF Export</div>
-                          <div className="flex items-center gap-2 mb-3">
-                            {(["text", "illustrated"] as const).map((p) => (
-                              <button
-                                key={p}
-                                onClick={() => setPdf(p)}
-                                className={cn(
-                                  "px-3 py-2 rounded-lg border text-sm transition-colors",
-                                  pdf === p ? "font-semibold" : "opacity-70 hover:opacity-100"
-                                )}
-                                style={{
-                                  borderColor: THEME.cardBorder,
-                                  background: pdf === p ? THEME.accent : "transparent",
-                                  color: pdf === p ? "#0E0E10" : THEME.text,
-                                }}
-                              >
-                                {p === "text" ? "Text only" : "With images"}
-                              </button>
-                            ))}
-                          </div>
-
-                          {/* Количество изображений для иллюстрированного PDF */}
-                          {pdf === "illustrated" && (
-                            <div>
-                              <label className="text-sm font-medium opacity-80 flex items-center gap-2">
-                                <ImageIcon size={16} style={{ color: THEME.accent }} />
-                                Number of illustrations (4-20 images)
-                              </label>
-                              <input
-                                type="range"
-                                min={4}
-                                max={20}
-                                value={images}
-                                onChange={(e) => {
-                                  const value = parseInt(e.target.value);
-                                  if (value >= 4 && value <= 20) {
-                                    setImages(value);
-                                  }
-                                }}
-                                className="w-full mt-2"
-                              />
-                              <div className="text-sm mt-1 opacity-70 flex justify-between">
-                                <span>4 images</span>
-                                <span>
-                                  <b>{images}</b> images
-                                </span>
-                                <span>20 images</span>
-                              </div>
-                            </div>
-                          )}
                         </div>
                       </div>
                     ),
