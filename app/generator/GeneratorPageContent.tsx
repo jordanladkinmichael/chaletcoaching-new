@@ -72,7 +72,9 @@ export default function GeneratorPageContent() {
   // Auth handler - redirect to auth pages with returnTo
   const openAuth = (mode: "signup" | "signin" = "signin") => {
     const returnTo = buildReturnTo();
-    router.push(`/auth/${mode}?returnTo=${encodeURIComponent(returnTo)}` as Route);
+    // Map mode to correct path with hyphens
+    const path = mode === "signin" ? "sign-in" : "sign-up";
+    router.push(`/auth/${path}?returnTo=${encodeURIComponent(returnTo)}` as Route);
   };
 
   // Generate preview handler

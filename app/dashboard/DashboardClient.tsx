@@ -55,7 +55,10 @@ export default function DashboardClient() {
   const openAuth = useCallback((mode?: "signup" | "signin") => {
     const currentPath = "/dashboard";
     const returnTo = encodeURIComponent(currentPath);
-    const target = `/auth/${mode || "signin"}?returnTo=${returnTo}`;
+    // Map mode to correct path with hyphens
+    const authMode = mode || "signin";
+    const path = authMode === "signin" ? "sign-in" : "sign-up";
+    const target = `/auth/${path}?returnTo=${returnTo}`;
     router.push(target as Route);
   }, [router]);
 

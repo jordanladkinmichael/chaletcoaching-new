@@ -146,7 +146,9 @@ function SupportPageContent() {
       ? currentPath
       : "/dashboard";
     const query = returnTo ? `?returnTo=${encodeURIComponent(returnTo)}` : "";
-    router.push(`/auth/${mode}${query}` as Route);
+    // Map mode to correct path with hyphens
+    const path = mode === "signin" ? "sign-in" : "sign-up";
+    router.push(`/auth/${path}${query}` as Route);
   };
 
   // Navigation handler

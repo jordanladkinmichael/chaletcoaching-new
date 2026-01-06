@@ -60,7 +60,10 @@ export function AuthShell({ children, title }: AuthShellProps) {
       ? currentPath
       : "/dashboard";
     const query = returnTo ? `?returnTo=${encodeURIComponent(returnTo)}` : "";
-    const target = `/auth/${mode || "signin"}${query}`;
+    // Map mode to correct path with hyphens
+    const authMode = mode || "signin";
+    const path = authMode === "signin" ? "sign-in" : "sign-up";
+    const target = `/auth/${path}${query}`;
     router.push(target as Route);
   }, [router]);
 
