@@ -100,7 +100,18 @@ export default function GeneratorPageContent() {
       const res = await fetch("/api/generator/preview", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(opts),
+        body: JSON.stringify({
+          weeks: Number(opts.weeks),
+          sessionsPerWeek: Number(opts.sessionsPerWeek),
+          injurySafe: !!opts.injurySafe,
+          specialEquipment: !!opts.specialEquipment,
+          nutritionTips: !!opts.nutritionTips,
+          pdf: opts.pdf,
+          images: Number(opts.images),
+          workoutTypes: Array.isArray(opts.workoutTypes) ? opts.workoutTypes : [],
+          targetMuscles: Array.isArray(opts.targetMuscles) ? opts.targetMuscles : [],
+          gender: opts.gender,
+        }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data?.error ?? "Preview failed");
@@ -150,7 +161,18 @@ export default function GeneratorPageContent() {
       const res = await fetch("/api/generator/publish", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(opts),
+        body: JSON.stringify({
+          weeks: Number(opts.weeks),
+          sessionsPerWeek: Number(opts.sessionsPerWeek),
+          injurySafe: !!opts.injurySafe,
+          specialEquipment: !!opts.specialEquipment,
+          nutritionTips: !!opts.nutritionTips,
+          pdf: opts.pdf,
+          images: Number(opts.images),
+          workoutTypes: Array.isArray(opts.workoutTypes) ? opts.workoutTypes : [],
+          targetMuscles: Array.isArray(opts.targetMuscles) ? opts.targetMuscles : [],
+          gender: opts.gender,
+        }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data?.error ?? "Publish failed");

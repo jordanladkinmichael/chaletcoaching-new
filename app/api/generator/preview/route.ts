@@ -16,14 +16,22 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     console.log("Received request body:", body);
     
-    // Извлекаем опции из body.opts или напрямую из body
-    const opts = body.opts || body;
-    const { weeks, sessionsPerWeek, injurySafe, specialEquipment, nutritionTips, workoutTypes, targetMuscles, gender, images } = opts;
+    // Нормализуем входные данные: поддерживаем body, body.opts, body.options
+    const raw = body?.opts || body?.options || body || {};
+    const weeks = Number(raw.weeks);
+    const sessionsPerWeek = Number(raw.sessionsPerWeek);
+    const injurySafe = !!raw.injurySafe;
+    const specialEquipment = !!raw.specialEquipment;
+    const nutritionTips = !!raw.nutritionTips;
+    const images = Number(raw.images ?? 0);
+    const workoutTypes = Array.isArray(raw.workoutTypes) ? raw.workoutTypes : [];
+    const targetMuscles = Array.isArray(raw.targetMuscles) ? raw.targetMuscles : [];
+    const gender = raw.gender;
 
-    console.log("Extracted options:", { weeks, sessionsPerWeek, injurySafe, specialEquipment, nutritionTips, workoutTypes, targetMuscles, gender, images });
+    console.log("Normalized options:", { weeks, sessionsPerWeek, injurySafe, specialEquipment, nutritionTips, workoutTypes, targetMuscles, gender, images });
 
     // Валидация входных данных
-    if (!weeks || !sessionsPerWeek || !workoutTypes || !targetMuscles || !gender) {
+    if (!weeks || !sessionsPerWeek || !workoutTypes.length || !targetMuscles.length || !gender) {
       return NextResponse.json({ 
         error: "Missing required fields", 
         received: { weeks, sessionsPerWeek, workoutTypes, targetMuscles, gender },
