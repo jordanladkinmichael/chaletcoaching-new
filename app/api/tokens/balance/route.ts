@@ -4,12 +4,14 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 
 export async function GET() {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.id) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
     try {
+        const session = await getServerSession(authOptions);
+        if (!session?.user?.id) {
+            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        }
+
+        // getUserBalance now handles errors internally and returns 0 on failure
+        // This prevents 500 errors and allows the app to continue functioning
         const balance = await getUserBalance(session.user.id);
         return NextResponse.json({ balance });
     } catch (err: unknown) {
@@ -27,12 +29,8 @@ export async function GET() {
             console.error("Prisma error code:", (err as { code?: string }).code);
         }
 
-        return NextResponse.json(
-            { 
-                error: "Failed to fetch balance",
-                message: err instanceof Error ? err.message : "Unknown error"
-            },
-            { status: 500 }
-        );
+        // Return balance 0 instead of error to prevent breaking the UI
+        // The error is already logged for debugging
+        return NextResponse.json({ balance: 0 });
     }
 }

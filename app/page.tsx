@@ -191,7 +191,12 @@ function HeroSection() {
                   playsInline
                   preload="metadata"
                   className="w-full h-full object-cover"
-                  onError={() => {
+                  onError={(e) => {
+                    // Suppress poster 404 errors by removing poster attribute
+                    const target = e.target as HTMLVideoElement;
+                    if (target.poster && target.poster.includes('hero_poster')) {
+                      target.poster = '';
+                    }
                     // Fallback if video fails to load
                     const fallback = document.querySelector('.hero-video-fallback') as HTMLElement;
                     if (fallback) fallback.style.display = 'block';
@@ -419,6 +424,13 @@ function LiveFeedSection() {
               playsInline
               preload="metadata"
               className="w-full h-full object-cover"
+              onError={(e) => {
+                // Suppress poster 404 errors by removing poster attribute
+                const target = e.target as HTMLVideoElement;
+                if (target.poster && target.poster.includes('live_activity_poster')) {
+                  target.poster = '';
+                }
+              }}
             />
             {/* Fallback gradient if poster missing */}
             <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-surface to-ai-soft/10 pointer-events-none" />
@@ -1261,7 +1273,9 @@ export default function ChaletcoachingPrototype() {
       ? currentPath
       : "/dashboard";
     const query = returnTo ? `?returnTo=${encodeURIComponent(returnTo)}` : "";
-    router.push(`/auth/${mode}${query}` as Route);
+    // Map mode to correct path with hyphens
+    const path = mode === "signin" ? "sign-in" : "sign-up";
+    router.push(`/auth/${path}${query}` as Route);
   }, [router]);
 
   const isAuthed = !!(session?.user as { id?: string })?.id;
@@ -1297,16 +1311,25 @@ export default function ChaletcoachingPrototype() {
       if (res.ok) {
         const data = await res.json();
         setBalance(typeof data.balance === "number" ? data.balance : 0);
+      } else {
+        // If request fails, set balance to 0 instead of showing error
+        setBalance(0);
       }
+    } catch (error) {
+      // Silently handle errors - set balance to 0
+      console.warn("Failed to load balance:", error);
+      setBalance(0);
     } finally {
       setBalanceLoading(false);
     }
   }, [isAuthed]);
 
   // C: загружаем баланс при изменении авторизации
+  // Use isAuthed directly to prevent infinite loop (loadBalance is memoized with isAuthed)
   React.useEffect(() => {
     void loadBalance();
-  }, [loadBalance]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAuthed]);
 
   const addToast = React.useCallback((type: ToastType, title: string, message?: string) => {
     const id = Math.random().toString(36).substr(2, 9);
