@@ -18,6 +18,7 @@ export default function SignUpClient() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -185,12 +186,48 @@ export default function SignUpClient() {
                 </div>
               )}
 
+              {/* Terms and Conditions checkbox */}
+              <div className="flex items-start gap-2">
+                <input
+                  type="checkbox"
+                  id="terms-checkbox"
+                  checked={agreedToTerms}
+                  onChange={(e) => setAgreedToTerms(e.target.checked)}
+                  disabled={loading}
+                  className="mt-0.5 w-4 h-4 rounded border-border bg-surface text-primary focus:ring-2 focus:ring-focus focus:ring-offset-2 focus:ring-offset-bg cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                  style={{ borderColor: THEME.cardBorder }}
+                />
+                <label
+                  htmlFor="terms-checkbox"
+                  className="text-sm cursor-pointer"
+                  style={{ color: THEME.text }}
+                >
+                  I read and agree to{" "}
+                  <Link
+                    href="/legal/terms"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="underline hover:opacity-80 transition-opacity"
+                    style={{ color: THEME.primary }}
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    terms and conditions
+                  </Link>
+                </label>
+              </div>
+
               <Button
                 type="submit"
                 variant="primary"
                 fullWidth
                 isLoading={loading}
-                disabled={loading}
+                disabled={
+                  loading ||
+                  !agreedToTerms ||
+                  !email.trim() ||
+                  !password ||
+                  !confirmPassword
+                }
               >
                 Create account
               </Button>
