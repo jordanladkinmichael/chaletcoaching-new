@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import prisma from "@/lib/prisma";
+import { prisma } from "@/lib/db";
 import { getUserBalance } from "@/lib/balance";
 import { TOKEN_PACKS } from "@/lib/token-packages";
 

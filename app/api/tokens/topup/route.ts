@@ -44,18 +44,24 @@ export async function POST(req: Request) {
             }
         }
 
+        // Ensure tokensToCredit is a valid integer
+        const tokensAsInt = Math.floor(Math.max(0, tokensToCredit));
+        if (tokensAsInt <= 0) {
+            return NextResponse.json({ error: "Invalid token amount" }, { status: 400 });
+        }
+
         // ✅ Create transaction
         const transaction = await prisma.transaction.create({
             data: {
                 userId: session.user.id,
                 type: "topup",
-                amount: tokensToCredit,
+                amount: tokensAsInt, // Ensure it's an integer for Prisma Int type
                 meta: JSON.stringify({
                     packageId,
                     packageName: tokenPackage.name,
                     price,
                     currency,
-                    tokensCredited: tokensToCredit,
+                    tokensCredited: tokensAsInt,
                     processedAt: new Date().toISOString(),
                     method: "auto_payment",
                 }),
@@ -73,18 +79,25 @@ export async function POST(req: Request) {
         return NextResponse.json({
             success: true,
             transactionId: transaction.id,
-            tokensAdded: tokensToCredit,
+            tokensAdded: tokensAsInt,
             newBalance,
             package: {
                 id: packageId,
                 name: tokenPackage.name,
                 price,
                 currency,
-                tokens: tokensToCredit,
+                tokens: tokensAsInt,
             },
         });
     } catch (error) {
         console.error("💥 Token top-up error:", error);
+        
+        // More detailed error logging
+        if (error instanceof Error) {
+            console.error("Error name:", error.name);
+            console.error("Error message:", error.message);
+            console.error("Error stack:", error.stack);
+        }
 
         if (error instanceof z.ZodError) {
             return NextResponse.json(
@@ -93,8 +106,28 @@ export async function POST(req: Request) {
             );
         }
 
+        // Check for Prisma errors
+        if (error && typeof error === 'object' && 'code' in error) {
+            console.error("Prisma error code:", (error as { code?: string }).code);
+            if ((error as { code?: string }).code === 'P2002') {
+                return NextResponse.json(
+                    { error: "Transaction already exists" },
+                    { status: 409 }
+                );
+            }
+            if ((error as { code?: string }).code === 'P2003') {
+                return NextResponse.json(
+                    { error: "User not found" },
+                    { status: 404 }
+                );
+            }
+        }
+
         return NextResponse.json(
-            { error: "Failed to process token top-up" },
+            { 
+                error: "Failed to process token top-up",
+                message: error instanceof Error ? error.message : "Unknown error"
+            },
             { status: 500 }
         );
     }
