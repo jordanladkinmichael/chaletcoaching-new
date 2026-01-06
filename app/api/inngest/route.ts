@@ -14,6 +14,6 @@ export const { GET, POST, PUT } = serve({
     generatePDF,
     ping,
   ],
-  signingKey: process.env.CHALETCOACHING_INNGEST_SIGNING_KEY,
+  signingKey: process.env.INNGEST_SIGNING_KEY,
 });
 

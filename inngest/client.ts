@@ -4,6 +4,6 @@ import { Inngest } from "inngest";
 export const inngest = new Inngest({
   id: "chaletcoaching",
   name: "Chaletcoaching",
-  eventKey: process.env.CHALETCOACHING_INNGEST_EVENT_KEY,
+  eventKey: process.env.INNGEST_EVENT_KEY,
 });
 
