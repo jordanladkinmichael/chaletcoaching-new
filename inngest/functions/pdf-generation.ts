@@ -147,12 +147,11 @@ export const generatePDF = inngest.createFunction(
       };
     });
 
-    // Шаг 4: Создаем HTML контент и генерируем PDF через Puppeteer
-    // Объединяем шаги, чтобы все данные были доступны в одном контексте
+    // Шаг 4: Создаем HTML, генерируем PDF, загружаем в Blob и сохраняем URL в БД
+    // Все операции объединены в один шаг, чтобы данные были доступны в одном контексте
     // Это предотвращает потерю переменных при retry
-    let pdfBuffer: Buffer;
-    
     const pdfMetadata = await step.run("generate-pdf", async () => {
+      let pdfBuffer: Buffer;
       const options = typeof course.options === "string"
         ? JSON.parse(course.options)
         : course.options;
@@ -335,7 +334,6 @@ export const generatePDF = inngest.createFunction(
         const pdfSizeKB = Math.round(generatedPdfBuffer.length / 1024);
         console.log(`PDF generated successfully: ${pdfSizeKB} KB`);
         
-        // Сохраняем buffer в переменную вне шага
         // Конвертируем в Buffer для совместимости типов (page.pdf() может вернуть Uint8Array)
         pdfBuffer = Buffer.from(generatedPdfBuffer);
       } catch (error) {
@@ -348,46 +346,40 @@ export const generatePDF = inngest.createFunction(
         await browser.close();
       }
 
-      // Возвращаем метаданные для логирования
-      return {
-        pdfSize: pdfBuffer.length,
-        pdfSizeKB: Math.round(pdfBuffer.length / 1024),
-        htmlLength: htmlContent.length,
-        formattedContentLength: currentFormattedContent.length,
-        imagesCount: currentOptimizedImages.filter(img => img !== null).length,
-      };
-    });
-
-    // Шаг 6: Загружаем PDF в Vercel Blob Storage
-    const blobResult = await step.run("upload-pdf-to-blob", async () => {
+      // === Загрузка PDF в Vercel Blob Storage (объединено в один шаг) ===
+      console.log('Uploading PDF to Vercel Blob Storage...');
       const filename = generatePDFFilename(courseId);
-      const result = await uploadPDF(pdfBuffer, filename);
-      
-      console.log(`PDF uploaded to Blob: ${result.url} (${result.size} bytes)`);
-      
-      return result;
-    });
+      const blobResult = await uploadPDF(pdfBuffer, filename);
+      console.log(`PDF uploaded to Blob: ${blobResult.url} (${blobResult.size} bytes)`);
 
-    // Шаг 7: Сохраняем PDF URL в БД
-    const pdfUrl = await step.run("save-pdf-url", async () => {
+      // === Сохранение PDF URL в БД (объединено в один шаг) ===
+      console.log('Saving PDF URL to database...');
       await prisma.course.update({
         where: { id: courseId },
         data: { 
           pdfUrl: blobResult.url,
         },
       });
-
       console.log(`PDF URL saved to database: ${blobResult.url}`);
-      
-      return blobResult.url;
+
+      // Возвращаем финальные метаданные
+      return {
+        pdfSize: pdfBuffer.length,
+        pdfSizeKB: Math.round(pdfBuffer.length / 1024),
+        htmlLength: htmlContent.length,
+        formattedContentLength: currentFormattedContent.length,
+        imagesCount: currentOptimizedImages.filter(img => img !== null).length,
+        pdfUrl: blobResult.url,
+        uploadedAt: blobResult.uploadedAt,
+      };
     });
 
     return {
       success: true,
       courseId,
-      pdfUrl,
-      pdfSize: blobResult.size,
-      uploadedAt: blobResult.uploadedAt,
+      pdfUrl: pdfMetadata.pdfUrl,
+      pdfSize: pdfMetadata.pdfSize,
+      uploadedAt: pdfMetadata.uploadedAt,
     };
   }
 );
