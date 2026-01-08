@@ -147,20 +147,103 @@ export const generatePDF = inngest.createFunction(
       };
     });
 
-    // Шаг 4: Создаем HTML контент с использованием шаблона
-    // Используем переменную вне шага для хранения HTML (не возвращаем большой HTML)
-    let htmlContent = "";
+    // Шаг 4: Создаем HTML контент и генерируем PDF через Puppeteer
+    // Объединяем шаги, чтобы все данные были доступны в одном контексте
+    // Это предотвращает потерю переменных при retry
+    let pdfBuffer: Buffer;
     
-    const htmlMetadata = await step.run("create-html", async () => {
+    const pdfMetadata = await step.run("generate-pdf", async () => {
       const options = typeof course.options === "string"
         ? JSON.parse(course.options)
         : course.options;
 
+      // Пересоздаем formattedContent, если он недоступен (может быть потерян при retry)
+      // Проверяем, существует ли переменная formattedContent (может быть не определена при retry)
+      let currentFormattedContent: string;
+      try {
+        // Пытаемся использовать formattedContent из предыдущего шага
+        currentFormattedContent = formattedContent || "";
+      } catch {
+        // Если переменная не определена, используем пустую строку
+        currentFormattedContent = "";
+      }
+      
+      // Если formattedContent пустой или слишком короткий, пересоздаем его
+      if (!currentFormattedContent || currentFormattedContent.length < 100) {
+        console.log("Formatted content not available, recreating...");
+        const rawContent = course.content || "";
+        
+        if (!rawContent) {
+          console.warn("No content available for course, using placeholder");
+          currentFormattedContent = "<p>Content not available for this course.</p>";
+        } else {
+          // Пересоздаем отформатированный контент
+          currentFormattedContent = await formatContentForPDF({
+            content: rawContent,
+            nutritionAdvice: course.nutritionAdvice,
+            weeks: options.weeks || 4,
+            sessionsPerWeek: options.sessionsPerWeek || 4,
+            workoutTypes: Array.isArray(options.workoutTypes) ? options.workoutTypes : [],
+            targetMuscles: Array.isArray(options.targetMuscles) ? options.targetMuscles : [],
+            injurySafe: options.injurySafe || false,
+            specialEquipment: options.specialEquipment || false,
+          });
+          console.log("Formatted content recreated for PDF generation");
+        }
+      } else {
+        console.log(`Using existing formatted content (${currentFormattedContent.length} characters)`);
+      }
+
+      // Пересоздаем optimizedImages, если они недоступны (могут быть потеряны при retry)
+      // Проверяем, существует ли переменная optimizedImages (может быть не определена при retry)
+      let currentOptimizedImages: Array<{ dataUrl: string; width: number; height: number; size: number; originalUrl: string } | null>;
+      try {
+        // Пытаемся использовать optimizedImages из предыдущего шага
+        currentOptimizedImages = optimizedImages || [];
+      } catch {
+        // Если переменная не определена, используем пустой массив
+        currentOptimizedImages = [];
+      }
+      
+      if (!currentOptimizedImages || currentOptimizedImages.length === 0) {
+        console.log("Optimized images not available, recreating...");
+        
+        // Получаем URL изображений из курса
+        let imageUrls: string[] = [];
+        if (course.images) {
+          try {
+            const parsedImages = typeof course.images === "string"
+              ? JSON.parse(course.images)
+              : course.images;
+            
+            if (Array.isArray(parsedImages) && parsedImages.length > 0) {
+              imageUrls = parsedImages.slice(0, 2); // Ограничиваем до 2 изображений
+            }
+          } catch (error) {
+            console.error("Failed to parse course images:", error);
+          }
+        }
+
+        if (imageUrls.length > 0) {
+          // Пересоздаем оптимизированные изображения
+          currentOptimizedImages = await downloadAndOptimizeImages(imageUrls, {
+            maxWidth: 800,
+            maxHeight: 600,
+            timeout: 10000,
+            maxImages: 2,
+          });
+          console.log(`Recreated ${currentOptimizedImages.filter(img => img !== null).length} optimized images`);
+        } else {
+          currentOptimizedImages = [];
+          console.log("No images available for PDF - generating without images");
+        }
+      }
+
       // Генерируем HTML для изображений с встроенными base64 данными
-      const imagesHtml = generateImageHTML(optimizedImages);
+      const imagesHtml = generateImageHTML(currentOptimizedImages);
 
       // Генерируем HTML используя компактный шаблон
-      htmlContent = generatePDFTemplate({
+      const htmlContent = generatePDFTemplate({
         title: course.title || "Fitness Program",
         createdAt: new Date(course.createdAt),
         weeks: options.weeks || 4,
@@ -170,24 +253,15 @@ export const generatePDF = inngest.createFunction(
         injurySafe: options.injurySafe || false,
         specialEquipment: options.specialEquipment || false,
         nutritionTips: options.nutritionTips || false,
-        formattedContent,
+        formattedContent: currentFormattedContent,
         nutritionAdvice: course.nutritionAdvice,
         imagesHtml,
       });
 
-      console.log("HTML template generated with embedded images");
-      // Возвращаем только метаданные, не сам HTML (может содержать base64 изображения и быть очень большим)
-      return {
-        htmlLength: htmlContent.length,
-        hasImages: optimizedImages.length > 0,
-      };
-    });
+      console.log(`HTML template generated. HTML size: ${htmlContent.length} characters`);
+      console.log(`Formatted content length: ${currentFormattedContent.length} characters`);
+      console.log(`Optimized images count: ${currentOptimizedImages.filter(img => img !== null).length}`);
 
-    // Шаг 5: Генерируем PDF через Puppeteer
-    // Используем переменную вне шага для хранения PDF buffer (не возвращаем большой buffer)
-    let pdfBuffer: Buffer;
-    
-    const pdfMetadata = await step.run("generate-pdf", async () => {
       // Проверка HTML контента перед генерацией
       if (!htmlContent || htmlContent.length < 100) {
         const errorMsg = `HTML content is too small or empty: ${htmlContent?.length || 0} characters`;
@@ -197,7 +271,6 @@ export const generatePDF = inngest.createFunction(
       }
 
       console.log(`Starting PDF generation. HTML content size: ${htmlContent.length} characters`);
-      console.log(`Formatted content length: ${formattedContent.length} characters`);
 
       const browser = await puppeteer.launch({
         args: [
@@ -248,7 +321,7 @@ export const generatePDF = inngest.createFunction(
           const errorDetails = {
             pdfSize: generatedPdfBuffer.length,
             htmlSize: htmlContent.length,
-            formattedContentSize: formattedContent.length,
+            formattedContentSize: currentFormattedContent.length,
             htmlPreview: htmlContent.substring(0, 1000),
           };
           console.error('PDF is too small. Details:', JSON.stringify(errorDetails, null, 2));
@@ -265,23 +338,24 @@ export const generatePDF = inngest.createFunction(
         // Сохраняем buffer в переменную вне шага
         // Конвертируем в Buffer для совместимости типов (page.pdf() может вернуть Uint8Array)
         pdfBuffer = Buffer.from(generatedPdfBuffer);
-        
-        // Возвращаем только метаданные, не сам PDF buffer (может быть очень большим)
-        return {
-          pdfSize: pdfBuffer.length,
-          pdfSizeKB,
-        };
       } catch (error) {
         console.error('PDF generation error:', error);
         console.error('Error details:', {
-          htmlContentSize: htmlContent?.length || 0,
-          formattedContentSize: formattedContent?.length || 0,
           errorMessage: error instanceof Error ? error.message : String(error),
         });
         throw error;
       } finally {
         await browser.close();
       }
+
+      // Возвращаем метаданные для логирования
+      return {
+        pdfSize: pdfBuffer.length,
+        pdfSizeKB: Math.round(pdfBuffer.length / 1024),
+        htmlLength: htmlContent.length,
+        formattedContentLength: currentFormattedContent.length,
+        imagesCount: currentOptimizedImages.filter(img => img !== null).length,
+      };
     });
 
     // Шаг 6: Загружаем PDF в Vercel Blob Storage
