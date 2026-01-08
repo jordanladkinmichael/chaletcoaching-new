@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { generateWorkoutPlan, generateFitnessImages, generateNutritionAdvice, FitnessContentRequest } from "@/lib/openai";
 import { generateCourseTitle, calcFullCourseTokens } from "@/lib/tokens";
+import { inngest } from "@/inngest/client";
 import { prisma } from "@/lib/db";
 
 export async function POST(request: NextRequest) {
@@ -132,6 +133,18 @@ export async function POST(request: NextRequest) {
           options: fitnessRequest,
         }),
       },
+    });
+
+    // Автоматически запускаем генерацию PDF через Inngest (асинхронно, не ждем завершения)
+    inngest.send({
+      name: "pdf/generate",
+      data: {
+        courseId: savedCourse.id,
+        userId: session.user.id,
+      },
+    }).catch((error) => {
+      // Логируем ошибку, но не прерываем процесс создания курса
+      console.error("Failed to trigger PDF generation:", error);
     });
 
     return NextResponse.json({

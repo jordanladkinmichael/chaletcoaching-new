@@ -55,7 +55,10 @@ export const generatePDF = inngest.createFunction(
     });
 
     // Шаг 2: Получаем и оптимизируем изображения (используем существующие из курса)
-    const optimizedImages = await step.run("optimize-images", async () => {
+    // Используем переменную вне шага для хранения больших данных (не возвращаем их)
+    let optimizedImages: Array<{ dataUrl: string; width: number; height: number; size: number; originalUrl: string } | null> = [];
+    
+    const imageMetadata = await step.run("optimize-images", async () => {
       const options = typeof course.options === "string"
         ? JSON.parse(course.options)
         : course.options;
@@ -79,29 +82,38 @@ export const generatePDF = inngest.createFunction(
         }
       }
 
-      // Если изображений нет, возвращаем пустой массив
+      // Если изображений нет, возвращаем метаданные пустого массива
       if (imageUrls.length === 0) {
         console.log("No images available for PDF - generating without images");
-        return [];
+        optimizedImages = [];
+        return { imageCount: 0, urls: [] };
       }
 
       // Скачиваем и оптимизируем изображения
       console.log(`Downloading and optimizing ${imageUrls.length} images...`);
-      const optimized = await downloadAndOptimizeImages(imageUrls, {
+      optimizedImages = await downloadAndOptimizeImages(imageUrls, {
         maxWidth: 800,
         maxHeight: 600,
         timeout: 10000,
         maxImages: 2,
       });
 
-      const validImages = optimized.filter((img) => img !== null);
+      const validImages = optimizedImages.filter((img) => img !== null);
       console.log(`Successfully optimized ${validImages.length} images`);
 
-      return optimized;
+      // Возвращаем только метаданные, не сами изображения (base64 данные слишком большие)
+      return {
+        imageCount: validImages.length,
+        urls: imageUrls,
+        totalSize: validImages.reduce((sum, img) => sum + (img?.size || 0), 0),
+      };
     });
 
     // Шаг 3: Форматируем контент через OpenAI для компактного PDF
-    const formattedContent = await step.run("format-content", async () => {
+    // Используем переменную вне шага для хранения HTML (не возвращаем большой HTML)
+    let formattedContent = "";
+    
+    const contentMetadata = await step.run("format-content", async () => {
       const options = typeof course.options === "string"
         ? JSON.parse(course.options)
         : course.options;
@@ -111,11 +123,12 @@ export const generatePDF = inngest.createFunction(
 
       if (!rawContent) {
         console.warn("No content available for course, using placeholder");
-        return "<p>Content not available for this course.</p>";
+        formattedContent = "<p>Content not available for this course.</p>";
+        return { contentLength: formattedContent.length, hasContent: false };
       }
 
       // Форматируем контент через OpenAI для компактного PDF (максимум 4 страницы)
-      const formatted = await formatContentForPDF({
+      formattedContent = await formatContentForPDF({
         content: rawContent,
         nutritionAdvice: course.nutritionAdvice,
         weeks: options.weeks || 4,
@@ -127,11 +140,18 @@ export const generatePDF = inngest.createFunction(
       });
 
       console.log("Content formatted for PDF");
-      return formatted;
+      // Возвращаем только метаданные, не сам HTML (может быть большим)
+      return {
+        contentLength: formattedContent.length,
+        hasContent: true,
+      };
     });
 
     // Шаг 4: Создаем HTML контент с использованием шаблона
-    const htmlContent = await step.run("create-html", async () => {
+    // Используем переменную вне шага для хранения HTML (не возвращаем большой HTML)
+    let htmlContent = "";
+    
+    const htmlMetadata = await step.run("create-html", async () => {
       const options = typeof course.options === "string"
         ? JSON.parse(course.options)
         : course.options;
@@ -140,7 +160,7 @@ export const generatePDF = inngest.createFunction(
       const imagesHtml = generateImageHTML(optimizedImages);
 
       // Генерируем HTML используя компактный шаблон
-      const html = generatePDFTemplate({
+      htmlContent = generatePDFTemplate({
         title: course.title || "Fitness Program",
         createdAt: new Date(course.createdAt),
         weeks: options.weeks || 4,
@@ -156,11 +176,18 @@ export const generatePDF = inngest.createFunction(
       });
 
       console.log("HTML template generated with embedded images");
-      return html;
+      // Возвращаем только метаданные, не сам HTML (может содержать base64 изображения и быть очень большим)
+      return {
+        htmlLength: htmlContent.length,
+        hasImages: optimizedImages.length > 0,
+      };
     });
 
     // Шаг 5: Генерируем PDF через Puppeteer
-    const pdfBuffer = (await step.run("generate-pdf", async () => {
+    // Используем переменную вне шага для хранения PDF buffer (не возвращаем большой buffer)
+    let pdfBuffer: Buffer;
+    
+    const pdfMetadata = await step.run("generate-pdf", async () => {
       const browser = await puppeteer.launch({
         args: [
           ...chromium.args,
@@ -206,14 +233,21 @@ export const generatePDF = inngest.createFunction(
         const pdfSizeKB = Math.round(generatedPdfBuffer.length / 1024);
         console.log(`PDF generated successfully: ${pdfSizeKB} KB`);
         
-        return generatedPdfBuffer;
+        // Сохраняем buffer в переменную вне шага
+        pdfBuffer = generatedPdfBuffer;
+        
+        // Возвращаем только метаданные, не сам PDF buffer (может быть очень большим)
+        return {
+          pdfSize: generatedPdfBuffer.length,
+          pdfSizeKB,
+        };
       } catch (error) {
         console.error('PDF generation error:', error);
         throw error;
       } finally {
         await browser.close();
       }
-    })) as unknown as Buffer;
+    });
 
     // Шаг 6: Загружаем PDF в Vercel Blob Storage
     const blobResult = await step.run("upload-pdf-to-blob", async () => {

@@ -5,6 +5,7 @@ import { prisma } from "@/lib/db";
 import { z } from "zod";
 import { calcFullCourseTokens, generateCourseTitle } from "@/lib/tokens";
 import { generateWorkoutPlan, generateFitnessImages, generateNutritionAdvice, FitnessContentRequest } from "@/lib/openai";
+import { inngest } from "@/inngest/client";
 
 // Валидируем опции генератора и даём дефолты
 const Opts = z.object({
@@ -110,6 +111,18 @@ export async function POST(req: Request) {
       nutritionAdvice: nutritionAdvice || null,
     },
     select: { id: true },
+  });
+
+  // Автоматически запускаем генерацию PDF через Inngest (асинхронно, не ждем завершения)
+  inngest.send({
+    name: "pdf/generate",
+    data: {
+      courseId: course.id,
+      userId: session.user.id,
+    },
+  }).catch((error) => {
+    // Логируем ошибку, но не прерываем процесс создания курса
+    console.error("Failed to trigger PDF generation:", error);
   });
 
   // Возвращаем новый баланс
