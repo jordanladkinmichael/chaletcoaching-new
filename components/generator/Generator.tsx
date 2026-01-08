@@ -57,6 +57,7 @@ export function Generator({
   region,
   requireAuth,
   openAuth,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   onGeneratePreview: _onGeneratePreview,
   onPublishCourse,
   balance,
@@ -69,11 +70,11 @@ export function Generator({
 }: GeneratorProps) {
   const [weeks, setWeeks] = useState<number>(4);
   const [sessions, setSessions] = useState<number>(4);
-  const [injurySafe, setInjurySafe] = useState<boolean>(true);
-  const [specEq, setSpecEq] = useState<boolean>(false);
-  const [nutrition, setNutrition] = useState<boolean>(false);
-  const [pdf, setPdf] = useState<"text" | "illustrated">("text");
-  const [images, setImages] = useState<number>(12);
+  const [injurySafe, _setInjurySafe] = useState<boolean>(true);
+  const [specEq, _setSpecEq] = useState<boolean>(false);
+  const [nutrition, _setNutrition] = useState<boolean>(false);
+  const [pdf, _setPdf] = useState<"text" | "illustrated">("text");
+  const [images, _setImages] = useState<number>(12);
   const [gender, setGender] = useState<"male" | "female">("male");
   const [workoutTypes, setWorkoutTypes] = useState<string[]>([]);
   const [targetMuscles, setTargetMuscles] = useState<string[]>([]);

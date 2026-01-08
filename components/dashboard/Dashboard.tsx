@@ -257,14 +257,8 @@ export function Dashboard({ requireAuth, openAuth, balance, currentPreview, onDi
   const pollPdfStatus = React.useCallback((courseId: string) => {
     const maxAttempts = 30; // 30 попыток = 1 минута (каждые 2 секунды)
     let attempts = 0;
-    let cancelled = false;
     
     const interval = setInterval(async () => {
-      if (cancelled) {
-        clearInterval(interval);
-        return;
-      }
-      
       attempts++;
       
       try {
@@ -274,10 +268,8 @@ export function Dashboard({ requireAuth, openAuth, balance, currentPreview, onDi
           console.error(`Failed to check PDF status: ${response.status}`);
           if (attempts >= maxAttempts) {
             clearInterval(interval);
-            if (!cancelled) {
-              setPdfStatus(prev => ({ ...prev, [courseId]: 'error' }));
-              setGeneratingPDF(prev => prev === courseId ? null : prev);
-            }
+            setPdfStatus(prev => ({ ...prev, [courseId]: 'error' }));
+            setGeneratingPDF(prev => prev === courseId ? null : prev);
           }
           return;
         }
@@ -286,37 +278,30 @@ export function Dashboard({ requireAuth, openAuth, balance, currentPreview, onDi
         
         if (data.status === 'completed' && data.pdfUrl) {
           clearInterval(interval);
-          if (!cancelled) {
-            setPdfStatus(prev => ({ ...prev, [courseId]: 'ready' }));
-            setGeneratingPDF(prev => prev === courseId ? null : prev);
-            // Обновляем курс с новым pdfUrl
-            setCourses(prev => prev.map(c => 
-              c.id === courseId ? { ...c, pdfUrl: data.pdfUrl } : c
-            ));
-            console.log(`PDF ready for course ${courseId}:`, data.pdfUrl);
-          }
+          setPdfStatus(prev => ({ ...prev, [courseId]: 'ready' }));
+          setGeneratingPDF(prev => prev === courseId ? null : prev);
+          // Обновляем курс с новым pdfUrl
+          setCourses(prev => prev.map(c => 
+            c.id === courseId ? { ...c, pdfUrl: data.pdfUrl } : c
+          ));
+          console.log(`PDF ready for course ${courseId}:`, data.pdfUrl);
         } else if (attempts >= maxAttempts) {
           clearInterval(interval);
-          if (!cancelled) {
-            setPdfStatus(prev => ({ ...prev, [courseId]: 'error' }));
-            setGeneratingPDF(prev => prev === courseId ? null : prev);
-            console.warn(`PDF generation timeout for course ${courseId}`);
-          }
+          setPdfStatus(prev => ({ ...prev, [courseId]: 'error' }));
+          setGeneratingPDF(prev => prev === courseId ? null : prev);
+          console.warn(`PDF generation timeout for course ${courseId}`);
         }
       } catch (error) {
         console.error(`Error polling PDF status for course ${courseId}:`, error);
         if (attempts >= maxAttempts) {
           clearInterval(interval);
-          if (!cancelled) {
-            setPdfStatus(prev => ({ ...prev, [courseId]: 'error' }));
-            setGeneratingPDF(prev => prev === courseId ? null : prev);
-          }
+          setPdfStatus(prev => ({ ...prev, [courseId]: 'error' }));
+          setGeneratingPDF(prev => prev === courseId ? null : prev);
         }
       }
     }, 2000); // Проверяем каждые 2 секунды
 
-    // Очистка интервала при размонтировании (если нужно)
-    // В данном случае интервал сам очистится при достижении maxAttempts или успехе
+    // Интервал сам очистится при достижении maxAttempts или успехе
   }, []);
 
   // Загрузка дополнительных транзакций
