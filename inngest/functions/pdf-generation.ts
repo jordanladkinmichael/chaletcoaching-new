@@ -188,6 +188,17 @@ export const generatePDF = inngest.createFunction(
     let pdfBuffer: Buffer;
     
     const pdfMetadata = await step.run("generate-pdf", async () => {
+      // Проверка HTML контента перед генерацией
+      if (!htmlContent || htmlContent.length < 100) {
+        const errorMsg = `HTML content is too small or empty: ${htmlContent?.length || 0} characters`;
+        console.error(errorMsg);
+        console.error('HTML content preview:', htmlContent?.substring(0, 500) || 'N/A');
+        throw new Error(errorMsg);
+      }
+
+      console.log(`Starting PDF generation. HTML content size: ${htmlContent.length} characters`);
+      console.log(`Formatted content length: ${formattedContent.length} characters`);
+
       const browser = await puppeteer.launch({
         args: [
           ...chromium.args,
@@ -204,15 +215,19 @@ export const generatePDF = inngest.createFunction(
       try {
         const page = await browser.newPage();
         
+        console.log('Setting HTML content in Puppeteer...');
         // Устанавливаем контент (изображения уже встроены как base64)
+        // Используем networkidle0 для полной загрузки всех ресурсов
         await page.setContent(htmlContent, {
-          waitUntil: 'domcontentloaded', // Быстрее, так как изображения уже встроены
-          timeout: 30000
+          waitUntil: 'networkidle0', // Ждем полной загрузки всех ресурсов
+          timeout: 60000 // Увеличили таймаут до 60 секунд
         });
 
-        // Минимальная пауза для рендеринга (изображения встроены, поэтому быстро)
-        await new Promise(resolve => setTimeout(resolve, 500));
+        console.log('HTML content loaded, waiting for rendering...');
+        // Пауза для рендеринга (изображения встроены, но нужна пауза для CSS)
+        await new Promise(resolve => setTimeout(resolve, 1000));
 
+        console.log('Generating PDF from HTML...');
         const generatedPdfBuffer = await page.pdf({
           format: 'A4',
           printBackground: true,
@@ -226,8 +241,22 @@ export const generatePDF = inngest.createFunction(
           displayHeaderFooter: false, // Без заголовков/футеров для компактности
         });
 
+        console.log(`PDF generated. Size: ${generatedPdfBuffer.length} bytes`);
+
+        // Проверка размера PDF с детальной информацией об ошибке
         if (generatedPdfBuffer.length < 1000) {
-          throw new Error('Generated PDF is too small, likely corrupted');
+          const errorDetails = {
+            pdfSize: generatedPdfBuffer.length,
+            htmlSize: htmlContent.length,
+            formattedContentSize: formattedContent.length,
+            htmlPreview: htmlContent.substring(0, 1000),
+          };
+          console.error('PDF is too small. Details:', JSON.stringify(errorDetails, null, 2));
+          throw new Error(
+            `Generated PDF is too small (${generatedPdfBuffer.length} bytes), likely corrupted. ` +
+            `HTML content size: ${htmlContent.length} characters. ` +
+            `Check logs for more details.`
+          );
         }
 
         const pdfSizeKB = Math.round(generatedPdfBuffer.length / 1024);
@@ -244,6 +273,11 @@ export const generatePDF = inngest.createFunction(
         };
       } catch (error) {
         console.error('PDF generation error:', error);
+        console.error('Error details:', {
+          htmlContentSize: htmlContent?.length || 0,
+          formattedContentSize: formattedContent?.length || 0,
+          errorMessage: error instanceof Error ? error.message : String(error),
+        });
         throw error;
       } finally {
         await browser.close();

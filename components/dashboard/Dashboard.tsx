@@ -192,6 +192,7 @@ export function Dashboard({ requireAuth, openAuth, balance, currentPreview, onDi
   const [hasMore, setHasMore] = React.useState(true);
   const [loadingMore, setLoadingMore] = React.useState(false);
   const [generatingPDF, setGeneratingPDF] = React.useState<string | null>(null);
+  const [pdfStatus, setPdfStatus] = React.useState<Record<string, 'idle' | 'generating' | 'ready' | 'error'>>({});
   const [selectedCourse, setSelectedCourse] = React.useState<CourseItem | null>(null);
   const [showCourseModal, setShowCourseModal] = React.useState(false);
   const [regeneratingDay, setRegeneratingDay] = React.useState(false);
@@ -250,6 +251,72 @@ export function Dashboard({ requireAuth, openAuth, balance, currentPreview, onDi
         window.removeEventListener('course:published', onCoursePublished as EventListener);
       }
     };
+  }, []);
+
+  // Функция для polling статуса PDF
+  const pollPdfStatus = React.useCallback((courseId: string) => {
+    const maxAttempts = 30; // 30 попыток = 1 минута (каждые 2 секунды)
+    let attempts = 0;
+    let cancelled = false;
+    
+    const interval = setInterval(async () => {
+      if (cancelled) {
+        clearInterval(interval);
+        return;
+      }
+      
+      attempts++;
+      
+      try {
+        const response = await fetch(`/api/courses/generate-pdf?courseId=${courseId}`);
+        
+        if (!response.ok) {
+          console.error(`Failed to check PDF status: ${response.status}`);
+          if (attempts >= maxAttempts) {
+            clearInterval(interval);
+            if (!cancelled) {
+              setPdfStatus(prev => ({ ...prev, [courseId]: 'error' }));
+              setGeneratingPDF(prev => prev === courseId ? null : prev);
+            }
+          }
+          return;
+        }
+        
+        const data = await response.json();
+        
+        if (data.status === 'completed' && data.pdfUrl) {
+          clearInterval(interval);
+          if (!cancelled) {
+            setPdfStatus(prev => ({ ...prev, [courseId]: 'ready' }));
+            setGeneratingPDF(prev => prev === courseId ? null : prev);
+            // Обновляем курс с новым pdfUrl
+            setCourses(prev => prev.map(c => 
+              c.id === courseId ? { ...c, pdfUrl: data.pdfUrl } : c
+            ));
+            console.log(`PDF ready for course ${courseId}:`, data.pdfUrl);
+          }
+        } else if (attempts >= maxAttempts) {
+          clearInterval(interval);
+          if (!cancelled) {
+            setPdfStatus(prev => ({ ...prev, [courseId]: 'error' }));
+            setGeneratingPDF(prev => prev === courseId ? null : prev);
+            console.warn(`PDF generation timeout for course ${courseId}`);
+          }
+        }
+      } catch (error) {
+        console.error(`Error polling PDF status for course ${courseId}:`, error);
+        if (attempts >= maxAttempts) {
+          clearInterval(interval);
+          if (!cancelled) {
+            setPdfStatus(prev => ({ ...prev, [courseId]: 'error' }));
+            setGeneratingPDF(prev => prev === courseId ? null : prev);
+          }
+        }
+      }
+    }, 2000); // Проверяем каждые 2 секунды
+
+    // Очистка интервала при размонтировании (если нужно)
+    // В данном случае интервал сам очистится при достижении maxAttempts или успехе
   }, []);
 
   // Загрузка дополнительных транзакций
@@ -621,98 +688,105 @@ export function Dashboard({ requireAuth, openAuth, balance, currentPreview, onDi
                   </GhostButton>
                   <GhostButton
                     onClick={async () => {
-                      console.log("PDF button clicked for course:", c.id);
-                      console.log("Course pdfUrl:", c.pdfUrl);
+                      const courseId = c.id;
+                      const currentStatus = pdfStatus[courseId] || 'idle';
                       
+                      // Если PDF готов - скачиваем/открываем
                       if (c.pdfUrl) {
-                        // PDF уже существует - открываем URL
                         console.log("Opening existing PDF:", c.pdfUrl);
                         // Vercel Blob URL или обычный URL - открываем в новой вкладке
-                        // Старый base64 формат также поддерживается
-                        window.open(c.pdfUrl, "_blank");
-                      } else {
-                        // Генерируем PDF
-                        console.log("Starting PDF generation for course:", c.id);
-                        setGeneratingPDF(c.id);
-                        try {
-                          // Используем OpenAI API для генерации PDF
-                          const apiEndpoint = "/api/courses/generate-pdf";
-                          
-                          console.log("Calling API:", apiEndpoint);
-                          const response = await fetch(apiEndpoint, {
-                            method: "POST",
-                            headers: { "Content-Type": "application/json" },
-                            body: JSON.stringify({ courseId: c.id }),
-                          });
-                          
-                          console.log("API response status:", response.status);
-                          
-                          if (response.ok) {
-                            const data = await response.json();
-                            console.log("PDF generated successfully:", data);
-                            // Обновляем локальное состояние
-                            setCourses(prev => prev.map(course => 
-                              course.id === c.id 
-                                ? { ...course, pdfUrl: data.pdfUrl }
-                                : course
-                            ));
-                            
-                            // Обрабатываем PDF
-                            if (data.pdfUrl) {
-                              const pdfUrl = data.pdfUrl;
-                              
-                              // Проверяем тип URL
-                              if (pdfUrl.startsWith('data:application/pdf')) {
-                                // Старый формат: base64 PDF - скачиваем
-                                try {
-                                  const base64Data = pdfUrl.split(',')[1];
-                                  const pdfBlob = new Blob([Uint8Array.from(atob(base64Data), c => c.charCodeAt(0))], {
-                                    type: 'application/pdf'
-                                  });
-                                  
-                                  const downloadUrl = URL.createObjectURL(pdfBlob);
-                                  const link = document.createElement('a');
-                                  link.href = downloadUrl;
-                                  link.download = data.filename || 'fitness-course.pdf';
-                                  link.style.display = 'none';
-                                  document.body.appendChild(link);
-                                  link.click();
-                                  document.body.removeChild(link);
-                                  URL.revokeObjectURL(downloadUrl);
-                                } catch (error) {
-                                  console.error('Ошибка при скачивании base64 PDF:', error);
-                                  window.open(pdfUrl, '_blank');
-                                }
-                              } else if (pdfUrl.startsWith('data:text/html')) {
-                                // HTML файл - открываем в новой вкладке
-                                window.open(pdfUrl, '_blank');
-                              } else {
-                                // Новый формат: Vercel Blob URL или обычный URL - открываем в новой вкладке
-                                // Браузер сам откроет PDF
-                                window.open(pdfUrl, '_blank');
-                                console.log('PDF открыт в новой вкладке:', pdfUrl);
-                              }
-                            }
-                          } else {
-                            const error = await response.json();
-                            console.error("PDF generation failed:", error);
-                            alert(`Failed to generate PDF: ${error.error}`);
+                        if (c.pdfUrl.startsWith('data:application/pdf')) {
+                          // Старый формат: base64 PDF - скачиваем
+                          try {
+                            const base64Data = c.pdfUrl.split(',')[1];
+                            const pdfBlob = new Blob([Uint8Array.from(atob(base64Data), char => char.charCodeAt(0))], {
+                              type: 'application/pdf'
+                            });
+                            const downloadUrl = URL.createObjectURL(pdfBlob);
+                            const link = document.createElement('a');
+                            link.href = downloadUrl;
+                            link.download = `course-${courseId}.pdf`;
+                            link.style.display = 'none';
+                            document.body.appendChild(link);
+                            link.click();
+                            document.body.removeChild(link);
+                            URL.revokeObjectURL(downloadUrl);
+                          } catch (error) {
+                            console.error('Error downloading base64 PDF:', error);
+                            window.open(c.pdfUrl, '_blank');
                           }
-                        } catch (error) {
-                          console.error("PDF generation failed:", error);
-                          alert("Failed to generate PDF. Please try again.");
-                        } finally {
+                        } else {
+                          // Vercel Blob URL - открываем в новой вкладке
+                          window.open(c.pdfUrl, '_blank');
+                        }
+                        return;
+                      }
+                      
+                      // Если уже генерируется - не делаем ничего
+                      if (currentStatus === 'generating') {
+                        return;
+                      }
+                      
+                      // Запускаем генерацию PDF
+                      console.log("Starting PDF generation for course:", courseId);
+                      setPdfStatus(prev => ({ ...prev, [courseId]: 'generating' }));
+                      setGeneratingPDF(courseId);
+                      
+                      try {
+                        const response = await fetch("/api/courses/generate-pdf", {
+                          method: "POST",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({ courseId }),
+                        });
+                        
+                        if (!response.ok) {
+                          const error = await response.json().catch(() => ({ error: "Unknown error" }));
+                          throw new Error(error.error || "Failed to start PDF generation");
+                        }
+                        
+                        const data = await response.json();
+                        console.log("PDF generation started:", data);
+                        
+                        // Если PDF уже был готов (маловероятно, но возможно)
+                        if (data.status === 'completed' && data.pdfUrl) {
+                          setPdfStatus(prev => ({ ...prev, [courseId]: 'ready' }));
                           setGeneratingPDF(null);
+                          setCourses(prev => prev.map(course => 
+                            course.id === courseId ? { ...course, pdfUrl: data.pdfUrl } : course
+                          ));
+                        } else if (data.status === 'processing') {
+                          // Запускаем polling для проверки статуса
+                          pollPdfStatus(courseId);
+                        }
+                      } catch (error) {
+                        console.error("PDF generation failed:", error);
+                        setPdfStatus(prev => ({ ...prev, [courseId]: 'error' }));
+                        setGeneratingPDF(null);
+                        // Показываем понятное сообщение пользователю
+                        const errorMessage = error instanceof Error 
+                          ? error.message 
+                          : "Unknown error occurred";
+                        
+                        if (errorMessage.includes("Unauthorized")) {
+                          alert("You need to be logged in to generate PDF. Please sign in.");
+                        } else if (errorMessage.includes("not found")) {
+                          alert("Course not found. Please refresh the page and try again.");
+                        } else {
+                          alert(
+                            `Failed to start PDF generation: ${errorMessage}\n\n` +
+                            "You can try again by clicking the 'Generate PDF' button."
+                          );
                         }
                       }
                     }}
-                    disabled={generatingPDF === c.id}
+                    disabled={pdfStatus[c.id] === 'generating' || generatingPDF === c.id}
                     className={cn(
                       "min-w-[140px] transition-all duration-200",
-                      generatingPDF === c.id && "opacity-80 cursor-not-allowed"
+                      (pdfStatus[c.id] === 'generating' || generatingPDF === c.id) && "opacity-80 cursor-not-allowed",
+                      pdfStatus[c.id] === 'error' && "border-red-500 text-red-500"
                     )}
                   >
-                    {generatingPDF === c.id ? (
+                    {pdfStatus[c.id] === 'generating' || generatingPDF === c.id ? (
                       <>
                         <Spinner size={16} className="text-current" />
                         <span>Generating...</span>
@@ -721,6 +795,11 @@ export function Dashboard({ requireAuth, openAuth, balance, currentPreview, onDi
                       <>
                         <FileDown size={16} />
                         <span>Download PDF</span>
+                      </>
+                    ) : pdfStatus[c.id] === 'error' ? (
+                      <>
+                        <FileDown size={16} />
+                        <span>Generate PDF</span>
                       </>
                     ) : (
                       <>
