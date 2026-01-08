@@ -170,6 +170,23 @@ export function Dashboard({ requireAuth, openAuth, balance, currentPreview, onDi
     options: string;
   };
 
+  type CoachRequestItem = {
+    id: string;
+    coachId: string;
+    coachSlug: string;
+    goal: string;
+    level: string;
+    trainingType: string;
+    equipment: string;
+    daysPerWeek: number;
+    status: "pending" | "processing" | "done" | "failed";
+    tokensCharged: number;
+    courseId: string | null;
+    error: string | null;
+    createdAt: string;
+    updatedAt: string;
+  };
+
   type TxItem = {
     id: string;
     type: "topup" | "spend";
@@ -187,6 +204,7 @@ export function Dashboard({ requireAuth, openAuth, balance, currentPreview, onDi
   // Все хуки должны быть в начале компонента
   const [loading, setLoading] = React.useState(true);
   const [courses, setCourses] = React.useState<CourseItem[]>([]);
+  const [coachRequests, setCoachRequests] = React.useState<CoachRequestItem[]>([]);
   const [transactions, setTransactions] = React.useState<TxItem[]>([]);
   const [currentPage, setCurrentPage] = React.useState(1);
   const [hasMore, setHasMore] = React.useState(true);
@@ -209,19 +227,24 @@ export function Dashboard({ requireAuth, openAuth, balance, currentPreview, onDi
     async function fetchCoursesAndTx() {
       try {
         setLoading(true);
-        const [cRes, tRes] = await Promise.all([
+        const [cRes, tRes, crRes] = await Promise.all([
           fetch("/api/courses/list"),
           fetch(`/api/tokens/history?limit=${ITEMS_PER_PAGE}`),
+          fetch("/api/coach-requests/list"),
         ]);
         if (cancelled) return;
         const cJson = await cRes.json().catch(() => ({ items: [] }));
         const tJson = await tRes.json().catch(() => ({ items: [] }));
+        const crJson = await crRes.json().catch(() => ({ items: [] }));
         const coursesData = Array.isArray(cJson.items) ? cJson.items : [];
         const transactionsData = Array.isArray(tJson.items) ? tJson.items : [];
+        const coachRequestsData = Array.isArray(crJson.items) ? crJson.items : [];
         console.log("Loaded courses:", coursesData);
         console.log("Loaded transactions:", transactionsData);
+        console.log("Loaded coach requests:", coachRequestsData);
         setCourses(coursesData);
         setTransactions(transactionsData);
+        setCoachRequests(coachRequestsData);
         setHasMore(transactionsData?.length === ITEMS_PER_PAGE);
       } catch (error) {
         console.error("Failed to load dashboard data:", error);
@@ -599,6 +622,73 @@ export function Dashboard({ requireAuth, openAuth, balance, currentPreview, onDi
                 <X size={16} /> Dismiss
               </GhostButton>
             </div>
+          </div>
+        </Card>
+      )}
+
+      {/* Запросы к коучам */}
+      {coachRequests.length > 0 && (
+        <Card>
+          <div className="flex items-center justify-between">
+            <h3 className="text-xl font-semibold flex items-center gap-2">
+              <UserPlus size={18} /> Coach Requests
+            </h3>
+          </div>
+          
+          <div className="mt-4 grid gap-4 md:grid-cols-2">
+            {coachRequests.map((req) => {
+              const statusColors = {
+                pending: "bg-yellow-100 text-yellow-800 border-yellow-300",
+                processing: "bg-blue-100 text-blue-800 border-blue-300",
+                done: "bg-green-100 text-green-800 border-green-300",
+                failed: "bg-red-100 text-red-800 border-red-300",
+              };
+              
+              return (
+                <Card key={req.id} className="border-dashed">
+                  <div className="flex items-start justify-between mb-2">
+                    <div className="text-xs opacity-70">
+                      {new Date(req.createdAt).toLocaleDateString()}
+                    </div>
+                    <span className={`text-xs px-2 py-1 rounded border ${statusColors[req.status]}`}>
+                      {req.status}
+                    </span>
+                  </div>
+                  <div className="mt-1 text-lg font-semibold">
+                    Goal: {req.goal}
+                  </div>
+                  <div className="mt-1 text-sm opacity-80">
+                    {req.level} • {req.trainingType} • {req.daysPerWeek} days/week
+                  </div>
+                  <div className="mt-1 text-sm opacity-70">
+                    Spent: {formatNumber(req.tokensCharged)} tokens
+                  </div>
+                  {req.status === "done" && req.courseId && (
+                    <div className="mt-3">
+                      <AccentButton onClick={() => {
+                        const course = courses.find(c => c.id === req.courseId);
+                        if (course) {
+                          setSelectedCourse(course);
+                          setShowCourseModal(true);
+                        }
+                      }}>
+                        Open Course
+                      </AccentButton>
+                    </div>
+                  )}
+                  {req.status === "failed" && req.error && (
+                    <div className="mt-2 text-xs text-red-600">
+                      Error: {req.error}
+                    </div>
+                  )}
+                  {req.status === "pending" || req.status === "processing" ? (
+                    <div className="mt-2 text-xs opacity-70">
+                      Processing... This may take 3-8 hours.
+                    </div>
+                  ) : null}
+                </Card>
+              );
+            })}
           </div>
         </Card>
       )}

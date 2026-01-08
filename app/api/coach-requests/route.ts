@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { calcCoachRequestTokens } from "@/lib/tokens";
 import { getUserBalance } from "@/lib/balance";
 import { prisma } from "@/lib/db";
+import { inngest } from "@/inngest/client";
 
 /**
  * Coach requests endpoint
@@ -74,7 +75,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Deduct tokens immediately
-    await prisma.transaction.create({
+    const tx = await prisma.transaction.create({
       data: {
         userId: session.user.id,
         type: "spend",
@@ -89,35 +90,51 @@ export async function POST(request: NextRequest) {
       select: { id: true },
     });
 
-    // TODO: Save to database when DB is ready
-    // For now, stub the response
-    const requestId = `req-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-    
-    // In the future, this would be:
-    // const coachRequest = await prisma.coachRequest.create({
-    //   data: {
-    //     userId: session.user.id,
-    //     coachId: body.coachId,
-    //     coachSlug: body.coachSlug,
-    //     goal: body.goal,
-    //     level: body.level,
-    //     trainingType: body.trainingType,
-    //     equipment: body.equipment,
-    //     daysPerWeek: body.daysPerWeek,
-    //     notes: body.notes || null,
-    //     status: "pending",
-    //     tokensCharged: costBreakdown.total,
-    //     transactionId: tx.id,
-    //   },
-    // });
+    // Save coach request to database
+    const coachRequest = await prisma.coachRequest.create({
+      data: {
+        userId: session.user.id,
+        coachId: body.coachId,
+        coachSlug: body.coachSlug,
+        goal: body.goal,
+        level: body.level,
+        trainingType: body.trainingType,
+        equipment: body.equipment,
+        daysPerWeek: body.daysPerWeek,
+        notes: body.notes || null,
+        status: "pending",
+        tokensCharged: costBreakdown.total,
+      },
+      select: { id: true },
+    });
+
+    // Send Inngest event to process the request asynchronously
+    inngest.send({
+      name: "coach/requested",
+      data: {
+        requestId: coachRequest.id,
+        userId: session.user.id,
+        coachId: body.coachId,
+        coachSlug: body.coachSlug,
+        goal: body.goal,
+        level: body.level,
+        trainingType: body.trainingType,
+        equipment: body.equipment,
+        daysPerWeek: body.daysPerWeek,
+        notes: body.notes || null,
+      },
+    }).catch((error) => {
+      // Log error but don't fail the request - it will be retried
+      console.error("Failed to trigger coach request processing:", error);
+    });
 
     // Get updated balance
     const newBalance = await getUserBalance(session.user.id);
 
     return NextResponse.json({
       success: true,
-      requestId,
-      message: "Request received",
+      requestId: coachRequest.id,
+      message: "Request received and will be processed within 3-8 hours",
       tokensCharged: costBreakdown.total,
       newBalance,
     });

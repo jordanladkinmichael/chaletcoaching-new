@@ -81,9 +81,14 @@ const MUSCLE_EXERCISE_MAP = {
 };
 
 // Генерация плана тренировок
-export async function generateWorkoutPlan(request: FitnessContentRequest): Promise<string> {
+export async function generateWorkoutPlan(request: FitnessContentRequest, additionalContext?: string): Promise<string> {
   try {
-    const prompt = buildWorkoutPrompt(request);
+    let prompt = buildWorkoutPrompt(request);
+    
+    // Add additional context if provided (e.g., from coach request notes)
+    if (additionalContext) {
+      prompt += additionalContext;
+    }
     
     const completion = await openai.chat.completions.create({
       model: "gpt-4o-mini",

@@ -3,6 +3,7 @@ import { inngest } from "@/inngest/client";
 import { generatePDF } from "@/inngest/functions/pdf-generation";
 import { ping } from "@/inngest/functions/ping";
 import { testConnection } from "@/inngest/functions/test-connection";
+import { processCoachRequest } from "@/inngest/functions/coach-request";
 
 // Runtime configuration for Vercel
 export const runtime = 'nodejs'; // Inngest functions use Prisma which requires Node.js
@@ -15,6 +16,7 @@ export const { GET, POST, PUT } = serve({
     generatePDF,
     ping,
     testConnection,
+    processCoachRequest,
   ],
   signingKey: process.env.INNGEST_SIGNING_KEY,
 });
