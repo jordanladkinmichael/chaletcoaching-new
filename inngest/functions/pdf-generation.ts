@@ -234,11 +234,12 @@ export const generatePDF = inngest.createFunction(
         console.log(`PDF generated successfully: ${pdfSizeKB} KB`);
         
         // Сохраняем buffer в переменную вне шага
-        pdfBuffer = generatedPdfBuffer;
+        // Конвертируем в Buffer для совместимости типов (page.pdf() может вернуть Uint8Array)
+        pdfBuffer = Buffer.from(generatedPdfBuffer);
         
         // Возвращаем только метаданные, не сам PDF buffer (может быть очень большим)
         return {
-          pdfSize: generatedPdfBuffer.length,
+          pdfSize: pdfBuffer.length,
           pdfSizeKB,
         };
       } catch (error) {
