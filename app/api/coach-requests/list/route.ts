@@ -30,6 +30,7 @@ export async function GET() {
         tokensCharged: true,
         courseId: true,
         error: true,
+        availableAt: true,
         createdAt: true,
         updatedAt: true,
       },
@@ -54,6 +55,7 @@ export async function GET() {
     const itemsWithPdf = requests.map(req => ({
       ...req,
       pdfUrl: req.courseId ? courseMap.get(req.courseId) || null : null,
+      availableAt: req.availableAt?.toISOString() || null,
       createdAt: req.createdAt.toISOString(),
       updatedAt: req.updatedAt.toISOString(),
     }));

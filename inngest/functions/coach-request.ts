@@ -6,6 +6,7 @@
 import { inngest } from "../client";
 import { prisma } from "@/lib/db";
 import { generateAndSaveCourse, CourseGenerationOptions } from "@/lib/course-generator";
+import { sendCourseEmailByUrl } from "@/lib/email/course-email";
 
 type CoachRequestedEvent = {
   name: "coach/requested";
@@ -20,6 +21,7 @@ type CoachRequestedEvent = {
     equipment: string;
     daysPerWeek: number;
     notes?: string | null;
+    availableAt?: string; // ISO string for when the course becomes available
   };
 };
 
@@ -156,6 +158,59 @@ export const processCoachRequest = inngest.createFunction(
       console.log(`[Coach Request] PDF generation event sent successfully for course ${course.id}`);
       return { pdfTriggered: true };
     });
+
+    // Step 5: Wait until availableAt and then send email
+    const availableAt = event.data.availableAt;
+    if (availableAt) {
+      const availableDate = new Date(availableAt);
+      const now = new Date();
+      
+      if (availableDate > now) {
+        console.log(`[Coach Request] Waiting until ${availableAt} to send email for course ${course.id}`);
+        await step.sleepUntil("wait-until-available", availableDate);
+      }
+      
+      // Step 6: Send email with PDF
+      await step.run("send-course-email", async () => {
+        console.log(`[Coach Request] Sending delayed email for course ${course.id}`);
+        
+        // Get course with pdfUrl
+        const courseWithPdf = await prisma.course.findUnique({
+          where: { id: course.id },
+          select: { 
+            id: true, 
+            title: true, 
+            pdfUrl: true, 
+            createdAt: true,
+            options: true,
+          },
+        });
+        
+        if (!courseWithPdf || !courseWithPdf.pdfUrl) {
+          console.warn(`[Coach Request] Course ${course.id} has no PDF URL, skipping email`);
+          return { emailSent: false, reason: "no_pdf_url" };
+        }
+        
+        const options = typeof courseWithPdf.options === "string" 
+          ? JSON.parse(courseWithPdf.options) 
+          : courseWithPdf.options;
+        
+        const emailSent = await sendCourseEmailByUrl({
+          courseId: course.id,
+          userId,
+          pdfUrl: courseWithPdf.pdfUrl,
+          courseTitle: courseWithPdf.title || "Fitness Program",
+          createdAt: courseWithPdf.createdAt,
+          options: {
+            weeks: options?.weeks,
+            sessionsPerWeek: options?.sessionsPerWeek,
+          },
+        });
+        
+        console.log(`[Coach Request] Email sent for course ${course.id}: ${emailSent}`);
+        return { emailSent };
+      });
+    }
 
     return {
       success: true,

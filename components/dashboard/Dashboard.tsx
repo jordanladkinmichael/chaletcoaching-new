@@ -184,6 +184,7 @@ export function Dashboard({ requireAuth, openAuth, balance, currentPreview, onDi
     courseId: string | null;
     error: string | null;
     pdfUrl: string | null;
+    availableAt: string | null;
     createdAt: string;
     updatedAt: string;
   };
@@ -737,7 +738,7 @@ export function Dashboard({ requireAuth, openAuth, balance, currentPreview, onDi
                   <div className="mt-1 text-sm opacity-70">
                     Spent: {formatNumber(req.tokensCharged)} tokens
                   </div>
-                  {req.status === "done" && req.courseId && (
+                  {req.status === "done" && req.courseId && (!req.availableAt || new Date(req.availableAt) <= new Date()) && (
                     <div className="mt-3 flex gap-2 flex-wrap">
                       <AccentButton onClick={() => {
                         const course = courses.find(c => c.id === req.courseId);
@@ -861,11 +862,23 @@ export function Dashboard({ requireAuth, openAuth, balance, currentPreview, onDi
                       Error: {req.error}
                     </div>
                   )}
-                  {req.status === "pending" || req.status === "processing" ? (
+                  {(req.status === "pending" || req.status === "processing") && (
                     <div className="mt-2 text-xs opacity-70">
-                      Processing... This may take 3-8 hours.
+                      <Timer size={12} className="inline mr-1" />
+                      Your coach has received your request. Your personalized course is being prepared.
                     </div>
-                  ) : null}
+                  )}
+                  {req.status === "done" && req.availableAt && new Date(req.availableAt) > new Date() && (
+                    <div className="mt-2 text-xs opacity-70">
+                      <Timer size={12} className="inline mr-1" />
+                      Your course is ready! Available for download in {(() => {
+                        const hoursLeft = Math.ceil((new Date(req.availableAt).getTime() - Date.now()) / (1000 * 60 * 60));
+                        if (hoursLeft <= 0) return "a few minutes";
+                        if (hoursLeft === 1) return "1 hour";
+                        return `${hoursLeft} hours`;
+                      })()}.
+                    </div>
+                  )}
                 </Card>
               );
             })}

@@ -8,7 +8,7 @@ export const metadata: Metadata = {
   description: "Privacy policy and data handling practices for Chaletcoaching",
 };
 
-const EFFECTIVE_DATE = "12 August 2025";
+const EFFECTIVE_DATE = "January 17, 2026";
 
 // Малая локальная карточка, как в Terms/Refunds
 function Card({ children }: { children: React.ReactNode }) {
@@ -36,156 +36,183 @@ export default function PrivacyPage() {
         <p className="opacity-80 text-sm">Effective date: {EFFECTIVE_DATE}</p>
       </header>
 
-      {/* Data Controller Information */}
-      <Card>
-        <h2 className="text-lg font-semibold mb-3">Data Controller Information</h2>
-        <div className="opacity-90 text-sm space-y-1">
-          <p><strong>Data controller:</strong> CHALET AQUARIUS LTD (Company No. 15587263)</p>
-          <p><strong>Registered office:</strong> 20 Wenlock Road, London, England, N1 7GU</p>
-          <p><strong>Contact (Privacy / Support):</strong> info@chaletcoaching.co.uk • +44 7441 392840</p>
-          <p><strong>Service:</strong> https://www.chaletcoaching.co.uk</p>
-        </div>
-      </Card>
-
       {/* Introduction */}
       <Card>
         <h2 className="text-lg font-semibold mb-3">1. Introduction</h2>
-        <p className="opacity-90 text-sm">
-          We respect your privacy. This Privacy Policy explains what personal data we collect, how we use it, how long we keep it, with whom we share it, &quot;and how you can exercise your rights. It applies when you use the Chaletcoaching website, app and services (the &quot;Service&quot;).
-        </p>
-      </Card>
-
-      {/* Data we collect */}
-      <Card>
-        <h2 className="text-lg font-semibold mb-3">2. Data we collect</h2>
-        <p className="mb-3 opacity-90 text-sm">We only collect the personal data reasonably necessary to operate and improve the Service.</p>
         <div className="space-y-3 opacity-90 text-sm">
-          <p><strong>Identity & contact:</strong> name, email address; postal/billing address and phone number (where required for invoicing or support).</p>
-          <p><strong>Account data:</strong> login email, hashed password, profile details, preferences, marketing choices, consent records.</p>
-          <p><strong>Transactions & tokens:</strong> order references, token top-ups/redemptions, payment metadata (processor reference, amounts, dates). We do not store full card numbers or CVV.</p>
-          <p><strong>Service usage:</strong> plan previews and generations, exports/downloads, access logs, device/session identifiers.</p>
-          <p><strong>Fitness inputs you provide:</strong> training goals, constraints (time/equipment), experience level, and optional self-reported information (e.g., injuries, conditions, pregnancy status).</p>
-          <p><strong>Technical data:</strong> IP address, device type, operating system, browser/user-agent, timestamps, diagnostic/error logs.</p>
-          <p><strong>Support:</strong> emails and chat transcripts, attachments you send (screenshots, files, export IDs).</p>
-          <p><strong>Special category data (health).</strong> We do not require medical data. If you choose to share health-related information to tailor your plan, we process that limited data only with your explicit consent and you can withdraw consent at any time (see §7).</p>
-        </div>
-      </Card>
-
-      {/* Why we use your data & legal bases */}
-      <Card>
-        <h2 className="text-lg font-semibold mb-3">3. Why we use your data & legal bases</h2>
-        <p className="mb-3 opacity-90 text-sm">We process personal data for the following purposes under UK GDPR:</p>
-        <div className="space-y-3 opacity-90 text-sm">
-          <p><strong>Provide and operate the Service</strong> (create/manage accounts, token balance, deliver plan previews/exports, maintain history).<br />
-          <em>Legal basis: performance of a contract.</em></p>
-          <p><strong>Payments, fraud prevention, and compliance</strong> (reconciliation, chargeback handling, record keeping, tax/VAT).<br />
-          <em>Legal basis: legal obligation & legitimate interests (protect users and our business).</em></p>
-          <p><strong>Support, complaints and refunds</strong> (identify you, investigate, resolve).<br />
-          <em>Legal basis: performance of a contract & legitimate interests.</em></p>
-          <p><strong>Improve reliability and security</strong> (metrics, diagnostics, abuse detection, rate-limiting).<br />
-          <em>Legal basis: legitimate interests (we balance against your rights).</em></p>
-          <p><strong>Marketing</strong> (newsletters, offers) where you opt in.<br />
-          <em>Legal basis: consent (you can withdraw at any time).</em></p>
-          <p><strong>Fitness personalisation</strong> that may include health hints you provide.<br />
-          <em>Legal basis: explicit consent for any health-related details you choose to submit.</em></p>
-          <p><strong>We do not sell personal data.</strong></p>
-        </div>
-      </Card>
-
-      {/* AI personalisation & automated decisions */}
-      <div className="grid gap-6 md:grid-cols-2">
-        <Card>
-          <h2 className="text-lg font-semibold mb-3">4. AI personalisation & automated decisions</h2>
-          <p className="opacity-90 text-sm">
-            We use AI to help generate and tailor fitness plans based on your inputs. This is profiling for personalisation only and does not produce legal or similarly significant effects on you. You can opt out of marketing profiling at any time and you may use the Service without providing any health information (you will still receive general plans).
-          </p>
-        </Card>
-
-        <Card>
-          <h2 className="text-lg font-semibold mb-3">5. Sharing and international transfers</h2>
-          <div className="space-y-3 opacity-90 text-sm">
-            <p>We share data with trusted service providers strictly as needed to run the Service, for example:</p>
-            <ul className="list-disc pl-5 space-y-1">
-              <li>payment processors, fraud-prevention and chargeback services;</li>
-              <li>cloud hosting, databases, storage and content delivery;</li>
-              <li>email and customer-support tools;</li>
-              <li>analytics and crash-reporting (limited, privacy-respecting where feasible);</li>
-              <li>professional advisers (legal, accounting, audit).</li>
-            </ul>
-            <p>Some providers are outside the UK/EEA. Where we transfer data internationally, we use appropriate safeguards: UK adequacy decisions, Standard Contractual Clauses (SCCs), and additional measures where necessary, ensuring an adequate level of protection.</p>
+          <p>CHALET AQUARIUS LTD (&quot;Company&quot;, &quot;we&quot;, &quot;us&quot;, &quot;our&quot;) is committed to protecting your privacy and the sensitive personal information you entrust to us. This Privacy Policy outlines how we collect, use, disclose, and safeguard your personal data when you use our website chaletcoaching.co.uk and our fitness coaching platform (the &quot;Service&quot;).</p>
+          <p>We act as the Data Controller for the personal data you provide to us directly.</p>
+          <div className="space-y-1">
+            <p><strong>Company Name:</strong> CHALET AQUARIUS LTD</p>
+            <p><strong>Company Number:</strong> 15587263</p>
+            <p><strong>Registered Address:</strong> 20 Wenlock Road, London, England, N1 7GU</p>
+            <p><strong>Email:</strong> info@chaletcoaching.co.uk</p>
           </div>
-        </Card>
-      </div>
-
-      {/* Cookies and similar technologies */}
-      <Card>
-        <h2 className="text-lg font-semibold mb-3">6. Cookies and similar technologies</h2>
-        <p className="opacity-90 text-sm">
-          We use cookies and similar technologies (e.g., localStorage, sessionStorage, pixels) to operate core functions (authentication, security), remember preferences, measure performance and—where you consent—enable analytics/marketing. Essential cookies do not require consent. For details and choices, see our Cookie Policy.
-        </p>
+          <p>By using the Service, purchasing Tokens, or requesting a fitness plan, you acknowledge the terms of this Policy. This Service is strictly intended for users aged 18 and over.</p>
+        </div>
       </Card>
 
-      {/* How long we keep your data */}
+      {/* Data We Collect */}
       <Card>
-        <h2 className="text-lg font-semibold mb-3">7. How long we keep your data (retention)</h2>
-        <p className="mb-3 opacity-90 text-sm">We retain data only as long as necessary for the purposes above and to meet legal, regulatory and accounting obligations.</p>
+        <h2 className="text-lg font-semibold mb-3">2. Data We Collect</h2>
         <div className="space-y-3 opacity-90 text-sm">
-          <p><strong>Orders/payments/tokens</strong> (including checkout evidence): at least 24 months, and up to 6 years for compliance or disputed/enterprise transactions.</p>
-          <p><strong>Account profile & access logs:</strong> while the account is active and for a reasonable period after closure for security/fraud prevention and legal compliance.</p>
-          <p><strong>Support records:</strong> for the time needed to resolve the issue and a reasonable period thereafter.</p>
-          <p><strong>Health-related details</strong> (if any): stored minimally and only as long as needed for the chosen plan; deleted or anonymised on withdrawal of consent or when no longer required.</p>
-          <p>When retention ends, we delete or anonymise data unless a longer period is required by law.</p>
+          <p>We collect data necessary to generate personalized fitness plans, process Token payments, and deliver digital content.</p>
+          
+          <p><strong>2.1. Data You Provide</strong></p>
+          <ul className="list-disc pl-5 space-y-1 ml-4">
+            <li><strong>Account Information:</strong> Your name, email address, phone number, and secure password.</li>
+            <li><strong>Physical & Health Data (Special Category Data):</strong> To create effective AI or Trainer-led fitness plans, we collect sensitive data including, but not limited to:
+              <ul className="list-disc pl-5 space-y-1 mt-1">
+                <li>Age, gender, height, and weight.</li>
+                <li>Fitness goals (e.g., weight loss, muscle gain).</li>
+                <li>Current fitness level and lifestyle habits.</li>
+                <li>Physical limitations or past injuries (to ensure safety).</li>
+              </ul>
+              <p className="mt-1"><strong>Legal Basis:</strong> By submitting this information, you provide Explicit Consent for us to process this data solely for the purpose of generating your workout plan.</p>
+            </li>
+            <li><strong>Transaction Data:</strong> Details of Token package purchases, payment history, and current Token balance. We do not store full credit card numbers.</li>
+            <li><strong>Support Communications:</strong> Records of your correspondence with our support team or chat history with Trainers.</li>
+          </ul>
+
+          <p><strong>2.2. Data Collected Automatically</strong></p>
+          <ul className="list-disc pl-5 space-y-1 ml-4">
+            <li><strong>Technical Data:</strong> IP address, browser type and version, time zone setting, operating system, and device type.</li>
+            <li><strong>Usage Data:</strong> Information about how you navigate our dashboard, download courses, and utilize the Token system.</li>
+            <li><strong>Cookies:</strong> Small data files stored on your device to maintain your login session and preferences.</li>
+          </ul>
         </div>
       </Card>
 
-      {/* Your rights */}
+      {/* How We Use Your Data */}
       <Card>
-        <h2 className="text-lg font-semibold mb-3">8. Your rights</h2>
-        <p className="mb-3 opacity-90 text-sm">Under UK data protection law you may have the right to:</p>
-        <div className="space-y-2 opacity-90 text-sm ml-4">
-          <p>• Access your personal data;</p>
-          <p>• Rectify inaccurate or incomplete data;</p>
-          <p>• Erase data (in certain circumstances);</p>
-          <p>• Restrict processing;</p>
-          <p>• Data portability (for data you provided, where technically feasible);</p>
-          <p>• Object to processing based on legitimate interests or to direct marketing;</p>
-          <p>• Withdraw consent at any time (e.g., marketing or health-related inputs).</p>
+        <h2 className="text-lg font-semibold mb-3">3. How We Use Your Data</h2>
+        <div className="space-y-3 opacity-90 text-sm">
+          <p>We process your personal data under the UK GDPR and Data Protection Act 2018 based on the following legal grounds:</p>
+          
+          <p><strong>3.1. Performance of a Contract</strong></p>
+          <ul className="list-disc pl-5 space-y-1 ml-4">
+            <li>To manage your User Account and Token Wallet.</li>
+            <li>To deliver the purchased PDF courses to your email and dashboard.</li>
+            <li>To process payments via our payment processors (Visa/Mastercard).</li>
+          </ul>
+
+          <p><strong>3.2. Explicit Consent (Article 9 UK GDPR)</strong></p>
+          <ul className="list-disc pl-5 space-y-1 ml-4">
+            <li>To process your Health and Physical Data for the specific purpose of generating a workout routine. You may withdraw this consent at any time by deleting your account, but this will prevent us from providing further services.</li>
+          </ul>
+
+          <p><strong>3.3. Legal Obligation</strong></p>
+          <ul className="list-disc pl-5 space-y-1 ml-4">
+            <li>To maintain financial records for tax and accounting purposes (HMRC compliance).</li>
+            <li>To prevent fraud and money laundering.</li>
+          </ul>
+
+          <p><strong>3.4. Legitimate Interests</strong></p>
+          <ul className="list-disc pl-5 space-y-1 ml-4">
+            <li>To improve our AI algorithms and website functionality.</li>
+            <li>To send strictly operational emails (e.g., &quot;Course Ready for Download&quot;, &quot;Password Reset&quot;).</li>
+          </ul>
         </div>
-        <p className="mt-3 opacity-90 text-sm">
-          To exercise your rights, contact info@chaletcoaching.co.uk. We may need to verify your identity. We respond within statutory timeframes (normally one month). Some rights may be limited by law (e.g., where we must retain records).
-        </p>
       </Card>
 
-      {/* Additional sections */}
-      <div className="grid gap-6 md:grid-cols-2">
-        <Card>
-          <h2 className="text-lg font-semibold mb-3">9. Security</h2>
-          <p className="opacity-90 text-sm">
-            We implement reasonable technical and organisational measures, including encryption in transit, access controls, least-privilege policies, secure backups, logging and vulnerability management. No system is completely secure; we cannot guarantee absolute security.
-          </p>
-        </Card>
-
-        <Card>
-          <h2 className="text-lg font-semibold mb-3">10. Children</h2>
-          <p className="opacity-90 text-sm">
-            The Service is intended for adults (18+). We do not knowingly collect data from children under 18. If you believe a child has provided data, contact info@chaletcoaching.co.uk and we will delete it.
-          </p>
-        </Card>
-      </div>
-
-      {/* Changes to this Policy */}
+      {/* Sharing of Personal Data */}
       <Card>
-        <h2 className="text-lg font-semibold mb-3">11. Changes to this Policy</h2>
+        <h2 className="text-lg font-semibold mb-3">4. Sharing of Personal Data</h2>
+        <div className="space-y-3 opacity-90 text-sm">
+          <p>To provide our services, we may share your data with trusted third parties. We require all third parties to respect the security of your personal data and to treat it in accordance with the law.</p>
+          <ol className="list-decimal pl-5 space-y-2 ml-4">
+            <li><strong>Contracted Fitness Trainers:</strong> If you purchase a &quot;Trainer Course,&quot; we share your Physical & Health Data with the specific human trainer assigned to your order so they can compile your PDF plan.</li>
+            <li><strong>AI Technology Providers:</strong> If you purchase an &quot;AI Course,&quot; your anonymized or pseudonymized metrics are processed by our AI algorithms to generate the content instantly.</li>
+            <li><strong>Payment Processors:</strong> We use secure third-party payment gateways to process Visa/Mastercard transactions. They process your financial data independently.</li>
+            <li><strong>Service Providers:</strong> Cloud hosting services (to store your PDF files securely), email delivery services (to send your plans), and IT support.</li>
+            <li><strong>Professional Advisers:</strong> Accountants and lawyers for legal and financial compliance.</li>
+          </ol>
+          <p><strong>We do NOT sell your personal data to advertisers.</strong></p>
+        </div>
+      </Card>
+
+      {/* International Data Transfers */}
+      <Card>
+        <h2 className="text-lg font-semibold mb-3">5. International Data Transfers</h2>
+        <div className="space-y-3 opacity-90 text-sm">
+          <p>Our servers and third-party service providers (e.g., cloud hosting) may be located outside the UK or the European Economic Area (EEA).</p>
+          <p>If we transfer your data out of the UK, we ensure a similar degree of protection is afforded to it by ensuring at least one of the following safeguards is implemented:</p>
+          <ul className="list-disc pl-5 space-y-1 ml-4">
+            <li>The country is deemed to provide an adequate level of protection; or</li>
+            <li>We use specific contracts approved by the UK Information Commissioner&apos;s Office (ICO) regarding personal data protection (Standard Contractual Clauses).</li>
+          </ul>
+        </div>
+      </Card>
+
+      {/* Data Retention */}
+      <Card>
+        <h2 className="text-lg font-semibold mb-3">6. Data Retention</h2>
+        <div className="space-y-3 opacity-90 text-sm">
+          <p>We retain your personal data only as long as necessary to fulfill the purposes we collected it for:</p>
+          <ul className="list-disc pl-5 space-y-1 ml-4">
+            <li><strong>Account & Health Data:</strong> Retained while your account is active to allow you to download past courses. If you delete your account, this data is anonymized or erased within 30 days.</li>
+            <li><strong>Financial Records:</strong> Kept for 6 years to comply with UK tax laws.</li>
+            <li><strong>Token History:</strong> Retained for audit purposes as long as the account exists.</li>
+          </ul>
+        </div>
+      </Card>
+
+      {/* Your Legal Rights */}
+      <Card>
+        <h2 className="text-lg font-semibold mb-3">7. Your Legal Rights</h2>
+        <div className="space-y-3 opacity-90 text-sm">
+          <p>Under the UK GDPR, you have the right to:</p>
+          <ul className="list-disc pl-5 space-y-1 ml-4">
+            <li><strong>Access:</strong> Request a copy of the personal data we hold about you.</li>
+            <li><strong>Correction:</strong> Request correction of inaccurate data (e.g., updating your weight or email).</li>
+            <li><strong>Erasure (Right to be Forgotten):</strong> Request deletion of your data (subject to our legal tax obligations).</li>
+            <li><strong>Restriction:</strong> Request restriction of processing.</li>
+            <li><strong>Data Portability:</strong> Request transfer of your data to you or another provider.</li>
+          </ul>
+          <p>To exercise these rights, please contact us at info@chaletcoaching.co.uk.</p>
+        </div>
+      </Card>
+
+      {/* Data Security */}
+      <Card>
+        <h2 className="text-lg font-semibold mb-3">8. Data Security</h2>
+        <div className="space-y-3 opacity-90 text-sm">
+          <p>We implement robust security measures to prevent your personal data from being accidentally lost, used, or accessed in an unauthorized way.</p>
+          <ul className="list-disc pl-5 space-y-1 ml-4">
+            <li>We use SSL/TLS encryption for all data in transit.</li>
+            <li>Access to your Health Data is restricted to employees and trainers who have a direct business need to know.</li>
+            <li>Files stored in the dashboard are protected by authentication protocols.</li>
+          </ul>
+        </div>
+      </Card>
+
+      {/* Third-Party Links */}
+      <Card>
+        <h2 className="text-lg font-semibold mb-3">9. Third-Party Links</h2>
         <p className="opacity-90 text-sm">
-          We may update this Privacy Policy from time to time. Material changes will be notified via email to registered users and/or a prominent notice in the Service. The effective date above will be updated.
+          Our website may contain links to third-party websites. Clicking on those links may allow third parties to collect data about you. We do not control these third-party websites and are not responsible for their privacy statements.
         </p>
       </Card>
 
-      {/* Contact & complaints */}
+      {/* Updates to This Policy */}
       <Card>
-        <h2 className="text-lg font-semibold mb-3">12. Contact & complaints</h2>
-        <div className="opacity-90 text-sm space-y-1">
-          <p><strong>Questions or requests:</strong> info@chaletcoaching.co.uk • +44 7441 392840 • CHALET AQUARIUS LTD, 20 Wenlock Road, London, England, N1 7GU.</p>
+        <h2 className="text-lg font-semibold mb-3">10. Updates to This Policy</h2>
+        <p className="opacity-90 text-sm">
+          We may update this Privacy Policy from time to time. The new version will be posted on this page with an updated &quot;Effective Date&quot;. Continued use of the Service constitutes acceptance of the updated policy.
+        </p>
+      </Card>
+
+      {/* Contact Us */}
+      <Card>
+        <h2 className="text-lg font-semibold mb-3">11. Contact Us</h2>
+        <div className="space-y-3 opacity-90 text-sm">
+          <p>If you have any questions about this Privacy Policy or how we handle your health data, please contact:</p>
+          <div className="space-y-1">
+            <p><strong>CHALET AQUARIUS LTD</strong></p>
+            <p><strong>Address:</strong> 20 Wenlock Road, London, England, N1 7GU</p>
+            <p><strong>Email:</strong> info@chaletcoaching.co.uk</p>
+            <p><strong>Phone:</strong> +44 7441 392840</p>
+          </div>
         </div>
       </Card>
     </main>

@@ -363,32 +363,44 @@ export const generatePDF = inngest.createFunction(
       });
       console.log(`PDF URL saved to database: ${blobResult.url}`);
 
-      // === Отправка email с PDF (не критично, ошибки не прерывают процесс) ===
-      try {
-        console.log('Sending course email to user...');
-        const emailSent = await sendCourseEmail({
-          courseId,
-          userId,
-          pdfBuffer,
-          courseTitle: course.title || "Fitness Program",
-          createdAt: new Date(course.createdAt),
-          options: {
-            weeks: options.weeks,
-            sessionsPerWeek: options.sessionsPerWeek,
-            workoutTypes: Array.isArray(options.workoutTypes) ? options.workoutTypes : [],
-            targetMuscles: Array.isArray(options.targetMuscles) ? options.targetMuscles : [],
-          },
-        });
-        
-        if (emailSent) {
-          console.log(`Course email sent successfully for course ${courseId}`);
-        } else {
-          console.log(`Course email was not sent for course ${courseId} (user may not have email or Resend not configured)`);
+      // === Отправка email с PDF (только для обычных курсов, не для курсов коуча) ===
+      // Для курсов коуча email отправляется отложенно через coach-request.ts
+      const coachRequest = await prisma.coachRequest.findFirst({
+        where: { courseId },
+        select: { id: true, availableAt: true },
+      });
+
+      if (coachRequest) {
+        // Это курс коуча — email будет отправлен позже через coach-request.ts
+        console.log(`Course ${courseId} is a coach course, email will be sent at ${coachRequest.availableAt}`);
+      } else {
+        // Это обычный курс — отправляем email сразу
+        try {
+          console.log('Sending course email to user...');
+          const emailSent = await sendCourseEmail({
+            courseId,
+            userId,
+            pdfBuffer,
+            courseTitle: course.title || "Fitness Program",
+            createdAt: new Date(course.createdAt),
+            options: {
+              weeks: options.weeks,
+              sessionsPerWeek: options.sessionsPerWeek,
+              workoutTypes: Array.isArray(options.workoutTypes) ? options.workoutTypes : [],
+              targetMuscles: Array.isArray(options.targetMuscles) ? options.targetMuscles : [],
+            },
+          });
+          
+          if (emailSent) {
+            console.log(`Course email sent successfully for course ${courseId}`);
+          } else {
+            console.log(`Course email was not sent for course ${courseId} (user may not have email or Resend not configured)`);
+          }
+        } catch (emailError) {
+          // Не прерываем процесс, если отправка email не удалась
+          console.error(`Failed to send course email for course ${courseId}:`, emailError);
+          console.error('Email error details:', emailError instanceof Error ? emailError.message : String(emailError));
         }
-      } catch (emailError) {
-        // Не прерываем процесс, если отправка email не удалась
-        console.error(`Failed to send course email for course ${courseId}:`, emailError);
-        console.error('Email error details:', emailError instanceof Error ? emailError.message : String(emailError));
       }
 
       // Возвращаем финальные метаданные

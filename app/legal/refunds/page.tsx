@@ -6,6 +6,8 @@ export const metadata: Metadata = {
   description: "Refund policy and token system information for Chaletcoaching",
 };
 
+const EFFECTIVE_DATE = "January 16, 2026";
+
 function Card({ children }: { children: React.ReactNode }) {
   return (
     <div
@@ -26,168 +28,150 @@ export default function RefundsPage() {
           Policy
         </div>
         <h1 className="text-3xl md:text-4xl font-extrabold leading-tight">
-          Refund & Returns <span style={{ color: THEME.accent }}>Policy</span>
+          Refund and Return <span style={{ color: THEME.accent }}>Policy</span>
         </h1>
-        <p className="opacity-80 text-sm">Effective date: 12 August 2025</p>
+        <p className="opacity-80 text-sm">Effective Date: {EFFECTIVE_DATE}</p>
       </header>
 
-      {/* Company Information */}
+      {/* Introduction */}
       <Card>
-        <h2 className="text-lg font-semibold mb-3">Company Information</h2>
-        <div className="opacity-90 text-sm space-y-1">
-          <p><strong>Company:</strong> CHALET AQUARIUS LTD (Company No. 15587263)</p>
-          <p><strong>Registered office:</strong> 20 Wenlock Road, London, England, N1 7GU</p>
-          <p><strong>Support email:</strong> info@chaletcoaching.co.uk</p>
-          <p><strong>Phone:</strong> +44 7441 392840</p>
-          <p><strong>Service:</strong> https://www.chaletcoaching.co.uk</p>
-        </div>
-      </Card>
-
-      {/* Summary */}
-      <Card>
-        <h2 className="text-lg font-semibold mb-3">1. Summary (customer-facing)</h2>
+        <h2 className="text-lg font-semibold mb-3">1. Introduction</h2>
         <div className="space-y-3 opacity-90 text-sm">
-          <p>Refund requests are handled under this Policy and applicable UK consumer law.</p>
-          <p><strong>Typical processing time after approval:</strong> 5–10 business days (your bank&apos;s timelines may vary).</p>
-          <p>A refund will not exceed the original amount paid for the Tokens/transaction.</p>
-          <p><strong>Spent Tokens</strong> (used for previews, full course generation, or PDF exports) are non-refundable, except where the supplied digital Service is defective, materially not as described, or not supplied as contracted.</p>
-          <p>Tokens are account-bound, non-transferable and are not exchangeable for cash, except where required by law.</p>
-          <p><strong>Promotional/bonus Tokens</strong> are non-refundable unless the promotion&apos;s terms expressly state otherwise.</p>
-          <p><strong>Submit requests to:</strong> info@chaletcoaching.co.uk with your order reference and details.</p>
-          <p>This Policy may be updated; material changes will be notified as in section 8.</p>
-          <p>If you consented at checkout to immediate supply of digital content (e.g., downloadable Training Plan) and then accessed/downloaded it, you may lose your statutory right to cancel for that transaction (see 4.7).</p>
+          <p>This Refund and Return Policy (&quot;Policy&quot;) governs the cancellation of orders, refund requests for Token packages, and disputes regarding digital content provided by CHALET AQUARIUS LTD (Company No: 15587263).</p>
+          <p>By purchasing Tokens or exchanging them for Fitness Courses on chaletcoaching.co.uk, you agree to the terms outlined below. This Policy operates in conjunction with our Terms and Conditions.</p>
         </div>
       </Card>
 
-      {/* Scope and legal note */}
+      {/* Refund of Token Packages */}
       <Card>
-        <h2 className="text-lg font-semibold mb-3">2. Scope and legal note</h2>
+        <h2 className="text-lg font-semibold mb-3">2. Refund of Token Packages (Monetary Refunds)</h2>
         <div className="space-y-3 opacity-90 text-sm">
-          <p>This Policy covers refunds for Tokens (internal account units) and digital/online Services provided by CHALET AQUARIUS LTD via Chaletcoaching, including Training Plans (on-screen content, previews, exports), downloadable files (e.g., PDF/DOCX), and any bespoke materials.</p>
-          <p>Nothing here limits mandatory consumer rights under UK law, including the Consumer Contracts Regulations 2013 and the Consumer Rights Act 2015.</p>
+          <p>Tokens are the virtual currency used to access our services. The refund of real currency (Fiat) for Token packages is subject to strict conditions.</p>
+          
+          <p><strong>2.1. Unused Token Packages.</strong></p>
+          <p>You have the right to request a full refund for a purchased Token Package within 14 days of the transaction date, provided that:</p>
+          <ul className="list-disc pl-5 space-y-1 ml-4">
+            <li>None of the Tokens from that specific package have been used or exchanged for a Course.</li>
+            <li>The transaction has settled and is not subject to a payment dispute.</li>
+          </ul>
+
+          <p><strong>2.2. Partially Used Packages.</strong></p>
+          <p>Once you have used any portion of a Token Package (e.g., purchasing a Single Course using tokens from the &quot;Momentum Pack&quot;), the entire package is deemed &quot;activated&quot; and used.</p>
+          <ul className="list-disc pl-5 space-y-1 ml-4">
+            <li>No partial refunds will be issued for the remaining balance of Tokens in a package.</li>
+            <li>This policy ensures the integrity of our bulk-pricing model.</li>
+          </ul>
+
+          <p><strong>2.3. Processing Fee.</strong></p>
+          <p>For eligible monetary refunds, we reserve the right to deduct a processing fee (typically 3-5%) to cover the merchant fees (Visa/Mastercard) and administrative costs incurred during the original transaction and the refund process.</p>
         </div>
       </Card>
 
-      {/* Definitions */}
+      {/* Cancellation of Course Orders */}
       <Card>
-        <h2 className="text-lg font-semibold mb-3">3. Definitions</h2>
-        <div className="space-y-2 opacity-90 text-sm">
-          <p><strong>Tokens</strong> — internal units used to access paid features (previews, full course generation, PDF export). The indicative conversion/baseline is shown on the Pricing/checkout pages.</p>
-          <p><strong>Unused Tokens</strong> — Tokens credited to your Account that have not been redeemed/spent.</p>
-          <p><strong>Spent Tokens</strong> — Tokens used to unlock or obtain a paid feature or digital content.</p>
-          <p><strong>Promotional/Bonus Tokens</strong> — Tokens issued as part of a special offer, bonus or incentive.</p>
-          <p><strong>Bespoke/Custom Plans</strong> — materials created specifically for you following a brief and manual effort (if offered).</p>
-        </div>
-      </Card>
-
-      {/* Refund principles */}
-      <Card>
-        <h2 className="text-lg font-semibold mb-3">4. Refund principles (binding rules)</h2>
+        <h2 className="text-lg font-semibold mb-3">3. Cancellation of Course Orders (Token Reversals)</h2>
         <div className="space-y-3 opacity-90 text-sm">
-          <p><strong>4.1 Refund cap.</strong> Any refund will not exceed the amount you originally paid for the Tokens/Service (net of any non-refundable processor fees) in the currency of purchase.</p>
-          <p><strong>4.2 No refund for Spent Tokens.</strong> Tokens that have been redeemed are non-refundable, except where:</p>
-          <div className="ml-4 space-y-1">
-            <p><strong>(a)</strong> the digital Service supplied is materially defective or materially not as described;</p>
-            <p><strong>(b)</strong> we failed to supply the Service as contracted; or</p>
-            <p><strong>(c)</strong> a refund is required by law.</p>
+          <p>This section governs the return of Tokens to your account balance, not the return of money to your bank account.</p>
+          
+          <p><strong>3.1. AI-Generated Courses (Instant).</strong></p>
+          <p>Due to the nature of this service:</p>
+          <ul className="list-disc pl-5 space-y-1 ml-4">
+            <li>AI Courses are generated and delivered instantly (or within minutes) upon purchase.</li>
+            <li>Once you click &quot;Buy&quot; or &quot;Generate,&quot; the service is fully performed.</li>
+            <li><strong>Refund Status: Strictly Non-Refundable.</strong> Tokens cannot be returned once the generation process has started.</li>
+          </ul>
+
+          <p><strong>3.2. Trainer-Created Courses (Delayed).</strong></p>
+          <p>These courses require manual work by a human professional.</p>
+          <ul className="list-disc pl-5 space-y-1 ml-4">
+            <li><strong>Pending Status:</strong> If you wish to cancel a Trainer Course before the Trainer has started working on it (status is &quot;Pending&quot;), you may contact support. If approved, Tokens will be returned to your Dashboard balance.</li>
+            <li><strong>In-Progress / Delivered Status:</strong> Once the Trainer has begun compiling your plan or the file has been sent/uploaded, the service is deemed commenced. No cancellation or Token refund is possible.</li>
+          </ul>
+        </div>
+      </Card>
+
+      {/* Digital Content & Right of Withdrawal */}
+      <Card>
+        <h2 className="text-lg font-semibold mb-3">4. Digital Content & Right of Withdrawal</h2>
+        <div className="space-y-3 opacity-90 text-sm">
+          <p><strong>4.1. Consumer Rights Act Waiver.</strong></p>
+          <p>Under UK and EU consumer law, you typically have a 14-day &quot;cooling-off&quot; period. However, this does not apply to digital content once the download or streaming has begun.</p>
+          <ul className="list-disc pl-5 space-y-1 ml-4">
+            <li>By purchasing a Course and initiating the download (or receiving it via email), you expressly acknowledge that you lose your right of withdrawal.</li>
+          </ul>
+
+          <p><strong>4.2. &quot;Result&quot; Disclaimer.</strong></p>
+          <p>We provide educational fitness plans. We do not guarantee specific physical results (e.g., weight loss, muscle gain).</p>
+          <ul className="list-disc pl-5 space-y-1 ml-4">
+            <li>Dissatisfaction with the difficulty, style, or effectiveness of the workout plan is not valid grounds for a refund.</li>
+          </ul>
+        </div>
+      </Card>
+
+      {/* Technical Issues and Defective Content */}
+      <Card>
+        <h2 className="text-lg font-semibold mb-3">5. Technical Issues and Defective Content</h2>
+        <div className="space-y-3 opacity-90 text-sm">
+          <p><strong>5.1. Corrupted Files.</strong></p>
+          <p>If a purchased PDF file is corrupted, blank, or technically inaccessible:</p>
+          <ul className="list-disc pl-5 space-y-1 ml-4">
+            <li>You must contact info@chaletcoaching.co.uk within 48 hours of purchase.</li>
+            <li>We will attempt to provide a replacement file free of charge.</li>
+            <li>If we cannot provide a working file, the Tokens used for that specific order will be refunded to your Account.</li>
+          </ul>
+
+          <p><strong>5.2. Non-Delivery.</strong></p>
+          <p>If you spent Tokens but did not receive the Course in your Dashboard or Email:</p>
+          <ul className="list-disc pl-5 space-y-1 ml-4">
+            <li>Please check your Spam/Junk folder first.</li>
+            <li>Contact support immediately. If the system failed to deliver the product, we will manually send the file or refund the Tokens.</li>
+          </ul>
+        </div>
+      </Card>
+
+      {/* Method of Monetary Refund */}
+      <Card>
+        <h2 className="text-lg font-semibold mb-3">6. Method of Monetary Refund</h2>
+        <div className="space-y-3 opacity-90 text-sm">
+          <p><strong>6.1. Original Payment Method.</strong></p>
+          <p>Where a monetary refund is approved (under Section 2), it will be processed strictly to the original payment method used (Visa or MasterCard). We cannot issue refunds to third-party accounts or via cash.</p>
+
+          <p><strong>6.2. Timeline.</strong></p>
+          <p>Refunds typically take 5–10 business days to appear on your bank statement, depending on your card issuer&apos;s processing times.</p>
+
+          <p><strong>6.3. Currency Exchange Risks.</strong></p>
+          <p>We transact in GBP, EUR, and USD.</p>
+          <ul className="list-disc pl-5 space-y-1 ml-4">
+            <li>If your bank account is in a different currency, your bank may apply exchange rates.</li>
+            <li>We refund the exact amount charged in the transaction currency. We are not liable for any difference in the refund amount caused by exchange rate fluctuations between the purchase date and refund date.</li>
+          </ul>
+        </div>
+      </Card>
+
+      {/* Disputes and Chargebacks */}
+      <Card>
+        <h2 className="text-lg font-semibold mb-3">7. Disputes and Chargebacks</h2>
+        <div className="space-y-3 opacity-90 text-sm">
+          <p><strong>7.1.</strong> If you initiate a payment dispute (Chargeback) with your bank without first contacting our support team to resolve the issue:</p>
+          <ul className="list-disc pl-5 space-y-1 ml-4">
+            <li>Your Account and access to all purchased Courses will be suspended immediately.</li>
+            <li>We will submit this Policy, your access logs, and download records to the bank as evidence that the digital service was delivered.</li>
+            <li>We reserve the right to ban your IP address and device from future use of our Service.</li>
+          </ul>
+        </div>
+      </Card>
+
+      {/* Contact Information */}
+      <Card>
+        <h2 className="text-lg font-semibold mb-3">8. Contact Information</h2>
+        <div className="space-y-3 opacity-90 text-sm">
+          <p>To request a refund or report a technical issue, please include your User ID and Order Reference and contact us at:</p>
+          <div className="space-y-1">
+            <p><strong>CHALET AQUARIUS LTD</strong></p>
+            <p><strong>Email:</strong> info@chaletcoaching.co.uk</p>
+            <p><strong>Address:</strong> 20 Wenlock Road, London, England, N1 7GU</p>
+            <p><strong>Phone:</strong> +44 7441 392840</p>
           </div>
-          <p><strong>4.3 Unused Tokens.</strong> Unused Tokens are generally refundable at the original purchase price if you request a refund before Tokens are spent. We may deduct non-refundable payment processor fees; any deduction will be itemised in the confirmation.</p>
-          <p><strong>4.4 Account-binding; non-transferable.</strong> Tokens are tied to the Account they were credited to and cannot be transferred or assigned.</p>
-          <p><strong>4.5 No cash-out.</strong> Tokens cannot be exchanged for cash or other real currency, except where required by law.</p>
-          <p><strong>4.6 Promotional/bonus Tokens.</strong> Promotional/bonus Tokens are non-refundable unless the specific offer states otherwise (e.g., guaranteed-refund trials).</p>
-          <p><strong>4.7 Immediate supply & opened content.</strong> Where you consent to immediate supply of digital content and then access or download it (e.g., a Training Plan PDF), you acknowledge that your 14-day cooling-off right may not apply to that transaction. Refunds in such cases are available only under 4.2 or as legally required.</p>
-          <p><strong>4.8 Bespoke/custom work.</strong> For custom materials, refunds are unavailable once substantial work has begun, unless otherwise stated in a written bespoke agreement. Where staged delivery is agreed, any refund (if applicable) may be pro-rated per the bespoke terms.</p>
-          <p><strong>4.9 System/technical errors.</strong> If a technical issue on our side prevented delivery or corrupted a file, we will re-deliver, repair, replace, or refund as appropriate.</p>
-        </div>
-      </Card>
-
-      {/* How to request a refund */}
-      <div className="grid gap-6 md:grid-cols-2">
-        <Card>
-          <h2 className="text-lg font-semibold mb-3">5. How to request a refund (procedure)</h2>
-          <div className="space-y-3 opacity-90 text-sm">
-            <p>Email info@chaletcoaching.co.uk (or use the in-app support form, if available) and include:</p>
-            <ul className="list-disc pl-5 space-y-1">
-              <li>Order reference (mandatory);</li>
-              <li>Account email used for the purchase;</li>
-              <li>Whether the request concerns Unused Tokens or a Redeemed/Delivered Service;</li>
-              <li>For redeemed items: a description of the issue and supporting evidence (screenshots, filenames, error messages, steps to reproduce, timestamps, etc.);</li>
-              <li>Preferred refund method (normally we refund to the original payment method).</li>
-            </ul>
-          </div>
-        </Card>
-
-        <Card>
-          <h2 className="text-lg font-semibold mb-3">What happens next:</h2>
-          <div className="space-y-3 opacity-90 text-sm">
-            <p>• We acknowledge your request within 5 business days;</p>
-            <p>• We may request additional information;</p>
-            <p>• We decide and, if approved, process the refund within 5–10 business days of approval (card/bank posting times may vary).</p>
-          </div>
-        </Card>
-      </div>
-
-      {/* Investigation, evidence and decisions */}
-      <Card>
-        <h2 className="text-lg font-semibold mb-3">6. Investigation, evidence and decisions</h2>
-        <div className="space-y-3 opacity-90 text-sm">
-          <p><strong>6.1 Evidence.</strong> For redeemed Services we may review order and Token logs, checkout confirmations (Token baseline/conversion shown at checkout, totals), access/delivery logs (download timestamps, export IDs), and any evidence you supply.</p>
-          <p><strong>6.2 Method.</strong> Approved refunds are usually sent to the original payment method. If unavailable, we may offer a reasonable alternative (e.g., bank transfer) subject to verification.</p>
-          <p><strong>6.3 Rejection.</strong> If a claim is rejected, we provide a clear explanation and information on escalation/your statutory options.</p>
-        </div>
-      </Card>
-
-      {/* Chargebacks, fraud and abuse */}
-      <Card>
-        <h2 className="text-lg font-semibold mb-3">7. Chargebacks, fraud and abuse</h2>
-        <p className="opacity-90 text-sm">
-          If you initiate a chargeback while a refund request is pending, we will treat the matter as a payment dispute and submit full evidence (order logs, checkout confirmations, IP/user-agent, timestamps, access events). We may refuse refunds and suspend or close Accounts where there is fraud, abuse, or repeated unwarranted chargebacks.
-        </p>
-      </Card>
-
-      {/* Additional sections */}
-      <div className="grid gap-6 md:grid-cols-2">
-        <Card>
-          <h2 className="text-lg font-semibold mb-3">8. Changes to this Policy</h2>
-          <p className="opacity-90 text-sm">
-            We may update this Policy from time to time. Material changes will be notified to registered users via email and/or a prominent in-Service notice. Changes apply prospectively and do not affect completed transactions.
-          </p>
-        </Card>
-
-        <Card>
-          <h2 className="text-lg font-semibold mb-3">9. Record keeping and retention</h2>
-          <p className="opacity-90 text-sm">
-            We retain records necessary to assess refund decisions — including order IDs, Token purchase/redemption history, checkout acknowledgements (including any &quot;immediate supply&quot; consent text), timestamps, IP and user-agent — for at least 24 months, and up to 6 years for disputed or enterprise transactions, in line with our Privacy Policy and applicable data protection law.
-          </p>
-        </Card>
-      </div>
-
-      {/* Escalation and disputes */}
-      <Card>
-        <h2 className="text-lg font-semibold mb-3">10. Escalation and disputes</h2>
-        <p className="opacity-90 text-sm">
-          If you disagree with a decision, escalate by emailing info@chaletcoaching.co.uk with your reasons and order reference. We will review within 10 business days. This Policy does not affect your statutory rights; where applicable, you may use alternative dispute resolution or court proceedings.
-        </p>
-      </Card>
-
-      {/* Practical examples */}
-      <Card>
-        <h2 className="text-lg font-semibold mb-3">11. Practical examples</h2>
-        <div className="space-y-3 opacity-90 text-sm">
-          <p><strong>Unused Tokens:</strong> You purchased 2,000 Tokens; you spent 300; the remaining 1,700 Tokens are refundable at the original purchase price (less any non-refundable processor fees).</p>
-          <p><strong>Downloaded Training Plan:</strong> You consented to immediate supply and downloaded a PDF; a refund is available only if the file was defective, materially not as described, or not supplied as contracted.</p>
-          <p><strong>Promotional Tokens:</strong> 100 bonus Tokens from a promotion are non-refundable.</p>
-          <p><strong>Technical failure:</strong> Your export failed due to a verified platform error and could not be re-delivered — we will replace or refund.</p>
-        </div>
-      </Card>
-
-      {/* Contact details */}
-      <Card>
-        <h2 className="text-lg font-semibold mb-3">12. Contact details</h2>
-        <div className="opacity-90 text-sm space-y-1">
-          <p><strong>Email (support):</strong> info@chaletcoaching.co.uk</p>
-          <p><strong>Phone:</strong> +44 7441 392840</p>
-          <p><strong>Postal:</strong> CHALET AQUARIUS LTD, 20 Wenlock Road, London, England, N1 7GU</p>
         </div>
       </Card>
     </main>

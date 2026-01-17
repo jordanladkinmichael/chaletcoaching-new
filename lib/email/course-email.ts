@@ -190,3 +190,98 @@ export async function sendCourseEmail(options: SendCourseEmailOptions): Promise<
     return false;
   }
 }
+
+export interface SendCourseEmailByUrlOptions {
+  courseId: string;
+  userId: string;
+  pdfUrl: string;
+  courseTitle: string;
+  createdAt: Date;
+  options?: {
+    weeks?: number;
+    sessionsPerWeek?: number;
+  };
+}
+
+/**
+ * Send course PDF to user's email by downloading from URL
+ * Used for delayed email sending (coach requests)
+ * @returns true if email was sent successfully, false otherwise
+ */
+export async function sendCourseEmailByUrl(options: SendCourseEmailByUrlOptions): Promise<boolean> {
+  const { courseId, userId, pdfUrl, courseTitle, createdAt, options: courseOptions } = options;
+
+  try {
+    // Check if Resend is configured
+    if (!process.env.RESEND_API_KEY) {
+      console.warn("[Course Email] RESEND_API_KEY is not configured, skipping email send");
+      return false;
+    }
+
+    const fromEmail = process.env.RESEND_FROM_EMAIL || "Chaletcoaching <info@chaletcoaching.co.uk>";
+    
+    // Get user email from database
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { email: true, name: true },
+    });
+
+    if (!user || !user.email) {
+      console.warn(`[Course Email] User ${userId} does not have an email address, skipping email send`);
+      return false;
+    }
+
+    // Download PDF from URL
+    console.log(`[Course Email] Downloading PDF from ${pdfUrl}`);
+    const pdfResponse = await fetch(pdfUrl);
+    if (!pdfResponse.ok) {
+      console.error(`[Course Email] Failed to download PDF: ${pdfResponse.status}`);
+      return false;
+    }
+    const pdfArrayBuffer = await pdfResponse.arrayBuffer();
+    const pdfBuffer = Buffer.from(pdfArrayBuffer);
+    console.log(`[Course Email] Downloaded PDF: ${pdfBuffer.length} bytes`);
+
+    // Generate dashboard URL
+    const baseUrl = process.env.NEXTAUTH_URL || "https://www.chaletcoaching.co.uk";
+    const dashboardUrl = `${baseUrl}/dashboard`;
+
+    // Generate email HTML
+    const emailHTML = generateCourseEmailHTML({
+      courseTitle,
+      userName: user.name || undefined,
+      createdAt,
+      dashboardUrl,
+      weeks: courseOptions?.weeks,
+      sessionsPerWeek: courseOptions?.sessionsPerWeek,
+    });
+
+    // Generate PDF filename
+    const pdfFilename = `course-${courseId}-${Date.now()}.pdf`;
+
+    // Send email with PDF attachment
+    const { data, error } = await resend.emails.send({
+      from: fromEmail,
+      to: user.email,
+      subject: `Your Fitness Course: ${courseTitle}`,
+      html: emailHTML,
+      attachments: [
+        {
+          filename: pdfFilename,
+          content: pdfBuffer.toString("base64"),
+        },
+      ],
+    });
+
+    if (error) {
+      console.error(`[Course Email] Failed to send email to ${user.email}:`, error);
+      return false;
+    }
+
+    console.log(`[Course Email] Successfully sent course ${courseId} to ${user.email}`, data?.id);
+    return true;
+  } catch (error) {
+    console.error(`[Course Email] Error sending course email for course ${courseId}:`, error);
+    return false;
+  }
+}

@@ -129,6 +129,8 @@ model CoachRequest {
   courseId      String?
   // Сообщение об ошибке, если status = "failed"
   error         String?
+  // Когда курс станет доступен для скачивания (обычно createdAt + 4 часа)
+  availableAt   DateTime?
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
   user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)

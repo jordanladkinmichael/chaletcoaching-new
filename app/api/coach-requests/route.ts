@@ -89,6 +89,9 @@ export async function POST(request: NextRequest) {
       },
     });
 
+    // Calculate when the course will be available (4 hours from now)
+    const availableAt = new Date(Date.now() + 4 * 60 * 60 * 1000);
+
     // Save coach request to database
     const coachRequest = await prisma.coachRequest.create({
       data: {
@@ -103,8 +106,9 @@ export async function POST(request: NextRequest) {
         notes: body.notes || null,
         status: "pending",
         tokensCharged: costBreakdown.total,
+        availableAt,
       },
-      select: { id: true },
+      select: { id: true, availableAt: true },
     });
 
     // Send Inngest event to process the request asynchronously
@@ -121,6 +125,7 @@ export async function POST(request: NextRequest) {
         equipment: body.equipment,
         daysPerWeek: body.daysPerWeek,
         notes: body.notes || null,
+        availableAt: availableAt.toISOString(),
       },
     }).catch((error) => {
       // Log error but don't fail the request - it will be retried
@@ -133,7 +138,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       requestId: coachRequest.id,
-      message: "Request received and will be processed within 3-8 hours",
+      availableAt: availableAt.toISOString(),
+      message: "Your coach has received your request. Your course will be available soon.",
       tokensCharged: costBreakdown.total,
       newBalance,
     });
