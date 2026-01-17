@@ -298,6 +298,26 @@ export function Dashboard({ requireAuth, openAuth, balance, currentPreview, onDi
     }
   }, [pollPdfStatus]);
 
+  // Подписка на событие публикации курса
+  const onCoursePublished = React.useCallback((event: Event) => {
+    const customEvent = event as CustomEvent<{ courseId: string }>;
+    const courseId = customEvent.detail?.courseId;
+    console.log("Detected course:published event – refreshing courses", { courseId });
+    
+    fetch("/api/courses/list").then(r => r.json()).then(j => {
+      const coursesData = Array.isArray(j.items) ? j.items : [];
+      setCourses(coursesData);
+      
+      // Если есть courseId из события, проверяем статус PDF для нового курса
+      if (courseId) {
+        // Небольшая задержка, чтобы дать время Inngest запустить генерацию
+        setTimeout(() => {
+          checkPdfStatus(courseId);
+        }, 1000);
+      }
+    }).catch(err => console.error("Failed to refresh courses after publish:", err));
+  }, [checkPdfStatus]);
+
   // Все хуки должны быть здесь, до условного возврата
   // Загрузка начальных данных
   React.useEffect(() => {
@@ -348,26 +368,6 @@ export function Dashboard({ requireAuth, openAuth, balance, currentPreview, onDi
 
     fetchCoursesAndTx();
 
-    // Подписка на событие публикации курса
-    const onCoursePublished = React.useCallback((event: Event) => {
-      const customEvent = event as CustomEvent<{ courseId: string }>;
-      const courseId = customEvent.detail?.courseId;
-      console.log("Detected course:published event – refreshing courses", { courseId });
-      
-      fetch("/api/courses/list").then(r => r.json()).then(j => {
-        const coursesData = Array.isArray(j.items) ? j.items : [];
-        setCourses(coursesData);
-        
-        // Если есть courseId из события, проверяем статус PDF для нового курса
-        if (courseId) {
-          // Небольшая задержка, чтобы дать время Inngest запустить генерацию
-          setTimeout(() => {
-            checkPdfStatus(courseId);
-          }, 1000);
-        }
-      }).catch(err => console.error("Failed to refresh courses after publish:", err));
-    }, [checkPdfStatus]);
-
     if (typeof window !== 'undefined') {
       window.addEventListener('course:published', onCoursePublished as EventListener);
     }
@@ -378,7 +378,7 @@ export function Dashboard({ requireAuth, openAuth, balance, currentPreview, onDi
         window.removeEventListener('course:published', onCoursePublished as EventListener);
       }
     };
-  }, [checkPdfStatus]);
+  }, [onCoursePublished]);
 
   // Загрузка дополнительных транзакций
   const loadMoreTransactions = React.useCallback(async () => {

@@ -75,7 +75,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Deduct tokens immediately
-    const tx = await prisma.transaction.create({
+    await prisma.transaction.create({
       data: {
         userId: session.user.id,
         type: "spend",
@@ -87,7 +87,6 @@ export async function POST(request: NextRequest) {
           costBreakdown,
         }),
       },
-      select: { id: true },
     });
 
     // Save coach request to database
