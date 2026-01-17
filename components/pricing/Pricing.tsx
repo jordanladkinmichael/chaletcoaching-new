@@ -110,25 +110,29 @@ export function Pricing({
 
   return (
     <div className="space-y-6">
-      {/* Global Terms checkbox (only for authenticated users) */}
-      {!_requireAuth && (
-        <div className="mb-4">
-          <label className="flex items-center gap-2 cursor-pointer text-sm">
-            <input
-              type="checkbox"
-              checked={termsAccepted}
-              onChange={(e) => setTermsAccepted(e.target.checked)}
-              className="rounded"
-            />
-            <span className="text-text-muted">
-              I agree to the{" "}
-              <Link href="/legal/terms" className="text-primary hover:underline">
-                Terms
-              </Link>
-            </span>
-          </label>
-        </div>
-      )}
+      {/* Global Terms checkbox (always visible) */}
+      <div className="mb-4">
+        <label className="flex items-center gap-2 cursor-pointer text-sm">
+          <input
+            type="checkbox"
+            checked={termsAccepted}
+            onChange={(e) => setTermsAccepted(e.target.checked)}
+            className="rounded border-border bg-surface text-primary focus:ring-2 focus:ring-focus focus:ring-offset-2 focus:ring-offset-bg cursor-pointer"
+          />
+          <span className="text-text-muted">
+            I agree to the{" "}
+            <Link 
+              href="/legal/terms" 
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-primary hover:underline"
+              onClick={(e) => e.stopPropagation()}
+            >
+              Terms
+            </Link>
+          </span>
+        </label>
+      </div>
 
       {/* Package cards - fixed heights to prevent CLS */}
       <div className="grid gap-6 md:grid-cols-3">
@@ -172,7 +176,7 @@ export function Pricing({
                   <Button
                     variant="primary"
                     fullWidth
-                    disabled={!!loading || !!creating || (!_requireAuth && !termsAccepted)}
+                    disabled={!!loading || !!creating || _requireAuth || (!_requireAuth && !termsAccepted)}
                     onClick={() => void handleBuy(pack)}
                   >
                     {_requireAuth ? (
@@ -265,6 +269,7 @@ export function Pricing({
                 !!loading ||
                 !!creating ||
                 customAmountNum <= 0 ||
+                _requireAuth ||
                 (!_requireAuth && !termsAccepted)
               }
               onClick={() => void handleCustom()}

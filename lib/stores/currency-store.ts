@@ -34,6 +34,13 @@ export const useCurrencyStore = create<CurrencyStore>()(
       formatPrice: (priceInEUR: number) => {
         const { currency, convertPrice } = get();
         const convertedPrice = convertPrice(priceInEUR);
+        
+        // For USD, use custom formatting to avoid "US$" prefix
+        if (currency === "USD") {
+          return `$${convertedPrice.toFixed(2)}`;
+        }
+        
+        // For EUR and GBP, use Intl.NumberFormat
         return new Intl.NumberFormat("en-GB", {
           style: "currency",
           currency,

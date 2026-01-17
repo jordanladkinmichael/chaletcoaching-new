@@ -1205,9 +1205,13 @@ function MiniFAQSection() {
 function Home({
   region,
   onTopUp,
+  isAuthed,
+  openAuth,
 }: {
   region: Region;
   onTopUp: (pack: UiPackId | "custom", customAmount?: number) => Promise<void>;
+  isAuthed: boolean;
+  openAuth: (mode?: "signin" | "signup") => void;
 }) {
   // New Home page structure according to homepage_improvements.md
   return (
@@ -1246,8 +1250,8 @@ function Home({
             </div>
             <Pricing
               region={region}
-              requireAuth={false}
-              openAuth={() => {}}
+              requireAuth={!isAuthed}
+              openAuth={openAuth}
               onCustomTopUp={async (amt: number) => onTopUp("custom", amt)}
               onTierBuy={async (pack) => onTopUp(pack)}
               loading={false}
@@ -1550,6 +1554,8 @@ export default function ChaletcoachingPrototype() {
           <Home
             region={region}
             onTopUp={onTopUp}
+            isAuthed={isAuthed}
+            openAuth={openAuth}
           />
         )}
         {/* Generator and Pricing are now separate routes: /generator and /pricing */}

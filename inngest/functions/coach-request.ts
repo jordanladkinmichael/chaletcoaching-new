@@ -129,7 +129,7 @@ export const processCoachRequest = inngest.createFunction(
       }
     });
 
-    // Step 3: Update request with courseId and trigger PDF generation
+    // Step 3: Update request with courseId
     await step.run("update-request-complete", async () => {
       // Update request status to done and link course
       await prisma.coachRequest.update({
@@ -140,19 +140,21 @@ export const processCoachRequest = inngest.createFunction(
         },
       });
       console.log(`Coach request ${requestId} completed, course: ${course.id}`);
+      return { courseId: course.id, status: "done" };
+    });
 
-      // Trigger PDF generation (async, don't wait)
-      inngest.send({
+    // Step 4: Trigger PDF generation (separate step to ensure event is sent)
+    await step.run("trigger-pdf-generation", async () => {
+      console.log(`[Coach Request] Triggering PDF generation for course ${course.id}`);
+      await inngest.send({
         name: "pdf/generate",
         data: {
           courseId: course.id,
           userId,
         },
-      }).catch((error) => {
-        console.error(`Failed to trigger PDF generation for course ${course.id}:`, error);
       });
-
-      return { courseId: course.id, status: "done" };
+      console.log(`[Coach Request] PDF generation event sent successfully for course ${course.id}`);
+      return { pdfTriggered: true };
     });
 
     return {

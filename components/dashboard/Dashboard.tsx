@@ -222,7 +222,7 @@ export function Dashboard({ requireAuth, openAuth, balance, currentPreview, onDi
 
   // Функция для polling статуса PDF
   const pollPdfStatus = React.useCallback((courseId: string) => {
-    const maxAttempts = 30; // 30 попыток = 1 минута (каждые 2 секунды)
+    const maxAttempts = 90; // 90 попыток = 3 минуты (каждые 2 секунды)
     let attempts = 0;
     
     const interval = setInterval(async () => {
