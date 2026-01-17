@@ -183,6 +183,7 @@ export function Dashboard({ requireAuth, openAuth, balance, currentPreview, onDi
     tokensCharged: number;
     courseId: string | null;
     error: string | null;
+    pdfUrl: string | null;
     createdAt: string;
     updatedAt: string;
   };
@@ -250,6 +251,10 @@ export function Dashboard({ requireAuth, openAuth, balance, currentPreview, onDi
           setCourses(prev => prev.map(c => 
             c.id === courseId ? { ...c, pdfUrl: data.pdfUrl } : c
           ));
+          // Обновляем также coachRequests, если курс связан с запросом
+          setCoachRequests(prev => prev.map(req => 
+            req.courseId === courseId ? { ...req, pdfUrl: data.pdfUrl } : req
+          ));
           console.log(`PDF ready for course ${courseId}:`, data.pdfUrl);
         } else if (attempts >= maxAttempts) {
           clearInterval(interval);
@@ -283,6 +288,10 @@ export function Dashboard({ requireAuth, openAuth, balance, currentPreview, onDi
         setPdfStatus(prev => ({ ...prev, [courseId]: 'ready' }));
         setCourses(prev => prev.map(c => 
           c.id === courseId ? { ...c, pdfUrl: data.pdfUrl } : c
+        ));
+        // Обновляем также coachRequests, если курс связан с запросом
+        setCoachRequests(prev => prev.map(req => 
+          req.courseId === courseId ? { ...req, pdfUrl: data.pdfUrl } : req
         ));
         return true;
       } else if (data.status === 'processing') {
@@ -356,6 +365,18 @@ export function Dashboard({ requireAuth, openAuth, balance, currentPreview, onDi
                   checkPdfStatus(course.id);
                 }
               }, coursesData.indexOf(course) * 200);
+            }
+          });
+          
+          // Проверяем статус PDF для курсов коуча без pdfUrl
+          coachRequestsData.forEach((req: CoachRequestItem) => {
+            if (req.status === "done" && req.courseId && !req.pdfUrl) {
+              // Небольшая задержка между проверками
+              setTimeout(() => {
+                if (!cancelled) {
+                  checkPdfStatus(req.courseId!);
+                }
+              }, (coursesData.length * 200) + (coachRequestsData.indexOf(req) * 200));
             }
           });
         }
@@ -717,7 +738,7 @@ export function Dashboard({ requireAuth, openAuth, balance, currentPreview, onDi
                     Spent: {formatNumber(req.tokensCharged)} tokens
                   </div>
                   {req.status === "done" && req.courseId && (
-                    <div className="mt-3">
+                    <div className="mt-3 flex gap-2 flex-wrap">
                       <AccentButton onClick={() => {
                         const course = courses.find(c => c.id === req.courseId);
                         if (course) {
@@ -725,8 +746,114 @@ export function Dashboard({ requireAuth, openAuth, balance, currentPreview, onDi
                           setShowCourseModal(true);
                         }
                       }}>
-                        Open Course
+                        <Eye size={16} /> Open Course
                       </AccentButton>
+                      {req.courseId && (
+                        <GhostButton
+                          onClick={async () => {
+                            const courseId = req.courseId!;
+                            const currentStatus = pdfStatus[courseId] || 'idle';
+                            
+                            // Если PDF готов - скачиваем/открываем
+                            if (req.pdfUrl) {
+                              console.log("Opening PDF for coach request course:", req.pdfUrl);
+                              if (req.pdfUrl.startsWith('data:application/pdf')) {
+                                // Старый формат: base64 PDF - скачиваем
+                                try {
+                                  const base64Data = req.pdfUrl.split(',')[1];
+                                  const pdfBlob = new Blob([Uint8Array.from(atob(base64Data), char => char.charCodeAt(0))], {
+                                    type: 'application/pdf'
+                                  });
+                                  const downloadUrl = URL.createObjectURL(pdfBlob);
+                                  const link = document.createElement('a');
+                                  link.href = downloadUrl;
+                                  link.download = `coach-course-${courseId}.pdf`;
+                                  link.style.display = 'none';
+                                  document.body.appendChild(link);
+                                  link.click();
+                                  document.body.removeChild(link);
+                                  URL.revokeObjectURL(downloadUrl);
+                                } catch (error) {
+                                  console.error('Error downloading base64 PDF:', error);
+                                  window.open(req.pdfUrl, '_blank');
+                                }
+                              } else {
+                                // Vercel Blob URL - открываем в новой вкладке
+                                window.open(req.pdfUrl, '_blank');
+                              }
+                              return;
+                            }
+                            
+                            // Если уже генерируется - не делаем ничего
+                            if (currentStatus === 'generating') {
+                              return;
+                            }
+                            
+                            // Запускаем генерацию PDF
+                            console.log("Starting PDF generation for coach request course:", courseId);
+                            setPdfStatus(prev => ({ ...prev, [courseId]: 'generating' }));
+                            setGeneratingPDF(courseId);
+                            
+                            try {
+                              const response = await fetch("/api/courses/generate-pdf", {
+                                method: "POST",
+                                headers: { "Content-Type": "application/json" },
+                                body: JSON.stringify({ courseId }),
+                              });
+                              
+                              if (!response.ok) {
+                                const error = await response.json().catch(() => ({ error: "Unknown error" }));
+                                throw new Error(error.error || "Failed to start PDF generation");
+                              }
+                              
+                              const data = await response.json();
+                              console.log("PDF generation started for coach request:", data);
+                              
+                              if (data.status === 'completed' && data.pdfUrl) {
+                                setPdfStatus(prev => ({ ...prev, [courseId]: 'ready' }));
+                                setGeneratingPDF(null);
+                                // Обновляем запрос с новым pdfUrl
+                                setCoachRequests(prev => prev.map(r => 
+                                  r.id === req.id ? { ...r, pdfUrl: data.pdfUrl } : r
+                                ));
+                                // Открываем PDF
+                                window.open(data.pdfUrl, '_blank');
+                              } else if (data.status === 'processing') {
+                                // Запускаем polling для проверки статуса
+                                pollPdfStatus(courseId);
+                              }
+                            } catch (error) {
+                              console.error("PDF generation failed for coach request:", error);
+                              setPdfStatus(prev => ({ ...prev, [courseId]: 'error' }));
+                              setGeneratingPDF(null);
+                              alert(`Failed to start PDF generation: ${error instanceof Error ? error.message : 'Unknown error'}`);
+                            }
+                          }}
+                          disabled={pdfStatus[req.courseId] === 'generating' || generatingPDF === req.courseId}
+                          className={cn(
+                            "min-w-[140px] transition-all duration-200",
+                            (pdfStatus[req.courseId] === 'generating' || generatingPDF === req.courseId) && "opacity-80 cursor-not-allowed",
+                            pdfStatus[req.courseId] === 'error' && "border-red-500 text-red-500"
+                          )}
+                        >
+                          {pdfStatus[req.courseId] === 'generating' || generatingPDF === req.courseId ? (
+                            <>
+                              <Spinner size={16} className="text-current" />
+                              <span>Generating...</span>
+                            </>
+                          ) : req.pdfUrl ? (
+                            <>
+                              <FileDown size={16} />
+                              <span>Download PDF</span>
+                            </>
+                          ) : (
+                            <>
+                              <FileDown size={16} />
+                              <span>Generate PDF</span>
+                            </>
+                          )}
+                        </GhostButton>
+                      )}
                     </div>
                   )}
                   {req.status === "failed" && req.error && (

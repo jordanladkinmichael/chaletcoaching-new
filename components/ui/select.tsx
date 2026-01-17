@@ -9,6 +9,9 @@ export interface SelectProps extends React.SelectHTMLAttributes<HTMLSelectElemen
 }
 
 export function Select({ className, options, ...props }: SelectProps) {
+  // Определяем, является ли первая опция placeholder (пустое значение)
+  const firstOptionIsPlaceholder = options.length > 0 && options[0].value === "";
+  
   return (
     <div className="relative">
       <select
@@ -17,15 +20,26 @@ export function Select({ className, options, ...props }: SelectProps) {
           "focus:outline-none focus:ring-2 focus:ring-focus focus:ring-offset-2 focus:ring-offset-bg",
           "disabled:pointer-events-none disabled:opacity-50",
           "cursor-pointer",
+          // Если выбрана первая опция (placeholder), применяем placeholder-стиль
+          props.value === "" && firstOptionIsPlaceholder && "text-text-muted italic",
           className
         )}
         {...props}
       >
-        {options.map((option) => (
-          <option key={option.value} value={option.value}>
-            {option.label}
-          </option>
-        ))}
+        {options.map((option, index) => {
+          // Первая опция с пустым значением должна быть disabled (placeholder)
+          const isPlaceholder = index === 0 && option.value === "";
+          return (
+            <option 
+              key={option.value} 
+              value={option.value}
+              disabled={isPlaceholder}
+              className={isPlaceholder ? "text-text-muted italic" : ""}
+            >
+              {option.label}
+            </option>
+          );
+        })}
       </select>
       <ChevronDown
         size={18}

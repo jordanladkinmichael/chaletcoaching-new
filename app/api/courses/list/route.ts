@@ -9,8 +9,28 @@ export async function GET() {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  // Находим все courseId, которые связаны с CoachRequest (курсы коуча)
+  const coachRequestCourses = await prisma.coachRequest.findMany({
+    where: { 
+      userId: session.user.id,
+      courseId: { not: null },
+    },
+    select: { courseId: true },
+  });
+
+  const coachRequestCourseIds = coachRequestCourses
+    .map(cr => cr.courseId)
+    .filter((id): id is string => id !== null);
+
+  // Получаем все курсы пользователя, исключая курсы коуча
   const items = await prisma.course.findMany({
-    where: { userId: session.user.id },
+    where: { 
+      userId: session.user.id,
+      // Исключаем курсы, которые связаны с CoachRequest
+      ...(coachRequestCourseIds.length > 0 && {
+        id: { notIn: coachRequestCourseIds },
+      }),
+    },
     orderBy: { createdAt: "desc" },
     select: {
       id: true,
