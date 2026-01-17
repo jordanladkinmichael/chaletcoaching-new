@@ -7,6 +7,7 @@ import { formatContentForPDF } from "@/lib/pdf-formatter";
 import { generatePDFTemplate } from "@/lib/pdf-template";
 import { downloadAndOptimizeImages, generateImageHTML } from "@/lib/image-optimizer";
 import { uploadPDF, generatePDFFilename } from "@/lib/blob-storage";
+import { sendCourseEmail } from "@/lib/email/course-email";
 
 // Типы для события
 type PDFGenerationEvent = {
@@ -361,6 +362,34 @@ export const generatePDF = inngest.createFunction(
         },
       });
       console.log(`PDF URL saved to database: ${blobResult.url}`);
+
+      // === Отправка email с PDF (не критично, ошибки не прерывают процесс) ===
+      try {
+        console.log('Sending course email to user...');
+        const emailSent = await sendCourseEmail({
+          courseId,
+          userId,
+          pdfBuffer,
+          courseTitle: course.title || "Fitness Program",
+          createdAt: new Date(course.createdAt),
+          options: {
+            weeks: options.weeks,
+            sessionsPerWeek: options.sessionsPerWeek,
+            workoutTypes: Array.isArray(options.workoutTypes) ? options.workoutTypes : [],
+            targetMuscles: Array.isArray(options.targetMuscles) ? options.targetMuscles : [],
+          },
+        });
+        
+        if (emailSent) {
+          console.log(`Course email sent successfully for course ${courseId}`);
+        } else {
+          console.log(`Course email was not sent for course ${courseId} (user may not have email or Resend not configured)`);
+        }
+      } catch (emailError) {
+        // Не прерываем процесс, если отправка email не удалась
+        console.error(`Failed to send course email for course ${courseId}:`, emailError);
+        console.error('Email error details:', emailError instanceof Error ? emailError.message : String(emailError));
+      }
 
       // Возвращаем финальные метаданные
       return {

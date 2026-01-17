@@ -51,7 +51,8 @@ export function Avatar({
           alt={alt || name || "Avatar"}
           fill
           className="object-cover"
-          sizes={`${size === "sm" ? "32px" : size === "md" ? "40px" : "64px"}`}
+          quality={90}
+          sizes={`${size === "sm" ? "64px" : size === "md" ? "80px" : "128px"}`}
         />
       ) : (
         <span className="text-text-muted font-semibold">{initials}</span>
