@@ -219,63 +219,6 @@ export function Dashboard({ requireAuth, openAuth, balance, currentPreview, onDi
   const [publishingCourse, setPublishingCourse] = React.useState(false);
   const ITEMS_PER_PAGE = 20;
 
-  // Все хуки должны быть здесь, до условного возврата
-  // Загрузка начальных данных
-  React.useEffect(() => {
-    let cancelled = false;
-
-    async function fetchCoursesAndTx() {
-      try {
-        setLoading(true);
-        const [cRes, tRes, crRes] = await Promise.all([
-          fetch("/api/courses/list"),
-          fetch(`/api/tokens/history?limit=${ITEMS_PER_PAGE}`),
-          fetch("/api/coach-requests/list"),
-        ]);
-        if (cancelled) return;
-        const cJson = await cRes.json().catch(() => ({ items: [] }));
-        const tJson = await tRes.json().catch(() => ({ items: [] }));
-        const crJson = await crRes.json().catch(() => ({ items: [] }));
-        const coursesData = Array.isArray(cJson.items) ? cJson.items : [];
-        const transactionsData = Array.isArray(tJson.items) ? tJson.items : [];
-        const coachRequestsData = Array.isArray(crJson.items) ? crJson.items : [];
-        console.log("Loaded courses:", coursesData);
-        console.log("Loaded transactions:", transactionsData);
-        console.log("Loaded coach requests:", coachRequestsData);
-        setCourses(coursesData);
-        setTransactions(transactionsData);
-        setCoachRequests(coachRequestsData);
-        setHasMore(transactionsData?.length === ITEMS_PER_PAGE);
-      } catch (error) {
-        console.error("Failed to load dashboard data:", error);
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    }
-
-    fetchCoursesAndTx();
-
-    // Подписка на событие публикации курса
-    const onCoursePublished = () => {
-      console.log("Detected course:published event – refreshing courses");
-      fetch("/api/courses/list").then(r => r.json()).then(j => {
-        const coursesData = Array.isArray(j.items) ? j.items : [];
-        setCourses(coursesData);
-      }).catch(err => console.error("Failed to refresh courses after publish:", err));
-    };
-
-    if (typeof window !== 'undefined') {
-      window.addEventListener('course:published', onCoursePublished as EventListener);
-    }
-
-    return () => {
-      cancelled = true;
-      if (typeof window !== 'undefined') {
-        window.removeEventListener('course:published', onCoursePublished as EventListener);
-      }
-    };
-  }, []);
-
   // Функция для polling статуса PDF
   const pollPdfStatus = React.useCallback((courseId: string) => {
     const maxAttempts = 30; // 30 попыток = 1 минута (каждые 2 секунды)
@@ -326,6 +269,116 @@ export function Dashboard({ requireAuth, openAuth, balance, currentPreview, onDi
 
     // Интервал сам очистится при достижении maxAttempts или успехе
   }, []);
+
+  // Функция для проверки статуса PDF (без запуска генерации)
+  const checkPdfStatus = React.useCallback(async (courseId: string) => {
+    try {
+      const response = await fetch(`/api/courses/generate-pdf?courseId=${courseId}`);
+      if (!response.ok) {
+        return null;
+      }
+      const data = await response.json();
+      if (data.status === 'completed' && data.pdfUrl) {
+        // PDF уже готов
+        setPdfStatus(prev => ({ ...prev, [courseId]: 'ready' }));
+        setCourses(prev => prev.map(c => 
+          c.id === courseId ? { ...c, pdfUrl: data.pdfUrl } : c
+        ));
+        return true;
+      } else if (data.status === 'processing') {
+        // PDF генерируется - запускаем polling
+        setPdfStatus(prev => ({ ...prev, [courseId]: 'generating' }));
+        pollPdfStatus(courseId);
+        return false;
+      }
+      return null;
+    } catch (error) {
+      console.error(`Error checking PDF status for course ${courseId}:`, error);
+      return null;
+    }
+  }, [pollPdfStatus]);
+
+  // Все хуки должны быть здесь, до условного возврата
+  // Загрузка начальных данных
+  React.useEffect(() => {
+    let cancelled = false;
+
+    async function fetchCoursesAndTx() {
+      try {
+        setLoading(true);
+        const [cRes, tRes, crRes] = await Promise.all([
+          fetch("/api/courses/list"),
+          fetch(`/api/tokens/history?limit=${ITEMS_PER_PAGE}`),
+          fetch("/api/coach-requests/list"),
+        ]);
+        if (cancelled) return;
+        const cJson = await cRes.json().catch(() => ({ items: [] }));
+        const tJson = await tRes.json().catch(() => ({ items: [] }));
+        const crJson = await crRes.json().catch(() => ({ items: [] }));
+        const coursesData = Array.isArray(cJson.items) ? cJson.items : [];
+        const transactionsData = Array.isArray(tJson.items) ? tJson.items : [];
+        const coachRequestsData = Array.isArray(crJson.items) ? crJson.items : [];
+        console.log("Loaded courses:", coursesData);
+        console.log("Loaded transactions:", transactionsData);
+        console.log("Loaded coach requests:", coachRequestsData);
+        setCourses(coursesData);
+        setTransactions(transactionsData);
+        setCoachRequests(coachRequestsData);
+        setHasMore(transactionsData?.length === ITEMS_PER_PAGE);
+        
+        // Проверяем статус PDF для всех курсов без pdfUrl
+        if (!cancelled) {
+          coursesData.forEach((course: CourseItem) => {
+            if (!course.pdfUrl) {
+              // Небольшая задержка между проверками, чтобы не перегрузить сервер
+              setTimeout(() => {
+                if (!cancelled) {
+                  checkPdfStatus(course.id);
+                }
+              }, coursesData.indexOf(course) * 200);
+            }
+          });
+        }
+      } catch (error) {
+        console.error("Failed to load dashboard data:", error);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+
+    fetchCoursesAndTx();
+
+    // Подписка на событие публикации курса
+    const onCoursePublished = React.useCallback((event: Event) => {
+      const customEvent = event as CustomEvent<{ courseId: string }>;
+      const courseId = customEvent.detail?.courseId;
+      console.log("Detected course:published event – refreshing courses", { courseId });
+      
+      fetch("/api/courses/list").then(r => r.json()).then(j => {
+        const coursesData = Array.isArray(j.items) ? j.items : [];
+        setCourses(coursesData);
+        
+        // Если есть courseId из события, проверяем статус PDF для нового курса
+        if (courseId) {
+          // Небольшая задержка, чтобы дать время Inngest запустить генерацию
+          setTimeout(() => {
+            checkPdfStatus(courseId);
+          }, 1000);
+        }
+      }).catch(err => console.error("Failed to refresh courses after publish:", err));
+    }, [checkPdfStatus]);
+
+    if (typeof window !== 'undefined') {
+      window.addEventListener('course:published', onCoursePublished as EventListener);
+    }
+
+    return () => {
+      cancelled = true;
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('course:published', onCoursePublished as EventListener);
+      }
+    };
+  }, [checkPdfStatus]);
 
   // Загрузка дополнительных транзакций
   const loadMoreTransactions = React.useCallback(async () => {

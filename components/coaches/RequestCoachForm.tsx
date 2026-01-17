@@ -27,6 +27,7 @@ interface FormData {
 }
 
 const GOAL_OPTIONS = [
+  { value: "", label: "Select goal..." },
   { value: "Strength", label: "Strength" },
   { value: "Fat loss", label: "Fat loss" },
   { value: "Mobility", label: "Mobility" },
@@ -35,24 +36,28 @@ const GOAL_OPTIONS = [
 ];
 
 const LEVEL_OPTIONS = [
+  { value: "", label: "Select level..." },
   { value: "Beginner", label: "Beginner" },
   { value: "Intermediate", label: "Intermediate" },
   { value: "Advanced", label: "Advanced" },
 ];
 
 const TRAINING_TYPE_OPTIONS = [
+  { value: "", label: "Select training type..." },
   { value: "Home", label: "Home" },
   { value: "Gym", label: "Gym" },
   { value: "Mixed", label: "Mixed" },
 ];
 
 const EQUIPMENT_OPTIONS = [
+  { value: "", label: "Select equipment..." },
   { value: "None", label: "None" },
   { value: "Basic", label: "Basic" },
   { value: "Full gym", label: "Full gym" },
 ];
 
 const DAYS_PER_WEEK_OPTIONS = [
+  { value: "", label: "Select days..." },
   { value: "2", label: "2 days" },
   { value: "3", label: "3 days" },
   { value: "4", label: "4 days" },
@@ -84,9 +89,19 @@ export function RequestCoachForm({ coachId, coachSlug, className }: RequestCoach
     if (draft) {
       try {
         const parsed = JSON.parse(draft);
-        setFormData(parsed);
-        // Show toast that draft was restored (you can add toast component later)
-        console.log("Draft restored");
+        console.log("Draft loaded from localStorage:", parsed);
+        // Убеждаемся, что все поля установлены корректно
+        setFormData({
+          goal: parsed.goal || "",
+          level: parsed.level || "",
+          trainingType: parsed.trainingType || "",
+          equipment: parsed.equipment || "",
+          daysPerWeek: parsed.daysPerWeek || "",
+          notes: parsed.notes || "",
+        });
+        // Очищаем ошибки при загрузке draft
+        setErrors({});
+        console.log("Draft restored and form data set");
       } catch (err) {
         console.error("Failed to parse draft:", err);
       }
@@ -98,7 +113,16 @@ export function RequestCoachForm({ coachId, coachSlug, className }: RequestCoach
       if (draftAfterAuth) {
         try {
           const parsed = JSON.parse(draftAfterAuth);
-          setFormData(parsed);
+          console.log("Draft loaded after auth:", parsed);
+          setFormData({
+            goal: parsed.goal || "",
+            level: parsed.level || "",
+            trainingType: parsed.trainingType || "",
+            equipment: parsed.equipment || "",
+            daysPerWeek: parsed.daysPerWeek || "",
+            notes: parsed.notes || "",
+          });
+          setErrors({});
           // Scroll to form
           setTimeout(() => {
             document.getElementById("request-form")?.scrollIntoView({ behavior: "smooth" });
@@ -154,13 +178,15 @@ export function RequestCoachForm({ coachId, coachSlug, className }: RequestCoach
   const hasInsufficientBalance = Boolean(session?.user && costBreakdown && balance < costBreakdown.total);
 
   const validate = (): boolean => {
+    console.log("Validating form data:", formData);
     const newErrors: Partial<FormData> = {};
-    if (!formData.goal) newErrors.goal = "Required";
-    if (!formData.level) newErrors.level = "Required";
-    if (!formData.trainingType) newErrors.trainingType = "Required";
-    if (!formData.equipment) newErrors.equipment = "Required";
-    if (!formData.daysPerWeek) newErrors.daysPerWeek = "Required";
+    if (!formData.goal || formData.goal.trim() === "") newErrors.goal = "Required";
+    if (!formData.level || formData.level.trim() === "") newErrors.level = "Required";
+    if (!formData.trainingType || formData.trainingType.trim() === "") newErrors.trainingType = "Required";
+    if (!formData.equipment || formData.equipment.trim() === "") newErrors.equipment = "Required";
+    if (!formData.daysPerWeek || formData.daysPerWeek.trim() === "") newErrors.daysPerWeek = "Required";
     
+    console.log("Validation errors:", newErrors);
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -168,7 +194,10 @@ export function RequestCoachForm({ coachId, coachSlug, className }: RequestCoach
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    console.log("Form submit triggered with data:", formData);
+    
     if (!validate()) {
+      console.log("Validation failed, not submitting");
       return;
     }
 
@@ -257,8 +286,15 @@ export function RequestCoachForm({ coachId, coachSlug, className }: RequestCoach
           <Select
             id="goal"
             options={GOAL_OPTIONS}
-            value={formData.goal}
-            onChange={(e) => setFormData({ ...formData, goal: e.target.value })}
+            value={formData.goal || ""}
+            onChange={(e) => {
+              console.log("Goal changed to:", e.target.value);
+              setFormData({ ...formData, goal: e.target.value });
+              // Очищаем ошибку при изменении
+              if (errors.goal) {
+                setErrors({ ...errors, goal: undefined });
+              }
+            }}
             className={errors.goal ? "border-danger" : ""}
           />
           {errors.goal && (
@@ -273,8 +309,15 @@ export function RequestCoachForm({ coachId, coachSlug, className }: RequestCoach
           <Select
             id="level"
             options={LEVEL_OPTIONS}
-            value={formData.level}
-            onChange={(e) => setFormData({ ...formData, level: e.target.value })}
+            value={formData.level || ""}
+            onChange={(e) => {
+              console.log("Level changed to:", e.target.value);
+              setFormData({ ...formData, level: e.target.value });
+              // Очищаем ошибку при изменении
+              if (errors.level) {
+                setErrors({ ...errors, level: undefined });
+              }
+            }}
             className={errors.level ? "border-danger" : ""}
           />
           {errors.level && (
@@ -289,8 +332,15 @@ export function RequestCoachForm({ coachId, coachSlug, className }: RequestCoach
           <Select
             id="trainingType"
             options={TRAINING_TYPE_OPTIONS}
-            value={formData.trainingType}
-            onChange={(e) => setFormData({ ...formData, trainingType: e.target.value })}
+            value={formData.trainingType || ""}
+            onChange={(e) => {
+              console.log("Training type changed to:", e.target.value);
+              setFormData({ ...formData, trainingType: e.target.value });
+              // Очищаем ошибку при изменении
+              if (errors.trainingType) {
+                setErrors({ ...errors, trainingType: undefined });
+              }
+            }}
             className={errors.trainingType ? "border-danger" : ""}
           />
           {errors.trainingType && (
@@ -305,8 +355,15 @@ export function RequestCoachForm({ coachId, coachSlug, className }: RequestCoach
           <Select
             id="equipment"
             options={EQUIPMENT_OPTIONS}
-            value={formData.equipment}
-            onChange={(e) => setFormData({ ...formData, equipment: e.target.value })}
+            value={formData.equipment || ""}
+            onChange={(e) => {
+              console.log("Equipment changed to:", e.target.value);
+              setFormData({ ...formData, equipment: e.target.value });
+              // Очищаем ошибку при изменении
+              if (errors.equipment) {
+                setErrors({ ...errors, equipment: undefined });
+              }
+            }}
             className={errors.equipment ? "border-danger" : ""}
           />
           {errors.equipment && (
@@ -321,8 +378,15 @@ export function RequestCoachForm({ coachId, coachSlug, className }: RequestCoach
           <Select
             id="daysPerWeek"
             options={DAYS_PER_WEEK_OPTIONS}
-            value={formData.daysPerWeek}
-            onChange={(e) => setFormData({ ...formData, daysPerWeek: e.target.value })}
+            value={formData.daysPerWeek || ""}
+            onChange={(e) => {
+              console.log("Days per week changed to:", e.target.value);
+              setFormData({ ...formData, daysPerWeek: e.target.value });
+              // Очищаем ошибку при изменении
+              if (errors.daysPerWeek) {
+                setErrors({ ...errors, daysPerWeek: undefined });
+              }
+            }}
             className={errors.daysPerWeek ? "border-danger" : ""}
           />
           {errors.daysPerWeek && (
