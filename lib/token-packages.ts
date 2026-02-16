@@ -81,7 +81,10 @@ export function calculateTokensFromAmount(
 ): number {
   if (amount <= 0) return 0;
   const tokens = amount * TOKEN_RATES[currency];
-  return Math.floor(tokens / 10) * 10;
+  // Small epsilon compensates for IEEE 754 floating-point errors
+  // (e.g. 173.92 * 115.00 = 19999.9999996 instead of 20000)
+  const FP_EPSILON = 0.01;
+  return Math.floor((tokens + FP_EPSILON) / 10) * 10;
 }
 
 /**
@@ -91,5 +94,6 @@ export function wasRounded(amount: number, currency: Currency): boolean {
   if (amount <= 0) return false;
   const exactTokens = amount * TOKEN_RATES[currency];
   const roundedTokens = calculateTokensFromAmount(amount, currency);
-  return exactTokens !== roundedTokens;
+  // Treat sub-1-token differences as "not rounded" (FP noise)
+  return Math.abs(exactTokens - roundedTokens) > 1;
 }

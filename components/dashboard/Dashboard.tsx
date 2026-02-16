@@ -2,6 +2,7 @@
 
 import React from "react";
 import Image from "next/image";
+import Link from "next/link";
 import {
   Dumbbell,
   Eye,
@@ -9,6 +10,7 @@ import {
   Lock,
   LogIn,
   RefreshCw,
+  Settings,
   Timer,
   UserPlus,
   Wallet,
@@ -555,7 +557,7 @@ export function Dashboard({ requireAuth, openAuth, balance, currentPreview, onDi
   return (
     <div className="space-y-6">
       {/* Баланс и общая статистика */}
-      <div className="grid gap-6 md:grid-cols-3">
+      <div className="grid gap-6 md:grid-cols-4">
         <Card>
           <div className="flex items-center justify-between">
             <h3 className="text-xl font-semibold flex items-center gap-2">
@@ -611,6 +613,22 @@ export function Dashboard({ requireAuth, openAuth, balance, currentPreview, onDi
             </div>
           </div>
         </Card>
+
+        <Link href="/account" className="block">
+          <Card interactive className="h-full flex flex-col justify-between cursor-pointer hover:ring-2 hover:ring-primary transition-all">
+            <h3 className="text-xl font-semibold flex items-center gap-2">
+              <Settings size={18} /> Settings
+            </h3>
+            <div className="mt-4">
+              <div className="text-sm opacity-70">
+                Edit your profile, address, and password
+              </div>
+              <div className="mt-2 text-sm font-medium" style={{ color: THEME.accent }}>
+                Manage account →
+              </div>
+            </div>
+          </Card>
+        </Link>
       </div>
 
 

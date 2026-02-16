@@ -225,7 +225,8 @@ export default function CheckoutPage() {
           router.push(`/auth/${path}${query}` as Route);
         }}
         onNavigate={(page) => {
-          if (page === "pricing") router.push("/pricing");
+          if (page === "home") router.push("/");
+          else if (page === "pricing") router.push("/pricing");
           else if (page === "dashboard") router.push("/dashboard");
           else router.push(`/${page}` as Route);
         }}
