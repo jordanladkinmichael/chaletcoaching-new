@@ -1,11 +1,15 @@
 /**
- * Inngest function to process coach requests
- * Generates course content asynchronously and triggers PDF generation
+ * Inngest function to process coach requests.
+ * Generates course content asynchronously, triggers PDF generation,
+ * then waits until availableAt before marking as "done".
  */
 
 import { inngest } from "../client";
 import { prisma } from "@/lib/db";
-import { generateAndSaveCourse, CourseGenerationOptions } from "@/lib/course-generator";
+import {
+  generateAndSaveCourse,
+  CourseGenerationOptions,
+} from "@/lib/course-generator";
 import { sendCourseEmailByUrl } from "@/lib/email/course-email";
 
 type CoachRequestedEvent = {
@@ -28,8 +32,9 @@ type CoachRequestedEvent = {
 /**
  * Map coach request form fields to course generation options
  */
-function mapCoachRequestToCourseOptions(data: CoachRequestedEvent["data"]): CourseGenerationOptions {
-  // Map trainingType to workoutTypes
+function mapCoachRequestToCourseOptions(
+  data: CoachRequestedEvent["data"]
+): CourseGenerationOptions {
   const workoutTypesMap: Record<string, string[]> = {
     Home: [
       "Home Minimal Equipment",
@@ -48,7 +53,6 @@ function mapCoachRequestToCourseOptions(data: CoachRequestedEvent["data"]): Cour
     ],
   };
 
-  // Map goal to targetMuscles
   const targetMusclesMap: Record<string, string[]> = {
     Strength: ["full_body"],
     "Fat loss": ["full_body", "core"],
@@ -57,24 +61,23 @@ function mapCoachRequestToCourseOptions(data: CoachRequestedEvent["data"]): Cour
     Posture: ["upper_back", "core"],
   };
 
-  const workoutTypes = workoutTypesMap[data.trainingType] || workoutTypesMap["Mixed"];
+  const workoutTypes =
+    workoutTypesMap[data.trainingType] || workoutTypesMap["Mixed"];
   const targetMuscles = targetMusclesMap[data.goal] || ["full_body"];
-
-  // Map equipment to specialEquipment
   const specialEquipment = data.equipment === "Full gym";
 
   return {
     userId: data.userId,
-    weeks: 4, // Default to 4 weeks
+    weeks: 4,
     sessionsPerWeek: data.daysPerWeek,
-    injurySafe: true, // Conservative default
+    injurySafe: true,
     specialEquipment,
-    nutritionTips: false, // Can be enabled later if needed
+    nutritionTips: false,
     pdf: "text",
-    images: 6, // Default to 6 images
+    images: 6,
     workoutTypes,
     targetMuscles,
-    gender: "male", // Default - should be added to form later
+    gender: "male",
     notes: data.notes || undefined,
   };
 }
@@ -95,11 +98,13 @@ export const processCoachRequest = inngest.createFunction(
         where: { id: requestId },
         data: { status: "processing" },
       });
-      console.log(`Coach request ${requestId} status updated to processing`);
+      console.log(
+        `Coach request ${requestId} status updated to processing`
+      );
       return { status: "processing" };
     });
 
-    // Step 2: Map coach request to course options and generate course
+    // Step 2: Generate the course
     const course = await step.run("generate-course", async () => {
       try {
         const courseOptions = mapCoachRequestToCourseOptions(event.data);
@@ -115,11 +120,9 @@ export const processCoachRequest = inngest.createFunction(
 
         const generatedCourse = await generateAndSaveCourse(courseOptions);
         console.log(`Course generated successfully: ${generatedCourse.id}`);
-
         return generatedCourse;
       } catch (error) {
         console.error("Error generating course:", error);
-        // Update request status to failed
         await prisma.coachRequest.update({
           where: { id: requestId },
           data: {
@@ -131,23 +134,26 @@ export const processCoachRequest = inngest.createFunction(
       }
     });
 
-    // Step 3: Update request with courseId
-    await step.run("update-request-complete", async () => {
-      // Update request status to done and link course
+    // Step 3: Link course to request (keep status as "processing")
+    await step.run("link-course-to-request", async () => {
       await prisma.coachRequest.update({
         where: { id: requestId },
         data: {
-          status: "done",
           courseId: course.id,
+          // Status stays "processing" — will become "done" after availableAt
         },
       });
-      console.log(`Coach request ${requestId} completed, course: ${course.id}`);
-      return { courseId: course.id, status: "done" };
+      console.log(
+        `Coach request ${requestId} linked to course: ${course.id}, status remains processing`
+      );
+      return { courseId: course.id };
     });
 
-    // Step 4: Trigger PDF generation (separate step to ensure event is sent)
+    // Step 4: Trigger PDF generation
     await step.run("trigger-pdf-generation", async () => {
-      console.log(`[Coach Request] Triggering PDF generation for course ${course.id}`);
+      console.log(
+        `[Coach Request] Triggering PDF generation for course ${course.id}`
+      );
       await inngest.send({
         name: "pdf/generate",
         data: {
@@ -155,46 +161,67 @@ export const processCoachRequest = inngest.createFunction(
           userId,
         },
       });
-      console.log(`[Coach Request] PDF generation event sent successfully for course ${course.id}`);
+      console.log(
+        `[Coach Request] PDF generation event sent successfully for course ${course.id}`
+      );
       return { pdfTriggered: true };
     });
 
-    // Step 5: Wait until availableAt and then send email
+    // Step 5: Wait until availableAt before marking as done
     const availableAt = event.data.availableAt;
     if (availableAt) {
       const availableDate = new Date(availableAt);
       const now = new Date();
-      
       if (availableDate > now) {
-        console.log(`[Coach Request] Waiting until ${availableAt} to send email for course ${course.id}`);
+        console.log(
+          `[Coach Request] Waiting until ${availableAt} before marking as done`
+        );
         await step.sleepUntil("wait-until-available", availableDate);
       }
-      
-      // Step 6: Send email with PDF
+    }
+
+    // Step 6: Mark as "done" (only after availableAt has passed)
+    await step.run("mark-as-done", async () => {
+      await prisma.coachRequest.update({
+        where: { id: requestId },
+        data: { status: "done" },
+      });
+      console.log(
+        `Coach request ${requestId} marked as done (available for download)`
+      );
+      return { status: "done" };
+    });
+
+    // Step 7: Send email with PDF (after availableAt)
+    if (availableAt) {
       await step.run("send-course-email", async () => {
-        console.log(`[Coach Request] Sending delayed email for course ${course.id}`);
-        
-        // Get course with pdfUrl
+        console.log(
+          `[Coach Request] Sending email for course ${course.id}`
+        );
+
         const courseWithPdf = await prisma.course.findUnique({
           where: { id: course.id },
-          select: { 
-            id: true, 
-            title: true, 
-            pdfUrl: true, 
+          select: {
+            id: true,
+            title: true,
+            pdfUrl: true,
             createdAt: true,
             options: true,
           },
         });
-        
+
         if (!courseWithPdf || !courseWithPdf.pdfUrl) {
-          console.warn(`[Coach Request] Course ${course.id} has no PDF URL, skipping email`);
+          console.warn(
+            `[Coach Request] Course ${course.id} has no PDF URL, skipping email`
+          );
           return { emailSent: false, reason: "no_pdf_url" };
         }
-        
-        const options = typeof courseWithPdf.options === "string" 
-          ? JSON.parse(courseWithPdf.options) 
-          : courseWithPdf.options;
-        
+
+        const options =
+          typeof courseWithPdf.options === "string"
+            ? JSON.parse(courseWithPdf.options)
+            : courseWithPdf.options;
+
         const emailSent = await sendCourseEmailByUrl({
           courseId: course.id,
           userId,
@@ -206,8 +233,10 @@ export const processCoachRequest = inngest.createFunction(
             sessionsPerWeek: options?.sessionsPerWeek,
           },
         });
-        
-        console.log(`[Coach Request] Email sent for course ${course.id}: ${emailSent}`);
+
+        console.log(
+          `[Coach Request] Email sent for course ${course.id}: ${emailSent}`
+        );
         return { emailSent };
       });
     }
@@ -220,4 +249,3 @@ export const processCoachRequest = inngest.createFunction(
     };
   }
 );
-

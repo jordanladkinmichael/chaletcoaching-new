@@ -15,7 +15,9 @@ import type { Route } from "next";
 
 interface CheckoutData {
   packageId: string;
-  amount: number;
+  amount: number; // net price (before VAT)
+  grossAmount?: number; // net + VAT
+  vatAmount?: number; // VAT amount
   currency: "EUR" | "GBP" | "USD";
   tokens: number;
   description: string;
@@ -76,9 +78,11 @@ export default function CheckoutPage() {
   if (!checkout) return null;
 
   const vatRate = 0.2;
-  const subtotal = checkout.amount;
-  const vatAmount = subtotal * vatRate;
-  const total = subtotal + vatAmount;
+  const subtotal = checkout.amount; // net price
+  const vatAmt =
+    checkout.vatAmount ?? Math.round(subtotal * vatRate * 100) / 100;
+  const total =
+    checkout.grossAmount ?? Math.round((subtotal + vatAmt) * 100) / 100;
 
   const validateForm = (): boolean => {
     const newErrors: FormErrors = {};
@@ -324,7 +328,7 @@ export default function CheckoutPage() {
                       <div className="flex justify-between text-sm">
                         <span className="opacity-70">VAT (20%)</span>
                         <span className="font-medium">
-                          {vatAmount.toFixed(2)} {checkout.currency}
+                          {vatAmt.toFixed(2)} {checkout.currency}
                         </span>
                       </div>
                       <div

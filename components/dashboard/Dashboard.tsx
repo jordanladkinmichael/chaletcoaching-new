@@ -868,17 +868,8 @@ export function Dashboard({ requireAuth, openAuth, balance, currentPreview, onDi
                       Your coach has received your request. Your personalized course is being prepared.
                     </div>
                   )}
-                  {req.status === "done" && req.availableAt && new Date(req.availableAt) > new Date() && (
-                    <div className="mt-2 text-xs opacity-70">
-                      <Timer size={12} className="inline mr-1" />
-                      Your course is ready! Available for download in {(() => {
-                        const hoursLeft = Math.ceil((new Date(req.availableAt).getTime() - Date.now()) / (1000 * 60 * 60));
-                        if (hoursLeft <= 0) return "a few minutes";
-                        if (hoursLeft === 1) return "1 hour";
-                        return `${hoursLeft} hours`;
-                      })()}.
-                    </div>
-                  )}
+                  {/* Removed: premature "ready" message. Status now stays "processing" 
+                      until the 4-hour window passes, then becomes "done". */}
                 </Card>
               );
             })}

@@ -336,7 +336,7 @@ export default function PaymentsTokensPage() {
               <H2 className="mb-6 text-center">Rates and currencies</H2>
               <div className="text-center mb-6">
                 <Paragraph className="text-lg font-semibold mb-2">
-                  100 tokens = €1.00 | £0.87 | $1.35
+                  100 tokens = €1.00 | £0.87 | $1.19
                 </Paragraph>
                 <Paragraph className="opacity-80">
                   EUR is the base currency. Your selected currency is shown in the header.
@@ -356,7 +356,7 @@ export default function PaymentsTokensPage() {
                   </div>
                   <div className="flex justify-between items-center py-2">
                     <span className="font-semibold">USD</span>
-                    <span className="opacity-85">$1.35 → 100 tokens</span>
+                    <span className="opacity-85">$1.19 → 100 tokens</span>
                   </div>
                 </div>
               </Card>

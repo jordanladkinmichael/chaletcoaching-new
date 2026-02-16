@@ -7,7 +7,13 @@ import SiteHeader from "@/components/site-header";
 import SiteFooter from "@/components/site-footer";
 import { Container, H1, Paragraph } from "@/components/ui";
 import { useCurrencyStore } from "@/lib/stores/currency-store";
-import { TOKEN_PACKS, TOKEN_RATES, calculateTokensFromAmount, type UiPackId } from "@/lib/token-packages";
+import {
+  TOKEN_PACKS,
+  TOKEN_RATES,
+  calculateTokensFromAmount,
+  type UiPackId,
+} from "@/lib/token-packages";
+import { EXCHANGE_RATES, VAT_RATE } from "@/lib/exchange-rates";
 import { Pricing } from "@/components/pricing/Pricing";
 import type { Route } from "next";
 
@@ -20,10 +26,11 @@ export default function PricingPage() {
   const [topUpLoading, setTopUpLoading] = useState(false);
   const [balance, setBalance] = useState(0);
   const [balanceLoading, setBalanceLoading] = useState(false);
-  
+
   // Determine region from currency
-  const region: Region = currency === "USD" ? "US" : currency === "GBP" ? "UK" : "EU";
-  
+  const region: Region =
+    currency === "USD" ? "US" : currency === "GBP" ? "UK" : "EU";
+
   const isAuthed = !!session?.user;
 
   // Load balance
@@ -59,11 +66,7 @@ export default function PricingPage() {
   // Navigation handler
   const handleNavigate = (page: string) => {
     const target =
-      page === "home"
-        ? "/"
-        : page.startsWith("/")
-          ? page
-          : `/${page}`;
+      page === "home" ? "/" : page.startsWith("/") ? page : `/${page}`;
     router.push(target as Route);
   };
 
@@ -91,7 +94,7 @@ export default function PricingPage() {
     try {
       const currencyForApi: "EUR" | "GBP" | "USD" = currency;
       let packageId: string;
-      let amount: number | undefined;
+      let netAmount: number;
       let tokens: number;
       let description = "";
 
@@ -102,8 +105,8 @@ export default function PricingPage() {
           return;
         }
         packageId = "ENTERPRISE";
-        amount = Number(customAmount);
-        tokens = calculateTokensFromAmount(amount, currencyForApi);
+        netAmount = Number(customAmount);
+        tokens = calculateTokensFromAmount(netAmount, currencyForApi);
         description = "Custom top-up";
       } else {
         const packInfo = TOKEN_PACKS.find((p) => p.uiId === pack);
@@ -114,14 +117,20 @@ export default function PricingPage() {
         tokens = packInfo.tokens;
         const priceInEUR = packInfo.tokens / TOKEN_RATES.EUR;
         const { convertPrice } = useCurrencyStore.getState();
-        amount = convertPrice(priceInEUR);
+        netAmount = convertPrice(priceInEUR);
         description = packInfo.title;
       }
+
+      // Calculate VAT and gross
+      const vatAmt = Math.round(netAmount * VAT_RATE * 100) / 100;
+      const grossAmount = Math.round((netAmount + vatAmt) * 100) / 100;
 
       if (typeof window !== "undefined") {
         const checkoutData = {
           packageId,
-          amount,
+          amount: netAmount, // net price for token calculation
+          grossAmount, // total with VAT for payment display
+          vatAmount: vatAmt, // VAT amount
           currency: currencyForApi,
           tokens,
           description,
@@ -137,6 +146,10 @@ export default function PricingPage() {
       setTopUpLoading(false);
     }
   };
+
+  // Exchange rate display — round to 2dp for user-friendly display
+  const gbpRate = EXCHANGE_RATES.GBP.toFixed(2);
+  const usdRate = EXCHANGE_RATES.USD.toFixed(2);
 
   return (
     <div className="min-h-screen flex flex-col bg-bg text-text">
@@ -155,14 +168,15 @@ export default function PricingPage() {
             <H1>Pricing</H1>
             <div className="space-y-2">
               <Paragraph className="text-lg">
-                100 tokens = €1.00 | £0.87 | $1.35
+                100 tokens = €1.00 | £{gbpRate} | ${usdRate}
               </Paragraph>
               <Paragraph className="text-sm text-text-muted">
-                Top up once and use tokens across Instant AI plans and coach-built requests.
+                Top up once and use tokens across Instant AI plans and
+                coach-built requests. All prices include 20% VAT.
               </Paragraph>
             </div>
           </div>
-          
+
           <Pricing
             region={region}
             requireAuth={!isAuthed}
@@ -177,4 +191,3 @@ export default function PricingPage() {
     </div>
   );
 }
-

@@ -141,7 +141,7 @@ export default function HowItWorksPage() {
       title: "How do tokens work?",
       content: (
         <p>
-          100 tokens = €1.00 | £0.87 | $1.35. You top up your balance once and spend tokens on coach requests or Instant AI plans. 
+          100 tokens = €1.00 | £0.87 | $1.19. You top up your balance once and spend tokens on coach requests or Instant AI plans. 
           Tokens remain in your balance until used.
         </p>
       ),
@@ -423,7 +423,7 @@ export default function HowItWorksPage() {
               <div>
                 <H2 className="mb-4">Tokens and payments</H2>
                 <Paragraph className="mb-6">
-                  100 tokens = €1.00 | £0.87 | $1.35
+                  100 tokens = €1.00 | £0.87 | $1.19
                 </Paragraph>
                 <Button variant="outline" asChild>
                   <Link href="/pricing">See pricing</Link>

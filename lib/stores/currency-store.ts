@@ -1,62 +1,80 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import {
+  EXCHANGE_RATES,
+  addVat,
+  vatAmount as calcVatAmount,
+  type Currency,
+} from "@/lib/exchange-rates";
 
-export type Currency = "GBP" | "EUR" | "USD";
+export type { Currency };
 
 interface CurrencyStore {
   currency: Currency;
-  exchangeRates: {
-    GBP: number;
-    EUR: number;
-    USD: number;
-  };
+  exchangeRates: typeof EXCHANGE_RATES;
   setCurrency: (currency: Currency) => void;
-  formatPrice: (priceInGBP: number) => string;
-  convertPrice: (priceInGBP: number) => number;
+  /** Format a EUR-denominated net price in current currency (no VAT) */
+  formatPrice: (priceInEUR: number) => string;
+  /** Convert a EUR-denominated net price to current currency (no VAT) */
+  convertPrice: (priceInEUR: number) => number;
+  /** Format a EUR-denominated net price as gross (inc. VAT) in current currency */
+  formatPriceWithVat: (priceInEUR: number) => string;
+  /** Convert a EUR-denominated net price to gross (inc. VAT) in current currency */
+  convertPriceWithVat: (priceInEUR: number) => number;
+  /** Get VAT amount for a EUR-denominated net price in current currency */
+  getVatAmount: (priceInEUR: number) => number;
 }
-
-// Token economics (base currency EUR)
-// 100 tokens = €1.00 / £0.87 / $1.35
-// Exchange rates: EUR=1 (base), GBP=0.87, USD=1.35
-const EXCHANGE_RATES = {
-  EUR: 1,
-  GBP: 0.87,
-  USD: 1.35,
-} as const;
-
 
 export const useCurrencyStore = create<CurrencyStore>()(
   persist(
     (set, get) => ({
-      currency: "EUR", // Default to EUR
+      currency: "EUR",
       exchangeRates: EXCHANGE_RATES,
       setCurrency: (currency) => set({ currency }),
+
       formatPrice: (priceInEUR: number) => {
         const { currency, convertPrice } = get();
-        const convertedPrice = convertPrice(priceInEUR);
-        
-        // For USD, use custom formatting to avoid "US$" prefix
-        if (currency === "USD") {
-          return `$${convertedPrice.toFixed(2)}`;
-        }
-        
-        // For EUR and GBP, use Intl.NumberFormat
+        const converted = convertPrice(priceInEUR);
+        if (currency === "USD") return `$${converted.toFixed(2)}`;
         return new Intl.NumberFormat("en-GB", {
           style: "currency",
           currency,
           minimumFractionDigits: 2,
           maximumFractionDigits: 2,
-        }).format(convertedPrice);
+        }).format(converted);
       },
+
       convertPrice: (priceInEUR: number) => {
         const { currency, exchangeRates } = get();
-        return priceInEUR * exchangeRates[currency];
+        return Math.round(priceInEUR * exchangeRates[currency] * 100) / 100;
+      },
+
+      formatPriceWithVat: (priceInEUR: number) => {
+        const { currency, convertPrice } = get();
+        const net = convertPrice(priceInEUR);
+        const gross = addVat(net);
+        if (currency === "USD") return `$${gross.toFixed(2)}`;
+        return new Intl.NumberFormat("en-GB", {
+          style: "currency",
+          currency,
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        }).format(gross);
+      },
+
+      convertPriceWithVat: (priceInEUR: number) => {
+        const { convertPrice } = get();
+        return addVat(convertPrice(priceInEUR));
+      },
+
+      getVatAmount: (priceInEUR: number) => {
+        const { convertPrice } = get();
+        return calcVatAmount(convertPrice(priceInEUR));
       },
     }),
     {
       name: "currency-storage",
-      skipHydration: true, // Skip hydration on server-side
+      skipHydration: true,
     }
   )
 );
-

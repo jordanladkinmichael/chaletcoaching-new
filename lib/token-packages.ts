@@ -1,18 +1,24 @@
 /**
- * Single source of truth for token packages and rates
- * Token rates: 100 tokens = €1.00 / £0.87 / $1.35
+ * Single source of truth for token packages and rates.
+ * Token rates derived from unified exchange rates in lib/exchange-rates.ts.
+ * Base rate: 100 tokens = €1.00
  */
+
+import { EXCHANGE_RATES, VAT_RATE } from "@/lib/exchange-rates";
 
 export type ApiPackageId = "STARTER" | "POPULAR" | "PRO" | "ENTERPRISE";
 export type UiPackId = "starter" | "momentum" | "elite";
 export type Currency = "EUR" | "GBP" | "USD";
 
-// Token rates: 100 tokens = €1.00 / £0.87 / $1.35
+// Token rates derived from unified exchange rates
+// 100 tokens per €1, scaled by FX rate for other currencies
 export const TOKEN_RATES = {
-  EUR: 100,        // 100 tokens per €1
-  GBP: 100 / 0.87, // ≈ 114.94 tokens per £1
-  USD: 100 / 1.35, // ≈ 74.07 tokens per $1
+  EUR: 100,
+  GBP: 100 / EXCHANGE_RATES.GBP, // ≈ 115.01 tokens per £1
+  USD: 100 / EXCHANGE_RATES.USD, // ≈ 84.39 tokens per $1
 } as const;
+
+export { VAT_RATE };
 
 export const TOKEN_PACKS: Array<{
   uiId: UiPackId;
@@ -22,27 +28,27 @@ export const TOKEN_PACKS: Array<{
   highlight?: boolean;
   microcopy: string;
 }> = [
-  { 
-    uiId: "starter", 
-    apiId: "STARTER", 
-    title: "Starter Spark", 
+  {
+    uiId: "starter",
+    apiId: "STARTER",
+    title: "Starter Spark",
     tokens: 10_000,
-    microcopy: "For a quick start"
+    microcopy: "For a quick start",
   },
-  { 
-    uiId: "momentum", 
-    apiId: "POPULAR", 
-    title: "Momentum Pack", 
-    tokens: 20_000, 
+  {
+    uiId: "momentum",
+    apiId: "POPULAR",
+    title: "Momentum Pack",
+    tokens: 20_000,
     highlight: true,
-    microcopy: "Best value for consistency"
+    microcopy: "Best value for consistency",
   },
-  { 
-    uiId: "elite", 
-    apiId: "PRO", 
-    title: "Elite Performance", 
+  {
+    uiId: "elite",
+    apiId: "PRO",
+    title: "Elite Performance",
     tokens: 30_000,
-    microcopy: "Built for long-term progress"
+    microcopy: "Built for long-term progress",
   },
 ];
 
@@ -55,32 +61,31 @@ export const QUICK_AMOUNTS: Record<Currency, number[]> = {
 
 // Helper functions
 export function getPackByUiId(uiId: UiPackId) {
-  return TOKEN_PACKS.find(p => p.uiId === uiId);
+  return TOKEN_PACKS.find((p) => p.uiId === uiId);
 }
 
 export function getPackByApiId(apiId: ApiPackageId) {
   if (apiId === "ENTERPRISE") return null;
-  return TOKEN_PACKS.find(p => p.apiId === apiId);
+  return TOKEN_PACKS.find((p) => p.apiId === apiId);
 }
 
 /**
- * Calculate tokens from currency amount
- * @param amount - Amount in currency units
+ * Calculate tokens from currency amount (net, before VAT).
+ * @param amount - Net amount in currency units
  * @param currency - Currency code
  * @returns Tokens (rounded down to nearest 10)
  */
-export function calculateTokensFromAmount(amount: number, currency: Currency): number {
+export function calculateTokensFromAmount(
+  amount: number,
+  currency: Currency
+): number {
   if (amount <= 0) return 0;
   const tokens = amount * TOKEN_RATES[currency];
-  // Round down to nearest 10 tokens
   return Math.floor(tokens / 10) * 10;
 }
 
 /**
- * Check if rounding was applied
- * @param amount - Amount in currency units
- * @param currency - Currency code
- * @returns true if rounding was applied
+ * Check if rounding was applied during token calculation.
  */
 export function wasRounded(amount: number, currency: Currency): boolean {
   if (amount <= 0) return false;
@@ -88,4 +93,3 @@ export function wasRounded(amount: number, currency: Currency): boolean {
   const roundedTokens = calculateTokensFromAmount(amount, currency);
   return exactTokens !== roundedTokens;
 }
-

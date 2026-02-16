@@ -1,7 +1,15 @@
-// Абстрактная система платежей для будущих интеграций
+import {
+  EXCHANGE_RATES,
+  convertFromEUR,
+  type Currency as FxCurrency,
+} from "@/lib/exchange-rates";
+
+// Abstract payment system for future integrations
 export interface PaymentProvider {
   name: string;
-  createPaymentSession(data: PaymentSessionData): Promise<PaymentSessionResult>;
+  createPaymentSession(
+    data: PaymentSessionData
+  ): Promise<PaymentSessionResult>;
   verifyPayment(sessionId: string): Promise<PaymentVerificationResult>;
 }
 
@@ -31,62 +39,52 @@ export interface PaymentVerificationResult {
 }
 
 export const TOKEN_PACKAGES = {
-    STARTER: {
-        name: "Starter",
-        price: 100, // €100 for 10,000 tokens (100 tokens = €1)
-        tokens: 10_000,
-    },
-    POPULAR: {
-        name: "Builder",
-        price: 200, // €200 for 20,000 tokens
-        tokens: 20_000,
-    },
-    PRO: {
-        name: "Pro",
-        price: 300, // €300 for 30,000 tokens
-        tokens: 30_000,
-    },
-    ENTERPRISE: {
-        name: "Custom",
-        price: 0,
-        tokens: 0, // calculated dynamically
-    },
+  STARTER: {
+    name: "Starter",
+    price: 100, // €100 for 10,000 tokens (100 tokens = €1)
+    tokens: 10_000,
+  },
+  POPULAR: {
+    name: "Builder",
+    price: 200, // €200 for 20,000 tokens
+    tokens: 20_000,
+  },
+  PRO: {
+    name: "Pro",
+    price: 300, // €300 for 30,000 tokens
+    tokens: 30_000,
+  },
+  ENTERPRISE: {
+    name: "Custom",
+    price: 0,
+    tokens: 0, // calculated dynamically
+  },
 } as const;
 
 export type TokenPackageId = keyof typeof TOKEN_PACKAGES;
 
-// Валюты
+// Supported currencies
 export const SUPPORTED_CURRENCIES = {
-  EUR: { symbol: '€', name: 'Euro' },
-  GBP: { symbol: '£', name: 'British Pound' },
-  USD: { symbol: '$', name: 'US Dollar' },
+  EUR: { symbol: "€", name: "Euro" },
+  GBP: { symbol: "£", name: "British Pound" },
+  USD: { symbol: "$", name: "US Dollar" },
 } as const;
 
 export type Currency = keyof typeof SUPPORTED_CURRENCIES;
 
-// Курсы конвертации (базовая валюта - EUR)
-// 1 EUR = 1.00 EUR (базовая)
-// 1 USD = 1.087 EUR ≈ 1.09 EUR (рассчитано: 1.25/1.15, где 1.25 USD = 1 GBP, 1 GBP = 1.15 EUR)
-const CONVERSION_RATE_USD = 1.087; // 1 EUR = 1.087 USD, или 1 USD = 0.92 EUR
-
-export function getPackagePrice(id: keyof typeof TOKEN_PACKAGES, currency: Currency): number {
-    const basePrice = TOKEN_PACKAGES[id].price; // Цены уже в EUR
-    
-    if (currency === 'EUR') {
-        return basePrice;
-    } else if (currency === 'USD') {
-        // Конвертируем из EUR в USD: price * (1 USD / 0.92 EUR) = price * 1.087
-        return Math.round(basePrice * CONVERSION_RATE_USD * 100) / 100;
-    } else if (currency === 'GBP') {
-        // Для обратной совместимости: 1 GBP = 0.87 EUR (1/1.15)
-        const GBP_TO_EUR = 1 / 1.15;
-        return Math.round(basePrice * GBP_TO_EUR * 100) / 100;
-    }
-    
-    return basePrice;
+/**
+ * Get package price in the specified currency.
+ * Uses the unified exchange rates from lib/exchange-rates.ts.
+ */
+export function getPackagePrice(
+  id: keyof typeof TOKEN_PACKAGES,
+  currency: Currency
+): number {
+  const basePrice = TOKEN_PACKAGES[id].price; // EUR base
+  return convertFromEUR(basePrice, currency as FxCurrency);
 }
 
-// Утилиты для работы с пакетами
+// Package utilities
 export function getTokenPackage(id: TokenPackageId) {
   return TOKEN_PACKAGES[id];
 }
@@ -98,7 +96,10 @@ export function getAllTokenPackages() {
   }));
 }
 
-export function formatPrice(price: number, currency: Currency = 'EUR'): string {
+export function formatPrice(
+  price: number,
+  currency: Currency = "EUR"
+): string {
   const { symbol } = SUPPORTED_CURRENCIES[currency];
   return `${symbol}${price.toFixed(2)}`;
 }

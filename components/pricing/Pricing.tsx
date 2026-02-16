@@ -23,6 +23,7 @@ import {
   type UiPackId,
   type Currency as TokenCurrency,
 } from "@/lib/token-packages";
+import { VAT_RATE } from "@/lib/exchange-rates";
 import { cardHoverLift } from "@/lib/animations";
 import { cn } from "@/lib/utils";
 
@@ -46,17 +47,21 @@ export function Pricing({
   onTierBuy: _onTierBuy,
   loading,
 }: PricingProps) {
-  const { currency, formatPrice, convertPrice } = useCurrencyStore();
+  const { currency, formatPrice, convertPrice, formatPriceWithVat } =
+    useCurrencyStore();
 
   // Custom Load collapsed state (collapsed on mobile by default)
   const [isCustomExpanded, setIsCustomExpanded] = React.useState(false);
 
-  // Calculate prices for each package in current currency
-  const getPackagePrice = (tokens: number): number => {
-    // Base price in EUR
+  // Calculate NET price for a package in current currency
+  const getNetPrice = (tokens: number): number => {
     const priceInEUR = tokens / TOKEN_RATES.EUR;
-    // Convert to current currency
     return convertPrice(priceInEUR);
+  };
+
+  // Calculate net price in EUR for formatting helpers
+  const getNetPriceEUR = (tokens: number): number => {
+    return tokens / TOKEN_RATES.EUR;
   };
 
   // Custom Load state
@@ -64,8 +69,14 @@ export function Pricing({
   const customAmountNum = Number(customAmount.replace(",", ".")) || 0;
 
   // Calculate tokens for custom amount using single source of truth
-  const customTokens = calculateTokensFromAmount(customAmountNum, currency as TokenCurrency);
-  const customWasRounded = wasRounded(customAmountNum, currency as TokenCurrency);
+  const customTokens = calculateTokensFromAmount(
+    customAmountNum,
+    currency as TokenCurrency
+  );
+  const customWasRounded = wasRounded(
+    customAmountNum,
+    currency as TokenCurrency
+  );
 
   // Track which action is creating
   const [creating, setCreating] = React.useState<string | null>(null);
@@ -74,7 +85,7 @@ export function Pricing({
   const [termsAccepted, setTermsAccepted] = React.useState(false);
 
   // Handle package purchase
-  const handleBuy = async (pack: typeof TOKEN_PACKS[number]) => {
+  const handleBuy = async (pack: (typeof TOKEN_PACKS)[number]) => {
     if (_requireAuth) return _openAuth("signup");
     setCreating(pack.uiId);
     try {
@@ -121,8 +132,8 @@ export function Pricing({
           />
           <span className="text-text-muted">
             I agree to the{" "}
-            <Link 
-              href="/legal/terms" 
+            <Link
+              href="/legal/terms"
               target="_blank"
               rel="noopener noreferrer"
               className="text-primary hover:underline"
@@ -137,7 +148,8 @@ export function Pricing({
       {/* Package cards - fixed heights to prevent CLS */}
       <div className="grid gap-6 md:grid-cols-3">
         {TOKEN_PACKS.map((pack) => {
-          const price = getPackagePrice(pack.tokens);
+          const netPriceEUR = getNetPriceEUR(pack.tokens);
+          const netPrice = getNetPrice(pack.tokens);
           return (
             <motion.div
               key={pack.uiId}
@@ -164,19 +176,29 @@ export function Pricing({
 
                 <CardContent className="flex-1">
                   <div className="mt-3 text-3xl font-bold tracking-tight text-primary">
-                    {formatPrice(price)}
+                    {formatPriceWithVat(netPriceEUR)}
+                  </div>
+                  <div className="mt-1 text-xs text-text-subtle">
+                    Net: {formatPrice(netPriceEUR)} + 20% VAT
                   </div>
                   <div className="mt-1 text-sm text-text-muted">
                     {pack.tokens.toLocaleString("en-US")} tokens
                   </div>
-                  <p className="mt-4 text-sm text-text-subtle">{pack.microcopy}</p>
+                  <p className="mt-4 text-sm text-text-subtle">
+                    {pack.microcopy}
+                  </p>
                 </CardContent>
 
                 <CardFooter>
                   <Button
                     variant="primary"
                     fullWidth
-                    disabled={!!loading || !!creating || _requireAuth || (!_requireAuth && !termsAccepted)}
+                    disabled={
+                      !!loading ||
+                      !!creating ||
+                      _requireAuth ||
+                      (!_requireAuth && !termsAccepted)
+                    }
                     onClick={() => void handleBuy(pack)}
                   >
                     {_requireAuth ? (
@@ -217,7 +239,7 @@ export function Pricing({
           <div className="mt-6 space-y-4">
             <div>
               <label className="text-sm font-medium text-text-muted mb-2 block">
-                Amount ({currency})
+                Amount ({currency}) — net price before VAT
               </label>
               <div className="flex items-center gap-2">
                 <span className="rounded-lg border border-border px-3 py-2 bg-surface text-text-muted">
@@ -244,7 +266,8 @@ export function Pricing({
                     onClick={() => setCustomAmount(amount.toString())}
                     className="px-3 py-1.5 text-xs rounded-lg border border-border bg-surface hover:bg-surface-hover text-text-muted hover:text-text transition-colors"
                   >
-                    {currencySymbols[currency]}{amount}
+                    {currencySymbols[currency]}
+                    {amount}
                   </button>
                 ))}
               </div>
@@ -258,8 +281,17 @@ export function Pricing({
                     Rounded to nearest 10 tokens.
                   </p>
                 )}
+                {customAmountNum > 0 && (
+                  <p className="mt-1 text-xs text-text-subtle">
+                    +20% VAT ({currencySymbols[currency]}
+                    {(customAmountNum * VAT_RATE).toFixed(2)}) will be added at
+                    checkout
+                  </p>
+                )}
               </div>
-              <p className="mt-2 text-xs text-text-subtle">Load exactly what you need</p>
+              <p className="mt-2 text-xs text-text-subtle">
+                Load exactly what you need
+              </p>
             </div>
 
             <Button
@@ -286,6 +318,12 @@ export function Pricing({
         )}
       </Card>
 
+      {/* Prices include VAT notice */}
+      <p className="text-xs text-text-subtle text-center">
+        All displayed package prices include 20% VAT. Tokens are calculated from
+        the net (pre-VAT) price.
+      </p>
+
       {/* What tokens unlock section */}
       <section className="mt-8">
         <H3 className="mb-6">What tokens unlock</H3>
@@ -298,7 +336,9 @@ export function Pricing({
             <CardContent>
               <ul className="space-y-2 text-sm text-text-muted mb-4">
                 <li>• Preview plan: 50 tokens</li>
-                <li>• Publish full plan: calculated based on selected options</li>
+                <li>
+                  • Publish full plan: calculated based on selected options
+                </li>
               </ul>
               <Button variant="outline" asChild>
                 <Link href="/generator">Open generator</Link>
@@ -335,4 +375,3 @@ export function Pricing({
     </div>
   );
 }
-

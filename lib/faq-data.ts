@@ -63,7 +63,7 @@ export const ALL_FAQS: FAQItem[] = [
   {
     id: "how-tokens-work",
     question: "How do tokens work?",
-    answer: "100 tokens = €1.00 / £0.87 / $1.35. You spend tokens when requesting coach courses or generating instant AI courses.",
+    answer: "100 tokens = €1.00 / £0.87 / $1.19. You spend tokens when requesting coach courses or generating instant AI courses.",
   },
   {
     id: "is-it-safe",
@@ -102,7 +102,7 @@ export const coachProfileFAQ: FAQItem[] = [
   {
     id: "how-tokens-work",
     question: "How do tokens work?",
-    answer: "100 tokens = €1.00 / £0.87 / $1.35. You spend tokens when requesting coach courses or generating instant AI courses. Tokens never expire.",
+    answer: "100 tokens = €1.00 / £0.87 / $1.19. You spend tokens when requesting coach courses or generating instant AI courses. Tokens never expire.",
   },
   {
     id: "instant-ai-instead",
@@ -210,7 +210,7 @@ export const FAQ_ITEMS: FaqItem[] = [
     id: "token-rates",
     category: "tokens_payments",
     question: "What are the token rates?",
-    answer: "100 tokens = €1.00 | £0.87 | $1.35. EUR is the base currency.",
+    answer: "100 tokens = €1.00 | £0.87 | $1.19. EUR is the base currency.",
     keywords: ["rates", "currency", "EUR", "GBP", "USD"],
   },
   {

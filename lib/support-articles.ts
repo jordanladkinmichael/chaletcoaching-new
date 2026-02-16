@@ -46,7 +46,7 @@ export const SUPPORT_ARTICLES: SupportArticle[] = [
       {
         heading: "How tokens work",
         paragraphs: [
-          "100 tokens = €1.00 | £0.87 | $1.35. You top up your balance once and spend tokens on coach requests or Instant AI plans.",
+          "100 tokens = €1.00 | £0.87 | $1.19. You top up your balance once and spend tokens on coach requests or Instant AI plans.",
           "Tokens remain in your balance until used. There is no expiration date.",
         ],
       },
@@ -70,7 +70,7 @@ export const SUPPORT_ARTICLES: SupportArticle[] = [
     body: [
       {
         paragraphs: [
-          "100 tokens = €1.00 | £0.87 | $1.35",
+          "100 tokens = €1.00 | £0.87 | $1.19",
           "EUR is the base currency. Your selected currency is shown in the header.",
         ],
       },
