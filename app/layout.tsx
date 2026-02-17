@@ -1,9 +1,10 @@
 import "./globals.css";
 import { Inter, Space_Grotesk } from "next/font/google";
+import Script from "next/script";
 import Providers from "./providers";
 import { generatePageMetadata } from "@/lib/metadata";
 
-const inter = Inter({ 
+const inter = Inter({
   subsets: ["latin"],
   variable: "--font-inter",
   display: "swap",
@@ -32,6 +33,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <Providers>
           {children}
         </Providers>
+        {/* Jivo Chat — loads in head before interactive, on every page */}
+        <Script
+          src="https://code.jivosite.com/widget/T28rAWbDAY"
+          strategy="beforeInteractive"
+        />
       </body>
     </html>
   );

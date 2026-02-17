@@ -4,6 +4,7 @@ import React from "react";
 import Image from "next/image";
 import Link from "next/link";
 import {
+  Calendar,
   Dumbbell,
   Eye,
   FileDown,
@@ -205,10 +206,24 @@ export function Dashboard({ requireAuth, openAuth, balance, currentPreview, onDi
     };
   };
 
+  type BookingItem = {
+    id: string;
+    coachId: string;
+    coachSlug: string;
+    coachName: string;
+    date: string;
+    durationHours: number;
+    status: "confirmed" | "cancelled" | "completed";
+    tokensCharged: number;
+    notes: string | null;
+    createdAt: string;
+  };
+
   // Все хуки должны быть в начале компонента
   const [loading, setLoading] = React.useState(true);
   const [courses, setCourses] = React.useState<CourseItem[]>([]);
   const [coachRequests, setCoachRequests] = React.useState<CoachRequestItem[]>([]);
+  const [bookings, setBookings] = React.useState<BookingItem[]>([]);
   const [transactions, setTransactions] = React.useState<TxItem[]>([]);
   const [currentPage, setCurrentPage] = React.useState(1);
   const [hasMore, setHasMore] = React.useState(true);
@@ -338,24 +353,29 @@ export function Dashboard({ requireAuth, openAuth, balance, currentPreview, onDi
     async function fetchCoursesAndTx() {
       try {
         setLoading(true);
-        const [cRes, tRes, crRes] = await Promise.all([
+        const [cRes, tRes, crRes, bRes] = await Promise.all([
           fetch("/api/courses/list"),
           fetch(`/api/tokens/history?limit=${ITEMS_PER_PAGE}`),
           fetch("/api/coach-requests/list"),
+          fetch("/api/bookings"),
         ]);
         if (cancelled) return;
         const cJson = await cRes.json().catch(() => ({ items: [] }));
         const tJson = await tRes.json().catch(() => ({ items: [] }));
         const crJson = await crRes.json().catch(() => ({ items: [] }));
+        const bJson = await bRes.json().catch(() => ({ items: [] }));
         const coursesData = Array.isArray(cJson.items) ? cJson.items : [];
         const transactionsData = Array.isArray(tJson.items) ? tJson.items : [];
         const coachRequestsData = Array.isArray(crJson.items) ? crJson.items : [];
+        const bookingsData = Array.isArray(bJson.items) ? bJson.items : [];
         console.log("Loaded courses:", coursesData);
         console.log("Loaded transactions:", transactionsData);
         console.log("Loaded coach requests:", coachRequestsData);
+        console.log("Loaded bookings:", bookingsData);
         setCourses(coursesData);
         setTransactions(transactionsData);
         setCoachRequests(coachRequestsData);
+        setBookings(bookingsData);
         setHasMore(transactionsData?.length === ITEMS_PER_PAGE);
         
         // Проверяем статус PDF для всех курсов без pdfUrl
@@ -715,6 +735,109 @@ export function Dashboard({ requireAuth, openAuth, balance, currentPreview, onDi
                 <X size={16} /> Dismiss
               </GhostButton>
             </div>
+          </div>
+        </Card>
+      )}
+
+      {/* My Bookings */}
+      {bookings.length > 0 && (
+        <Card>
+          <div className="flex items-center justify-between">
+            <h3 className="text-xl font-semibold flex items-center gap-2">
+              <Calendar size={18} /> My Bookings
+            </h3>
+            <Link
+              href="/coaches"
+              className="text-sm font-medium hover:underline"
+              style={{ color: THEME.accent }}
+            >
+              Book new session →
+            </Link>
+          </div>
+
+          <div className="mt-4 space-y-3">
+            {bookings.map((b) => {
+              const bookingDate = new Date(b.date);
+              const now = new Date();
+              const isPast = bookingDate < now;
+              const isToday =
+                bookingDate.getDate() === now.getDate() &&
+                bookingDate.getMonth() === now.getMonth() &&
+                bookingDate.getFullYear() === now.getFullYear();
+
+              const statusColor =
+                b.status === "confirmed"
+                  ? isPast
+                    ? "#9ca3af" // grey for past confirmed
+                    : isToday
+                      ? "#22c55e" // green for today
+                      : "#3b82f6" // blue for upcoming
+                  : b.status === "cancelled"
+                    ? "#ef4444"
+                    : "#22c55e";
+
+              const statusLabel =
+                b.status === "confirmed"
+                  ? isPast
+                    ? "Completed"
+                    : isToday
+                      ? "Today"
+                      : "Upcoming"
+                  : b.status === "cancelled"
+                    ? "Cancelled"
+                    : "Completed";
+
+              return (
+                <div
+                  key={b.id}
+                  className="flex items-center gap-4 p-4 rounded-xl border"
+                  style={{ borderColor: THEME.cardBorder }}
+                >
+                  {/* Date badge */}
+                  <div
+                    className="flex flex-col items-center justify-center rounded-lg px-3 py-2 min-w-[56px]"
+                    style={{ backgroundColor: statusColor + "15" }}
+                  >
+                    <span className="text-xs font-medium" style={{ color: statusColor }}>
+                      {bookingDate.toLocaleDateString("en-GB", { month: "short" })}
+                    </span>
+                    <span className="text-lg font-bold" style={{ color: statusColor }}>
+                      {bookingDate.getDate()}
+                    </span>
+                  </div>
+
+                  {/* Details */}
+                  <div className="flex-1 min-w-0">
+                    <div className="font-semibold text-sm truncate">
+                      <Link
+                        href={`/coaches/${b.coachSlug}`}
+                        className="hover:underline"
+                      >
+                        {b.coachName}
+                      </Link>
+                    </div>
+                    <div className="text-xs text-text-muted mt-0.5">
+                      {bookingDate.toLocaleTimeString("en-GB", {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}{" "}
+                      · {b.durationHours}h · {b.tokensCharged.toLocaleString()} tokens
+                    </div>
+                  </div>
+
+                  {/* Status */}
+                  <div
+                    className="text-xs font-medium px-2.5 py-1 rounded-full whitespace-nowrap"
+                    style={{
+                      backgroundColor: statusColor + "20",
+                      color: statusColor,
+                    }}
+                  >
+                    {statusLabel}
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </Card>
       )}

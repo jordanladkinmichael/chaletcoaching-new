@@ -1,0 +1,209 @@
+{
+    "projectName": "Chaletcoaching",
+    "tagline": "AI-powered personalized fitness training plans",
+    "websiteUrl": "https://www.chaletcoaching.co.uk",
+    "lastUpdated": "2026-02-17",
+  
+    "company": {
+      "legalName": "CHALET AQUARIUS LTD",
+      "companyNumber": "15587263",
+      "address": "20 Wenlock Road, London, England, N1 7GU",
+      "email": "info@chaletcoaching.co.uk",
+      "phone": "+44 7441 392840",
+      "brandName": "Chaletcoaching",
+      "paymentMethods": ["Visa", "Mastercard"],
+      "currencies": ["EUR", "GBP", "USD"]
+    },
+  
+    "tokenSystem": {
+      "description": "Tokens are the platform's internal currency. One balance is used for coach requests, Instant AI plans, and live session bookings. Tokens do not expire.",
+      "baseRate": "100 tokens = €1.00 (EUR is base currency)",
+      "ratesByCurrency": {
+        "EUR": "100 tokens = €1.00",
+        "GBP": "100 tokens = £0.87",
+        "USD": "100 tokens = $1.19"
+      },
+      "exchangeRates": {
+        "EUR": 1,
+        "GBP": 0.8696,
+        "USD": 1.1850
+      },
+      "vatNote": "Displayed prices include 20% VAT where applicable; token calculations use net amounts."
+    },
+  
+    "tokenPackages": {
+      "description": "Preset packs and custom load. Prices are in EUR base; converted to GBP/USD for display.",
+      "packs": [
+        {
+          "id": "STARTER",
+          "uiId": "starter",
+          "name": "Starter Spark",
+          "tokens": 10000,
+          "basePriceEUR": 100,
+          "microcopy": "For a quick start"
+        },
+        {
+          "id": "POPULAR",
+          "uiId": "momentum",
+          "name": "Momentum Pack",
+          "tokens": 20000,
+          "basePriceEUR": 200,
+          "highlight": true,
+          "microcopy": "Best value for consistency"
+        },
+        {
+          "id": "PRO",
+          "uiId": "elite",
+          "name": "Elite Performance",
+          "tokens": 30000,
+          "basePriceEUR": 300,
+          "microcopy": "Built for long-term progress"
+        }
+      ],
+      "customLoad": "Users can enter a custom amount (Custom Load). Tokens are calculated from the selected currency and rounded to nearest 10."
+    },
+  
+    "aiTrainingPlanGenerator": {
+      "name": "Instant AI",
+      "description": "AI-generated fitness plans in minutes. User selects options, can preview first, then publish full plan.",
+      "costs": {
+        "preview": "50 tokens (see plan structure before publishing)",
+        "regenerateDay": "30 tokens",
+        "regenerateWeek": "120 tokens",
+        "publish": "Variable: base formula (400 + weeks×120 + sessionsPerWeek×weeks×8) × 1.3, plus add-ons for injury-safe (+120×1.3), special equipment (+80×1.3), nutrition tips (+100×1.3), PDF (60×1.3 or illustrated with images), workout types (+15×1.3 per type), target muscles (+8×1.3 per muscle). Minimum 0."
+      },
+      "steps": [
+        "Choose training inputs (weeks, sessions, workout types, muscles, etc.)",
+        "Generate a preview (50 tokens)",
+        "Publish your full plan (token cost shown before confirm)",
+        "Download and train"
+      ]
+    },
+  
+    "coachCoursePricing": {
+      "description": "Coach-built personalized plans. User submits a request (goal, level, training type, equipment, days per week). Cost is calculated from a base plus add-ons.",
+      "formula": "Base 10,000 tokens + level add + training type add + equipment add + days per week add",
+      "breakdown": {
+        "base": 10000,
+        "level": {
+          "beginner": 0,
+          "intermediate": 5000,
+          "advanced": 12000
+        },
+        "trainingType": {
+          "home": 0,
+          "gym": 0,
+          "mixed": 4000
+        },
+        "equipment": {
+          "none": 0,
+          "basic": 3000,
+          "full_gym": 6000
+        },
+        "daysPerWeek": {
+          "2": 0,
+          "3": 0,
+          "4": 4000,
+          "5": 8000,
+          "6": 12000
+        }
+      },
+      "delivery": "Coach courses are prepared by the coach; typically available for download after processing (e.g. within a few hours). Status: pending → processing → done (or failed)."
+    },
+  
+    "coachLiveSessionPricing": {
+      "description": "Book a live training session with a coach. Flat rate for all coaches.",
+      "hourlyRateTokens": 10000,
+      "durations": [1, 2, 3],
+      "durationUnit": "hours",
+      "costFormula": "durationHours × 10,000 tokens",
+      "slotHours": "08:00–20:00, 1-hour increments; last start time depends on duration (e.g. 3h session must start by 17:00)."
+    },
+  
+    "howItWorks": {
+      "summary": "Two main paths: Coach-built request (personalized by a coach) or Instant AI plan (generated in minutes). Both use the same token balance.",
+      "coachPath": {
+        "title": "Coach-built request",
+        "steps": ["Pick a coach", "Send your request", "Your plan is prepared", "Track it in your dashboard"]
+      },
+      "instantAIPath": {
+        "title": "Instant AI plan",
+        "steps": ["Choose training inputs", "Generate a preview (50 tokens)", "Publish your full plan", "Download and train"]
+      },
+      "accountRequired": "Browsing does not require an account. Sign-in is required to generate plans, purchase tokens, and access the dashboard."
+    },
+  
+    "policies": {
+      "refunds": {
+        "title": "Refund & Returns Policy",
+        "path": "/legal/refunds",
+        "summary": "Monetary refunds for token packages: full refund within 14 days if no tokens from that package were used. Partially used packages are not eligible for partial refund. Processing fee (3–5%) may apply. AI-generated courses: non-refundable once generation started. Trainer courses: token reversal possible if cancelled while status is Pending; no refund once in progress or delivered. Corrupted/non-delivered files: contact within 48 hours for replacement or token refund. Refunds to original payment method (Visa/Mastercard); 5–10 business days. Chargebacks without contacting support first result in account suspension."
+      },
+      "privacy": {
+        "title": "Privacy Policy",
+        "path": "/legal/privacy"
+      },
+      "terms": {
+        "title": "Terms and Conditions",
+        "path": "/legal/terms"
+      },
+      "cookies": {
+        "title": "Cookies Policy",
+        "path": "/legal/cookies"
+      }
+    },
+  
+    "faq": [
+      { "id": "coach-delivery-time", "question": "How fast will I receive a coach course?", "answer": "Coach courses are delivered by your coach. Delivery time depends on your coach's schedule and course complexity." },
+      { "id": "coach-vs-ai", "question": "What's the difference between Coach Course and Instant AI?", "answer": "Coach Course is delivered by your coach with personalized expertise. Instant AI is generated in minutes." },
+      { "id": "refund-policy", "question": "Can I get a refund?", "answer": "Refund eligibility depends on your order status and delivery stage. Please read our Refund Policy." },
+      { "id": "tokens-expire", "question": "Do tokens expire?", "answer": "No, tokens do not expire." },
+      { "id": "payment-methods", "question": "What payment methods do you support?", "answer": "Visa and Mastercard." },
+      { "id": "currencies", "question": "Which currencies are supported?", "answer": "EUR, GBP, and USD." },
+      { "id": "how-tokens-work", "question": "How do tokens work?", "answer": "100 tokens = €1.00 / £0.87 / $1.19. You spend tokens when requesting coach courses or generating instant AI courses." },
+      { "id": "is-it-safe", "question": "Is it safe?", "answer": "We include injury-safe options and alternatives, but this is not medical advice. Consult a healthcare professional before starting." },
+      { "id": "equipment-needed", "question": "What equipment do I need?", "answer": "Most workouts can be done with minimal equipment. We provide alternatives for different setups." },
+      { "id": "training-frequency", "question": "How often should I train?", "answer": "We recommend 3–4 sessions per week for optimal results, but you can adjust based on your schedule and goals." },
+      { "id": "do-i-need-account", "question": "Do I need an account?", "answer": "You can browse pages without an account. You'll need to sign in to generate, purchase tokens, and access your dashboard." },
+      { "id": "what-are-tokens", "question": "What are tokens?", "answer": "Tokens are your balance used across features like previews, publishing, and coach requests." },
+      { "id": "not-enough-tokens", "question": "What happens if I don't have enough tokens?", "answer": "You'll be prompted to top up before completing the action." },
+      { "id": "is-payment-secure", "question": "Is payment secure?", "answer": "Yes. Payments are processed via secure checkout. We do not store your full card details." },
+      { "id": "where-see-balance", "question": "Where can I see my token balance?", "answer": "In your dashboard after signing in." },
+      { "id": "where-find-plans", "question": "Where do I find my plans?", "answer": "Your dashboard contains your generated plans and coach requests." },
+      { "id": "is-medical-advice", "question": "Is this medical advice?", "answer": "No. Training guidance is informational and not a substitute for licensed medical care." },
+      { "id": "suitable-beginners", "question": "Is this suitable for beginners?", "answer": "Yes. Choose beginner options, start conservatively, and progress gradually." }
+    ],
+  
+    "support": {
+      "email": "info@chaletcoaching.co.uk",
+      "supportPagePath": "/support",
+      "contactPath": "/contact",
+      "categories": ["Tokens & billing", "Coach requests", "Instant AI generator", "Account & dashboard", "Troubleshooting", "Trust & safety"]
+    },
+  
+    "keyRoutes": {
+      "home": "/",
+      "coaches": "/coaches",
+      "generator": "/generator",
+      "pricing": "/pricing",
+      "dashboard": "/dashboard",
+      "howItWorks": "/how-it-works",
+      "paymentsTokens": "/payments-tokens",
+      "faq": "/faq",
+      "about": "/about",
+      "contact": "/contact",
+      "support": "/support",
+      "trustSafety": "/trust-safety",
+      "whatYouReceive": "/what-you-receive",
+      "legalRefunds": "/legal/refunds",
+      "legalPrivacy": "/legal/privacy",
+      "legalTerms": "/legal/terms",
+      "legalCookies": "/legal/cookies",
+      "account": "/account"
+    },
+  
+    "disclaimers": {
+      "training": "Training guidance is informational and not a substitute for licensed medical care. Consult a healthcare professional before starting any new exercise program.",
+      "results": "We do not guarantee specific physical results (e.g., weight loss, muscle gain). Dissatisfaction with difficulty, style, or effectiveness of a plan is not valid grounds for a refund."
+    }
+  }

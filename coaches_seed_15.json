@@ -3,7 +3,7 @@
     "id": "c01",
     "slug": "maya-kalnina-yoga-flow",
     "name": "Maya Kalnina",
-    "avatar": "coach_maya_kalnina.webp",
+    "avatar": "coach_maya_kalnina.jpg",
     "specialties": [
       "Yoga Flow",
       "Breathwork",
@@ -34,7 +34,7 @@
     "id": "c02",
     "slug": "marco-rinaldi-powerlifting",
     "name": "Marco Rinaldi",
-    "avatar": "coach_marco_rinaldi.webp",
+    "avatar": "coach_marco_rinaldi.jpg",
     "specialties": [
       "Powerlifting",
       "Strength Programming",
@@ -64,7 +64,7 @@
     "id": "c03",
     "slug": "lena-berg-calisthenics",
     "name": "Lena Berg",
-    "avatar": "coach_lena_berg.webp",
+    "avatar": "coach_lena_berg.jpg",
     "specialties": [
       "Calisthenics",
       "Bodyweight Strength",
@@ -94,7 +94,7 @@
     "id": "c04",
     "slug": "elise-dumont-pilates-core",
     "name": "Elise Dumont",
-    "avatar": "coach_elise_dumont.webp",
+    "avatar": "coach_elise_dumont.jpg",
     "specialties": [
       "Pilates",
       "Core Stability",
@@ -124,7 +124,7 @@
     "id": "c05",
     "slug": "tomasz-nowak-hiit-conditioning",
     "name": "Tomasz Nowak",
-    "avatar": "coach_tomasz_nowak.webp",
+    "avatar": "coach_tomasz_nowak.jpg",
     "specialties": [
       "HIIT",
       "Conditioning",
@@ -154,7 +154,7 @@
     "id": "c06",
     "slug": "greta-silva-run-coach",
     "name": "Greta Silva",
-    "avatar": "coach_greta_silva.webp",
+    "avatar": "coach_greta_silva.jpg",
     "specialties": [
       "Running",
       "5K–Half Marathon",
@@ -185,7 +185,7 @@
     "id": "c07",
     "slug": "johan-lind-cycling-performance",
     "name": "Johan Lind",
-    "avatar": "coach_johan_lind.webp",
+    "avatar": "coach_johan_lind.jpg",
     "specialties": [
       "Cycling",
       "Performance",
@@ -216,7 +216,7 @@
     "id": "c08",
     "slug": "nadia-kovac-boxing-fitness",
     "name": "Nadia Kovac",
-    "avatar": "coach_nadia_kovac.webp",
+    "avatar": "coach_nadia_kovac.jpg",
     "specialties": [
       "Boxing Fitness",
       "Footwork",
@@ -247,7 +247,7 @@
     "id": "c09",
     "slug": "alex-kent-kettlebell",
     "name": "Alex Kent",
-    "avatar": "coach_alex_kent.webp",
+    "avatar": "coach_alex_kent.jpg",
     "specialties": [
       "Kettlebells",
       "Functional Strength",
@@ -276,7 +276,7 @@
     "id": "c10",
     "slug": "sara-van-dijk-mobility-posture",
     "name": "Sara van Dijk",
-    "avatar": "coach_sara_van_dijk.webp",
+    "avatar": "coach_sara_van_dijk.jpg",
     "specialties": [
       "Mobility",
       "Posture",
@@ -306,7 +306,7 @@
     "id": "c11",
     "slug": "pavel-ivanov-olympic-lifting",
     "name": "Pavel Ivanov",
-    "avatar": "coach_pavel_ivanov.webp",
+    "avatar": "coach_pavel_ivanov.jpg",
     "specialties": [
       "Olympic Lifting",
       "Barbell Technique",
@@ -336,7 +336,7 @@
     "id": "c12",
     "slug": "chiara-conti-dance-cardio",
     "name": "Chiara Conti",
-    "avatar": "coach_chiara_conti.webp",
+    "avatar": "coach_chiara_conti.jpg",
     "specialties": [
       "Dance Cardio",
       "Rhythm Training",
@@ -367,7 +367,7 @@
     "id": "c13",
     "slug": "mikael-otto-climbing-conditioning",
     "name": "Mikael Otto",
-    "avatar": "coach_mikael_otto.webp",
+    "avatar": "coach_mikael_otto.jpg",
     "specialties": [
       "Climbing Conditioning",
       "Grip Strength",
@@ -397,7 +397,7 @@
     "id": "c14",
     "slug": "irina-petrescu-low-impact",
     "name": "Irina Petrescu",
-    "avatar": "coach_irina_petrescu.webp",
+    "avatar": "coach_irina_petrescu.jpg",
     "specialties": [
       "Low-Impact Fitness",
       "Balance",
@@ -427,7 +427,7 @@
     "id": "c15",
     "slug": "benoit-martin-swim-technique",
     "name": "Benoit Martin",
-    "avatar": "coach_benoit_martin.webp",
+    "avatar": "coach_benoit_martin.jpg",
     "specialties": [
       "Swimming Technique",
       "Endurance",
