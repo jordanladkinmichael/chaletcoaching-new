@@ -24,6 +24,7 @@ import {
   type Currency as TokenCurrency,
 } from "@/lib/token-packages";
 import { VAT_RATE } from "@/lib/exchange-rates";
+import { COPY, type PricingContextKey } from "@/lib/copy-variants";
 import { cardHoverLift } from "@/lib/animations";
 import { cn } from "@/lib/utils";
 
@@ -38,6 +39,8 @@ export type PricingProps = {
   onTierBuy: (pack: UiPackId) => Promise<void>;
   onCustomTopUp: (amountCurrency: number) => Promise<void>;
   loading?: boolean;
+  /** Renders different copy for home vs pricing page to reduce duplicate content. */
+  context?: "home" | "pricing-page";
 };
 
 export function Pricing({
@@ -46,6 +49,7 @@ export function Pricing({
   onCustomTopUp: _onCustomTopUp,
   onTierBuy: _onTierBuy,
   loading,
+  context = "pricing-page",
 }: PricingProps) {
   const { currency, formatPrice, convertPrice, formatPriceWithVat } =
     useCurrencyStore();
@@ -77,6 +81,8 @@ export function Pricing({
     customAmountNum,
     currency as TokenCurrency
   );
+
+  const copy = COPY.pricingContext[context as PricingContextKey];
 
   // Track which action is creating
   const [creating, setCreating] = React.useState<string | null>(null);
@@ -318,55 +324,63 @@ export function Pricing({
         )}
       </Card>
 
-      {/* Prices include VAT notice */}
+      {/* Prices include VAT notice — wording varies by context for SEO */}
       <p className="text-xs text-text-subtle text-center">
-        All displayed package prices include 20% VAT. Tokens are calculated from
-        the net (pre-VAT) price.
+        {copy.vatNotice}
       </p>
 
-      {/* What tokens unlock section */}
+      {/* What tokens unlock section — different headings and CTAs per context */}
       <section className="mt-8">
-        <H3 className="mb-6">What tokens unlock</H3>
+        <H3 className="mb-6">{copy.sectionHeading}</H3>
         <div className="grid md:grid-cols-2 gap-6">
-          {/* Column A: Instant AI Generator */}
+          {/* Column A: Instant AI */}
           <Card>
             <CardHeader>
-              <H3 className="text-lg">Instant AI Generator</H3>
+              <H3 className="text-lg">{copy.leftCardTitle}</H3>
             </CardHeader>
             <CardContent>
-              <ul className="space-y-2 text-sm text-text-muted mb-4">
-                <li>• Preview plan: 50 tokens</li>
-                <li>
-                  • Publish full plan: calculated based on selected options
-                </li>
-              </ul>
+              {context === "pricing-page" ? (
+                <ul className="space-y-2 text-sm text-text-muted mb-4">
+                  <li>• {copy.leftCardBullets}</li>
+                </ul>
+              ) : (
+                <ul className="space-y-2 text-sm text-text-muted mb-4">
+                  <li>• {copy.leftCardBullets}</li>
+                </ul>
+              )}
               <Button variant="outline" asChild>
-                <Link href="/generator">Open generator</Link>
+                <Link href="/generator">{copy.leftCta}</Link>
               </Button>
             </CardContent>
           </Card>
 
-          {/* Column B: Coach-built request */}
+          {/* Column B: Coach */}
           <Card>
             <CardHeader>
-              <H3 className="text-lg">Coach-built request</H3>
+              <H3 className="text-lg">{copy.rightCardTitle}</H3>
             </CardHeader>
             <CardContent>
-              <div className="space-y-2 text-sm text-text-muted mb-4">
-                <div>Base: 10,000 tokens</div>
-                <div className="opacity-80 mt-2">Add-ons:</div>
-                <ul className="ml-4 space-y-1 text-xs opacity-70">
-                  <li>• Level: Intermediate +5,000, Advanced +12,000</li>
-                  <li>• Training type: Mixed +4,000</li>
-                  <li>• Equipment: Basic +3,000, Full gym +6,000</li>
-                  <li>• Days/week: 4 +4,000, 5 +8,000, 6 +12,000</li>
-                </ul>
-                <div className="mt-3 text-xs opacity-80">
-                  Example: Intermediate + Basic + 4 days/week = 22,000 tokens
+              {context === "pricing-page" ? (
+                <div className="space-y-2 text-sm text-text-muted mb-4">
+                  <div>Base: 10,000 tokens</div>
+                  <div className="opacity-80 mt-2">Add-ons:</div>
+                  <ul className="ml-4 space-y-1 text-xs opacity-70">
+                    <li>• Level: Intermediate +5,000, Advanced +12,000</li>
+                    <li>• Training type: Mixed +4,000</li>
+                    <li>• Equipment: Basic +3,000, Full gym +6,000</li>
+                    <li>• Days/week: 4 +4,000, 5 +8,000, 6 +12,000</li>
+                  </ul>
+                  <div className="mt-3 text-xs opacity-80">
+                    Example: Intermediate + Basic + 4 days/week = 22,000 tokens
+                  </div>
                 </div>
-              </div>
+              ) : (
+                <p className="text-sm text-text-muted mb-4">
+                  From 10,000 tokens. Add-ons for level, equipment, and days per week.
+                </p>
+              )}
               <Button variant="outline" asChild>
-                <Link href="/coaches">Browse coaches</Link>
+                <Link href="/coaches">{copy.rightCta}</Link>
               </Button>
             </CardContent>
           </Card>

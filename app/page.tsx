@@ -32,6 +32,7 @@ import { ToastContainer, Toast, ToastType, Container, Button, H1, H2, H3, Paragr
 import { useCurrencyStore } from "@/lib/stores/currency-store";
 import { TOKEN_PACKS, TOKEN_RATES, type UiPackId } from "@/lib/token-packages";
 import { VAT_RATE } from "@/lib/exchange-rates";
+import { COPY } from "@/lib/copy-variants";
 import type { Route } from "next";
 
 
@@ -1246,10 +1247,13 @@ function Home({
         <Container>
           <div className="space-y-6">
             <div>
-              <H2 className="mb-2">Tokens & Pricing</H2>
-              <Paragraph className="text-lg">Top up once — spend tokens on coach courses or instant AI.</Paragraph>
+              <H2 className="mb-2">{COPY.home.pricingHeading}</H2>
+              <Paragraph className="text-lg">
+                {COPY.home.pricingIntro}
+              </Paragraph>
             </div>
             <Pricing
+              context="home"
               region={region}
               requireAuth={!isAuthed}
               openAuth={openAuth}

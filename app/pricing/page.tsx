@@ -15,6 +15,7 @@ import {
 } from "@/lib/token-packages";
 import { EXCHANGE_RATES, VAT_RATE } from "@/lib/exchange-rates";
 import { Pricing } from "@/components/pricing/Pricing";
+import { COPY } from "@/lib/copy-variants";
 import type { Route } from "next";
 
 type Region = "EU" | "UK" | "US";
@@ -165,19 +166,19 @@ export default function PricingPage() {
       <main className="flex-1">
         <Container className="py-12 md:py-16">
           <div className="space-y-6 mb-8">
-            <H1>Pricing</H1>
+            <H1>{COPY.pricingPage.h1}</H1>
             <div className="space-y-2">
               <Paragraph className="text-lg">
                 100 tokens = €1.00 | £{gbpRate} | ${usdRate}
               </Paragraph>
               <Paragraph className="text-sm text-text-muted">
-                Top up once and use tokens across Instant AI plans and
-                coach-built requests. All prices include 20% VAT.
+                {COPY.pricingPage.introSecond}
               </Paragraph>
             </div>
           </div>
 
           <Pricing
+            context="pricing-page"
             region={region}
             requireAuth={!isAuthed}
             openAuth={openAuth}

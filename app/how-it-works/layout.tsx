@@ -2,13 +2,13 @@ import { generatePageMetadata } from "@/lib/metadata";
 import { COPY } from "@/lib/copy-variants";
 
 export const metadata = generatePageMetadata({
-  title: "Pricing & Tokens",
-  description: COPY.pricingPage.metaDescription,
-  url: "/pricing",
+  title: "How it works",
+  description: COPY.howItWorks.metaDescription,
+  url: "/how-it-works",
   image: "/logo.webp",
 });
 
-export default function PricingLayout({
+export default function HowItWorksLayout({
   children,
 }: {
   children: React.ReactNode;

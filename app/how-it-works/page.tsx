@@ -24,6 +24,7 @@ import {
   type AccordionItem,
 } from "@/components/ui";
 import { useCurrencyStore } from "@/lib/stores/currency-store";
+import { COPY } from "@/lib/copy-variants";
 import { cardHoverLift, fadeIn } from "@/lib/animations";
 import { THEME } from "@/lib/theme";
 import type { Route } from "next";
@@ -139,12 +140,7 @@ export default function HowItWorksPage() {
     {
       id: "how-tokens-work",
       title: "How do tokens work?",
-      content: (
-        <p>
-          100 tokens = €1.00 | £0.87 | $1.19. You top up your balance once and spend tokens on coach requests or Instant AI plans. 
-          Tokens remain in your balance until used.
-        </p>
-      ),
+      content: <p>{COPY.howItWorks.tokenFaqAnswer}</p>,
     },
     {
       id: "tokens-expire",
@@ -217,14 +213,14 @@ export default function HowItWorksPage() {
               <div className="space-y-6">
                 <H1>How it works</H1>
                 <Paragraph className="text-lg">
-                  Choose a coach-led request or generate an Instant AI plan. Tokens power both.
+                  {COPY.howItWorks.heroParagraph}
                 </Paragraph>
                 <div className="flex flex-col sm:flex-row gap-4">
                   <Button variant="primary" asChild>
-                    <Link href="/coaches">Browse coaches</Link>
+                    <Link href="/coaches">{COPY.howItWorks.ctaCoach}</Link>
                   </Button>
                   <Button variant="outline" asChild>
-                    <Link href="/generator">Open generator</Link>
+                    <Link href="/generator">{COPY.howItWorks.ctaGenerator}</Link>
                   </Button>
                 </div>
               </div>
@@ -274,7 +270,7 @@ export default function HowItWorksPage() {
                     />
                   </div>
                   <Button variant="primary" asChild>
-                    <Link href="/coaches">Find a coach</Link>
+                    <Link href="/coaches">{COPY.howItWorks.ctaCoach}</Link>
                   </Button>
                 </Card>
               </motion.div>
@@ -319,12 +315,7 @@ export default function HowItWorksPage() {
             <div className="max-w-4xl mx-auto">
               <H2 className="mb-8 text-center">How Coach requests work</H2>
               <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-                {[
-                  { emoji: "🔎", title: "Pick a coach" },
-                  { emoji: "📝", title: "Send your request" },
-                  { emoji: "🧩", title: "Your plan is prepared" },
-                  { emoji: "📊", title: "Track it in your dashboard" },
-                ].map((step, idx) => (
+                {(["🔎", "📝", "🧩", "📊"] as const).map((emoji, idx) => (
                   <motion.div
                     key={idx}
                     initial="hidden"
@@ -334,8 +325,8 @@ export default function HowItWorksPage() {
                     transition={{ delay: idx * 0.1 }}
                     className="text-center"
                   >
-                    <div className="text-4xl mb-3">{step.emoji}</div>
-                    <H3 className="text-lg mb-2">{step.title}</H3>
+                    <div className="text-4xl mb-3">{emoji}</div>
+                    <H3 className="text-lg mb-2">{COPY.howItWorks.coachSteps[idx]}</H3>
                   </motion.div>
                 ))}
               </div>
@@ -349,12 +340,7 @@ export default function HowItWorksPage() {
             <div className="max-w-4xl mx-auto">
               <H2 className="mb-8 text-center">How Instant AI works</H2>
               <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-                {[
-                  { emoji: "🎛️", title: "Choose training inputs" },
-                  { emoji: "👀", title: "Generate a preview (50 tokens)" },
-                  { emoji: "✅", title: "Publish your full plan" },
-                  { emoji: "⬇️", title: "Download and train" },
-                ].map((step, idx) => (
+                {(["🎛️", "👀", "✅", "⬇️"] as const).map((emoji, idx) => (
                   <motion.div
                     key={idx}
                     initial="hidden"
@@ -364,8 +350,8 @@ export default function HowItWorksPage() {
                     transition={{ delay: idx * 0.1 }}
                     className="text-center"
                   >
-                    <div className="text-4xl mb-3">{step.emoji}</div>
-                    <H3 className="text-lg mb-2">{step.title}</H3>
+                    <div className="text-4xl mb-3">{emoji}</div>
+                    <H3 className="text-lg mb-2">{COPY.howItWorks.instantAiSteps[idx]}</H3>
                   </motion.div>
                 ))}
               </div>
@@ -423,7 +409,7 @@ export default function HowItWorksPage() {
               <div>
                 <H2 className="mb-4">Tokens and payments</H2>
                 <Paragraph className="mb-6">
-                  100 tokens = €1.00 | £0.87 | $1.19
+                  {COPY.howItWorks.tokensSectionRate}
                 </Paragraph>
                 <Button variant="outline" asChild>
                   <Link href="/pricing">See pricing</Link>
@@ -499,10 +485,10 @@ export default function HowItWorksPage() {
               <H2>Ready to start?</H2>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Button variant="primary" asChild>
-                  <Link href="/coaches">Browse coaches</Link>
+                  <Link href="/coaches">{COPY.howItWorks.ctaCoach}</Link>
                 </Button>
                 <Button variant="outline" asChild>
-                  <Link href="/generator">Open generator</Link>
+                  <Link href="/generator">{COPY.howItWorks.ctaGenerator}</Link>
                 </Button>
               </div>
             </div>

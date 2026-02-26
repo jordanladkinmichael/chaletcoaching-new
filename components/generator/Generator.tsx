@@ -34,6 +34,7 @@ import {
   type GeneratorOpts,
 } from "@/lib/tokens";
 import { cn } from "@/lib/utils";
+import { COPY } from "@/lib/copy-variants";
 
 type Region = "EU" | "UK" | "US";
 
@@ -229,14 +230,14 @@ export function Generator({
         <div className="text-center space-y-4">
           <H1>Instant AI Training Plan Generator</H1>
           <Paragraph className="text-lg max-w-2xl mx-auto">
-            Build a personalized plan in minutes. Preview first, then publish when ready.
+            {COPY.generator.subtitle}
           </Paragraph>
           <div>
             <Link
               href="/coaches"
               className="text-primary hover:text-primary-hover underline text-sm font-medium"
             >
-              Prefer a coach? Browse coaches
+              {COPY.generator.coachCta}
             </Link>
           </div>
         </div>
