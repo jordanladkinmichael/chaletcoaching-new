@@ -204,7 +204,7 @@ export default function AboutPage() {
                 </Paragraph>
                 <div className="flex flex-col sm:flex-row gap-4">
                   <Button variant="primary" asChild>
-                    <Link href="/coaches">Browse coaches</Link>
+                    <Link href="/coaches">Meet our coaches</Link>
                   </Button>
                   <Button variant="outline" asChild>
                     <Link href="/how-it-works">How it works</Link>
@@ -386,7 +386,7 @@ export default function AboutPage() {
                     </li>
                   </ol>
                   <Button variant="outline" asChild>
-                    <Link href="/generator">Open generator</Link>
+                    <Link href="/generator">Try the AI generator</Link>
                   </Button>
                 </div>
               </div>
@@ -567,10 +567,10 @@ export default function AboutPage() {
               variants={sectionVariants}
               className="max-w-3xl mx-auto text-center"
             >
-              <H2 className="mb-4">Ready to start?</H2>
+              <H2 className="mb-4">Get started today</H2>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Button variant="primary" asChild>
-                  <Link href="/coaches">Browse coaches</Link>
+                  <Link href="/coaches">Meet our coaches</Link>
                 </Button>
                 <Button variant="outline" asChild>
                   <Link href="/pricing">See pricing</Link>

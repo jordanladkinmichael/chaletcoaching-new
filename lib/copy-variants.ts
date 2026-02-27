@@ -67,6 +67,19 @@ export const COPY = {
       leftCta: "Create an AI plan",
       rightCardTitle: "Coach-built plans",
       rightCta: "Request a coach plan",
+      cardMicrocopy: {
+        starter: "For a quick start",
+        momentum: "Best value for consistency",
+        elite: "Built for long-term progress",
+      },
+      buyButton: "Top up tokens",
+      signInButton: "Sign in to buy tokens",
+      popularBadge: "Most popular",
+      customTitle: "Custom Load",
+      customBadge: "Flexible",
+      customHelper: "Load exactly what you need",
+      customButton: "Top up tokens",
+      customSignIn: "Sign in to top up",
     },
     home: {
       vatNotice:
@@ -78,8 +91,61 @@ export const COPY = {
       leftCta: "Go to generator",
       rightCardTitle: "Coach requests",
       rightCta: "Find a coach",
+      cardMicrocopy: {
+        starter: "Try it out",
+        momentum: "Consistent training value",
+        elite: "For serious training goals",
+      },
+      buyButton: "Get tokens",
+      signInButton: "Sign in to get started",
+      popularBadge: "Popular choice",
+      customTitle: "Custom amount",
+      customBadge: "Any amount",
+      customHelper: "Choose your own amount",
+      customButton: "Add tokens",
+      customSignIn: "Sign in first",
     },
   },
+
+  /** Secondary page CTAs and headings (about, what-you-receive, trust-safety, payments-tokens) */
+  secondaryPages: {
+    about: {
+      heroCoachCta: "Meet our coaches",
+      ctaHeading: "Get started today",
+      ctaCoach: "Meet our coaches",
+      ctaSecondary: "See pricing",
+    },
+    whatYouReceive: {
+      heroCoachCta: "Find your coach",
+      heroGeneratorCta: "Generate a plan",
+      ctaHeading: "Create your plan now",
+      ctaCoach: "Find your coach",
+      ctaGenerator: "Generate a plan",
+    },
+    trustSafety: {
+      heroCoachCta: "View coaches",
+      heroGeneratorCta: "Build a plan with AI",
+      ctaHeading: "Begin with confidence",
+      ctaCoach: "View coaches",
+      ctaGenerator: "Build a plan with AI",
+    },
+    paymentsTokens: {
+      heroCoachCta: "Choose a coach",
+      ctaHeading: "Top up and go",
+      ctaPricing: "See pricing",
+      ctaGenerator: "Open the generator",
+    },
+  },
+
+  /** How-it-works "What you receive" list (rephrased to differ from /what-you-receive) */
+  howItWorksReceiveList: [
+    "Structured weekly progression",
+    "Day-by-day workout breakdown",
+    "Exercise alternatives included",
+    "Recovery and intensity guidance",
+    "Options for your equipment",
+    "Download or print your plan",
+  ] as const,
 } as const;
 
 export type PricingContextKey = keyof typeof COPY.pricingContext;

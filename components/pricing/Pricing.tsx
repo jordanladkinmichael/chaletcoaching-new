@@ -172,7 +172,7 @@ export function Pricing({
               >
                 {pack.highlight && (
                   <Badge variant="primary" className="absolute top-4 right-4">
-                    Most popular
+                    {copy.popularBadge}
                   </Badge>
                 )}
 
@@ -191,7 +191,7 @@ export function Pricing({
                     {pack.tokens.toLocaleString("en-US")} tokens
                   </div>
                   <p className="mt-4 text-sm text-text-subtle">
-                    {pack.microcopy}
+                    {copy.cardMicrocopy[pack.uiId as keyof typeof copy.cardMicrocopy]}
                   </p>
                 </CardContent>
 
@@ -208,11 +208,11 @@ export function Pricing({
                     onClick={() => void handleBuy(pack)}
                   >
                     {_requireAuth ? (
-                      <>Sign in to buy tokens</>
+                      <>{copy.signInButton}</>
                     ) : creating === pack.uiId ? (
                       <>Processing…</>
                     ) : (
-                      <>Top up tokens</>
+                      <>{copy.buyButton}</>
                     )}
                   </Button>
                 </CardFooter>
@@ -229,8 +229,8 @@ export function Pricing({
           className="flex items-center justify-between w-full"
         >
           <div className="flex items-center gap-3">
-            <H3>Custom Load</H3>
-            <Badge variant="default">Flexible</Badge>
+            <H3>{copy.customTitle}</H3>
+            <Badge variant="default">{copy.customBadge}</Badge>
           </div>
           <ChevronRight
             size={20}
@@ -296,7 +296,7 @@ export function Pricing({
                 )}
               </div>
               <p className="mt-2 text-xs text-text-subtle">
-                Load exactly what you need
+                {copy.customHelper}
               </p>
             </div>
 
@@ -313,11 +313,11 @@ export function Pricing({
               onClick={() => void handleCustom()}
             >
               {_requireAuth ? (
-                <>Sign in to top up</>
+                <>{copy.customSignIn}</>
               ) : creating === "custom" ? (
                 <>Processing…</>
               ) : (
-                <>Top up tokens</>
+                <>{copy.customButton}</>
               )}
             </Button>
           </div>

@@ -147,7 +147,7 @@ export default function HowItWorksPage() {
       title: "Do tokens expire?",
       content: (
         <p>
-          Tokens remain in your balance until used. There is no expiration date.
+          They never expire. Use them whenever you are ready.
         </p>
       ),
     },
@@ -156,7 +156,7 @@ export default function HowItWorksPage() {
       title: "Can I use both flows with the same balance?",
       content: (
         <p>
-          Yes. Your token balance works for both coach requests and Instant AI plans. You can use the same balance across all features.
+          Yes — a single token balance covers coach-built plans and AI-generated ones.
         </p>
       ),
     },
@@ -166,11 +166,10 @@ export default function HowItWorksPage() {
       content: (
         <div className="space-y-2">
           <p>
-            If you don&apos;t have enough tokens, you&apos;ll see a message indicating insufficient balance. 
-            You can top up your tokens at any time from the Pricing page.
+            You will be asked to top up before continuing. Head to the Pricing page to add more tokens at any time.
           </p>
           <p>
-            For Instant AI, you can generate a preview (50 tokens) to see the plan before committing to the full cost.
+            With Instant AI, you can preview a plan for 50 tokens before deciding to publish the full version.
           </p>
         </div>
       ),
@@ -180,8 +179,7 @@ export default function HowItWorksPage() {
       title: "Where do I find my plans?",
       content: (
         <p>
-          All your plans, both coach requests and Instant AI plans, are available in your Dashboard. 
-          You can view, download, and track your progress there.
+          Everything is in your Dashboard — coach plans, AI plans, downloads, and progress tracking.
         </p>
       ),
     },
@@ -375,14 +373,7 @@ export default function HowItWorksPage() {
               <div>
                 <H2 className="mb-6">What you receive</H2>
                 <ul className="space-y-4">
-                  {[
-                    "Clear weekly structure and progression",
-                    "Session-by-session training plan",
-                    "Exercise guidance and alternatives",
-                    "Intensity and recovery recommendations",
-                    "Equipment-aware options",
-                    "Printable and downloadable format",
-                  ].map((item, idx) => (
+                  {COPY.howItWorksReceiveList.map((item, idx) => (
                     <motion.li
                       key={idx}
                       initial="hidden"
@@ -482,7 +473,7 @@ export default function HowItWorksPage() {
         <section className="py-12 md:py-16">
           <Container>
             <div className="max-w-2xl mx-auto text-center space-y-6">
-              <H2>Ready to start?</H2>
+              <H2>Start your plan</H2>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Button variant="primary" asChild>
                   <Link href="/coaches">{COPY.howItWorks.ctaCoach}</Link>

@@ -127,7 +127,7 @@ export default function PaymentsTokensPage() {
       title: "Do tokens expire?",
       content: (
         <p>
-          Tokens remain in your balance until used.
+          No. Your tokens stay in your account with no time limit.
         </p>
       ),
     },
@@ -136,7 +136,7 @@ export default function PaymentsTokensPage() {
       title: "Can I use tokens for both flows?",
       content: (
         <p>
-          Yes. The same token balance works across Instant AI and coach requests.
+          Absolutely. One balance covers AI-generated plans and coach requests alike.
         </p>
       ),
     },
@@ -229,7 +229,7 @@ export default function PaymentsTokensPage() {
                     <Link href="/pricing">See pricing</Link>
                   </Button>
                   <Button variant="outline" asChild>
-                    <Link href="/coaches">Browse coaches</Link>
+                    <Link href="/coaches">Choose a coach</Link>
                   </Button>
                 </div>
                 <div>
@@ -336,10 +336,10 @@ export default function PaymentsTokensPage() {
               <H2 className="mb-6 text-center">Rates and currencies</H2>
               <div className="text-center mb-6">
                 <Paragraph className="text-lg font-semibold mb-2">
-                  100 tokens = €1.00 | £0.87 | $1.19
+                  For every euro you spend, you receive 100 tokens (equivalent rates in GBP and USD).
                 </Paragraph>
                 <Paragraph className="opacity-80">
-                  EUR is the base currency. Your selected currency is shown in the header.
+                  EUR is the base. Your preferred currency is always displayed in the header.
                 </Paragraph>
               </div>
               
@@ -391,7 +391,7 @@ export default function PaymentsTokensPage() {
                   <div className="flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center mt-0.5" style={{ backgroundColor: THEME.accent + "20" }}>
                     <div className="w-2 h-2 rounded-full" style={{ backgroundColor: THEME.accent }} />
                   </div>
-                  <Paragraph>You can use the same balance for both Instant AI and coach requests.</Paragraph>
+                  <Paragraph>One balance covers everything — AI plans and coach requests.</Paragraph>
                 </div>
               </div>
 
@@ -452,7 +452,7 @@ export default function PaymentsTokensPage() {
                     </div>
                   </div>
                   <Button variant="outline" asChild className="w-full">
-                    <Link href="/generator">Open generator</Link>
+                    <Link href="/generator">Open the generator</Link>
                   </Button>
                 </Card>
 
@@ -474,7 +474,7 @@ export default function PaymentsTokensPage() {
                     </div>
                   </div>
                   <Button variant="outline" asChild className="w-full">
-                    <Link href="/coaches">Browse coaches</Link>
+                    <Link href="/coaches">Choose a coach</Link>
                   </Button>
                 </Card>
               </div>
@@ -565,7 +565,7 @@ export default function PaymentsTokensPage() {
               variants={sectionVariants}
               className="max-w-3xl mx-auto text-center"
             >
-              <H2 className="mb-6">Ready to start?</H2>
+              <H2 className="mb-6">Top up and go</H2>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <motion.div variants={prefersReducedMotion ? undefined : buttonHoverLift} whileHover="hover">
                   <Button variant="primary" asChild>
@@ -574,7 +574,7 @@ export default function PaymentsTokensPage() {
                 </motion.div>
                 <motion.div variants={prefersReducedMotion ? undefined : buttonHoverLift} whileHover="hover">
                   <Button variant="outline" asChild>
-                    <Link href="/generator">Open generator</Link>
+                    <Link href="/generator">Open the generator</Link>
                   </Button>
                 </motion.div>
               </div>

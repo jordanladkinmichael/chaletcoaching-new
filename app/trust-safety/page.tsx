@@ -229,10 +229,10 @@ export default function TrustSafetyPage() {
                 </Paragraph>
                 <div className="flex flex-col sm:flex-row gap-4">
                   <Button variant="primary" asChild>
-                    <Link href="/coaches">Browse coaches</Link>
+                    <Link href="/coaches">View coaches</Link>
                   </Button>
                   <Button variant="outline" asChild>
-                    <Link href="/generator">Open generator</Link>
+                    <Link href="/generator">Build a plan with AI</Link>
                   </Button>
                 </div>
                 <div>
@@ -437,13 +437,13 @@ export default function TrustSafetyPage() {
         <section className="py-12 md:py-16">
           <Container>
             <div className="max-w-2xl mx-auto text-center space-y-6">
-              <H2>Ready to start?</H2>
+              <H2>Begin with confidence</H2>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Button variant="primary" asChild>
-                  <Link href="/coaches">Browse coaches</Link>
+                  <Link href="/coaches">View coaches</Link>
                 </Button>
                 <Button variant="outline" asChild>
-                  <Link href="/generator">Open generator</Link>
+                  <Link href="/generator">Build a plan with AI</Link>
                 </Button>
               </div>
             </div>

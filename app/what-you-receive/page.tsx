@@ -173,8 +173,7 @@ export default function WhatYouReceivePage() {
       title: "How do Instant AI previews work?",
       content: (
         <p>
-          Instant AI previews cost 50 tokens. You can generate a preview to see the plan structure before committing 
-          to the full plan cost. If you&apos;re satisfied, you can publish the full plan.
+          Pay 50 tokens to preview the plan layout. Happy with it? Publish the complete version and download it straight away.
         </p>
       ),
     },
@@ -183,8 +182,7 @@ export default function WhatYouReceivePage() {
       title: "Can I use the same tokens for both flows?",
       content: (
         <p>
-          Yes. Your token balance works for both coach requests and Instant AI plans. You can use the same balance 
-          across all features on the platform.
+          Yes — your balance is shared. Spend tokens on a coach plan today, an AI plan tomorrow, or both at once.
         </p>
       ),
     },
@@ -193,8 +191,7 @@ export default function WhatYouReceivePage() {
       title: "Where can I access my plans?",
       content: (
         <p>
-          All your plans, both coach requests and Instant AI plans, are available in your Dashboard. 
-          You can view, download, and track your progress there.
+          Open your Dashboard to see every plan, download files, and track your training.
         </p>
       ),
     },
@@ -230,10 +227,10 @@ export default function WhatYouReceivePage() {
                 </Paragraph>
                 <div className="flex flex-col sm:flex-row gap-4">
                   <Button variant="primary" asChild>
-                    <Link href="/coaches">Browse coaches</Link>
+                    <Link href="/coaches">Find your coach</Link>
                   </Button>
                   <Button variant="outline" asChild>
-                    <Link href="/generator">Open generator</Link>
+                    <Link href="/generator">Generate a plan</Link>
                   </Button>
                 </div>
                 <div>
@@ -521,13 +518,13 @@ export default function WhatYouReceivePage() {
         <section className="py-12 md:py-16">
           <Container>
             <div className="max-w-2xl mx-auto text-center space-y-6">
-              <H2>Ready to start?</H2>
+              <H2>Create your plan now</H2>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Button variant="primary" asChild>
-                  <Link href="/coaches">Browse coaches</Link>
+                  <Link href="/coaches">Find your coach</Link>
                 </Button>
                 <Button variant="outline" asChild>
-                  <Link href="/generator">Open generator</Link>
+                  <Link href="/generator">Generate a plan</Link>
                 </Button>
               </div>
             </div>
