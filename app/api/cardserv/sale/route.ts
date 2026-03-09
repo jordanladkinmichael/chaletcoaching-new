@@ -7,6 +7,7 @@ import { createCardServOrder } from "@/lib/cardserv";
 import type { CardServCurrency } from "@/lib/cardserv-config";
 import { prisma } from "@/lib/db";
 import { applyCardServGatewayUpdate } from "@/lib/payment-orders";
+import { isForceSuccessEnabled } from "@/lib/payments-force-success";
 import { Currency, getPackagePrice, TOKEN_PACKAGES, TokenPackageId } from "@/lib/payment";
 import { calculateTokensFromAmount } from "@/lib/token-packages";
 
@@ -37,13 +38,13 @@ function getAppUrl(req: Request): string {
   const requestUrl = new URL(req.url);
   const origin = `${requestUrl.protocol}//${requestUrl.host}`;
 
-  // Always prefer the actual request origin (works correctly on prod domains and localhost).
+  // Always prefer the actual request origin (works on prod domains and localhost).
   if (origin) return origin;
 
   const envUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXTAUTH_URL;
   if (envUrl) return envUrl.replace(/\/$/, "");
 
-  return "http://localhost:3000";
+  throw new Error("Unable to resolve app base URL");
 }
 
 function expectedAmounts(packageId: TokenPackageId, currency: Currency, amount: number) {
@@ -74,8 +75,9 @@ export async function POST(req: Request) {
     if (!payerEmail) {
       return NextResponse.json({ error: "Missing customer email" }, { status: 400 });
     }
-    const currency = parsed.currency as CardServCurrency;
-    const expected = expectedAmounts(parsed.packageId, parsed.currency, parsed.amount);
+
+    const currency: CardServCurrency = "EUR";
+    const expected = expectedAmounts(parsed.packageId, currency, parsed.amount);
 
     if (
       Math.abs(expected.net - parsed.amount) > 0.01 ||
@@ -83,7 +85,10 @@ export async function POST(req: Request) {
       Math.abs(expected.grossAmount - parsed.grossAmount) > 0.01 ||
       Math.abs(expected.tokens - parsed.tokens) > 0
     ) {
-      return NextResponse.json({ error: "Checkout data mismatch" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Checkout data mismatch. Please restart checkout from pricing." },
+        { status: 400 },
+      );
     }
 
     const orderMerchantId = `cc_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
@@ -93,7 +98,7 @@ export async function POST(req: Request) {
         userId: session.user.id,
         packageId: parsed.packageId,
         packageName: parsed.packageId === "ENTERPRISE" ? "Custom" : TOKEN_PACKAGES[parsed.packageId].name,
-        currency: parsed.currency,
+        currency,
         amountNet: expected.net,
         vatAmount: expected.vatAmount,
         amountGross: expected.grossAmount,
@@ -103,7 +108,7 @@ export async function POST(req: Request) {
       },
     });
 
-    const sale = await createCardServOrder({
+    const salePayload = {
       orderMerchantId,
       amountGross: expected.grossAmount,
       currency,
@@ -114,7 +119,55 @@ export async function POST(req: Request) {
       city: parsed.city,
       postalCode: parsed.postalCode,
       appUrl: getAppUrl(req),
-    });
+    };
+
+    if (isForceSuccessEnabled()) {
+      const fallbackRedirect = `${salePayload.appUrl}/api/cardserv/result?order=${encodeURIComponent(orderMerchantId)}&forced=1`;
+      let redirectUrl = fallbackRedirect;
+      let probeRaw: unknown = null;
+
+      // Try to get a real CardServ redirect URL so forced mode keeps gateway redirect UX.
+      try {
+        const probe = await createCardServOrder(salePayload);
+        if (probe.redirectUrl) redirectUrl = probe.redirectUrl;
+        probeRaw = probe.raw;
+      } catch {
+        // Keep fallback redirect if gateway test call cannot return a redirect URL.
+      }
+
+      const forced = await applyCardServGatewayUpdate({
+        orderMerchantId,
+        orderState: "APPROVED",
+        orderSystemId: `forced_${orderMerchantId}`,
+        redirectUrl,
+        errorCode: null,
+        errorMessage: null,
+        raw: {
+          forced: true,
+          source: "sale",
+          mode: "sandbox",
+          redirectUrl,
+          probeRaw,
+          at: new Date().toISOString(),
+        },
+        source: "sale",
+      });
+
+      return NextResponse.json({
+        ok: true,
+        orderMerchantId,
+        orderSystemId: `forced_${orderMerchantId}`,
+        state: "APPROVED",
+        redirectUrl,
+        threeDSAuth: null,
+        errorCode: null,
+        errorMessage: null,
+        finalized: forced.ok ? forced.finalized : false,
+        tokensAdded: forced.ok && "tokensAdded" in forced ? forced.tokensAdded : 0,
+      });
+    }
+
+    const sale = await createCardServOrder(salePayload);
 
     const stateResult = await applyCardServGatewayUpdate({
       orderMerchantId,

@@ -46,7 +46,7 @@ export default function CheckoutPage() {
   const router = useRouter();
   const { data: session } = useSession();
   const [checkout, setCheckout] = useState<CheckoutData | null>(null);
-  const [success, setSuccess] = useState(false);
+  const [success] = useState(false);
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState<FormData>({
     cardNumber: "",
@@ -192,20 +192,9 @@ export default function CheckoutPage() {
         return;
       }
 
-      if (data.state === "APPROVED") {
-        setSuccess(true);
-        router.push(`/payment-success?order=${encodeURIComponent(orderMerchantId)}`);
-        return;
-      }
-
-      if (data.state === "DECLINED" || data.state === "ERROR") {
-        router.push(
-          `/payment-failed?order=${encodeURIComponent(orderMerchantId)}&reason=${encodeURIComponent(data.errorMessage || data.state)}`,
-        );
-        return;
-      }
-
-      router.push(`/payment-success?order=${encodeURIComponent(orderMerchantId)}`);
+      // If no external gateway redirect is returned, complete through callback handler.
+      window.location.href = `/api/cardserv/result?order=${encodeURIComponent(orderMerchantId)}`;
+      return;
     } catch (err: unknown) {
       const message =
         err instanceof Error ? err.message : "Payment failed. Please try again.";

@@ -22,6 +22,7 @@ import { THEME } from "@/lib/theme";
 import { cn } from "@/lib/utils";
 import { calcFullCourseTokens } from "@/lib/tokens";
 import { calculateTokensFromAmount } from "@/lib/token-packages";
+import { convertToEUR } from "@/lib/exchange-rates";
 
 import type { GeneratorOpts } from "@/lib/tokens";
 import { formatNumber } from "@/lib/tokens";
@@ -1372,7 +1373,7 @@ export default function ChaletcoachingPrototype() {
 
   // Top up helper used across pages
   // Единый хендлер пополнения
-  const { currency: currentCurrency, convertPrice } = useCurrencyStore();
+  const { currency: currentCurrency } = useCurrencyStore();
   const onTopUp = React.useCallback(
     async (pack: UiPackId | "custom", customAmount?: number) => {
       if (!isAuthed) {
@@ -1382,7 +1383,8 @@ export default function ChaletcoachingPrototype() {
 
       setTopUpLoading(true);
       try {
-        const currency: "EUR" | "GBP" | "USD" = currentCurrency;
+        const displayCurrency: "EUR" | "GBP" | "USD" = currentCurrency;
+        const currency = "EUR" as const;
         let packageId: string;
         let amount: number | undefined;
         let tokens: number;
@@ -1395,7 +1397,7 @@ export default function ChaletcoachingPrototype() {
           return;
           }
           packageId = "ENTERPRISE";
-          amount = Number(customAmount);
+          amount = convertToEUR(Number(customAmount), displayCurrency);
           tokens = calculateTokensFromAmount(amount, currency);
           description = "Custom top-up";
         } else {
@@ -1406,7 +1408,7 @@ export default function ChaletcoachingPrototype() {
           packageId = packInfo.apiId;
           tokens = packInfo.tokens;
           const priceInEUR = packInfo.tokens / TOKEN_RATES.EUR;
-          amount = convertPrice(priceInEUR);
+          amount = priceInEUR;
           description = packInfo.title;
         }
 
@@ -1437,7 +1439,7 @@ export default function ChaletcoachingPrototype() {
         setTopUpLoading(false);
       }
     },
-    [isAuthed, openAuth, currentCurrency, convertPrice, addToast, session?.user?.email, router]
+    [isAuthed, openAuth, currentCurrency, addToast, session?.user?.email, router]
   );
 
   const handlePublishCourse = async (opts: GeneratorOpts) => {
