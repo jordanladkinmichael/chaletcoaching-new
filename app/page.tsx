@@ -31,7 +31,6 @@ import { Dashboard } from "@/components/dashboard/Dashboard";
 import { ToastContainer, Toast, ToastType, Container, Button, H1, H2, H3, Paragraph, Accordion } from "@/components/ui";
 import { useCurrencyStore } from "@/lib/stores/currency-store";
 import { TOKEN_PACKS, TOKEN_RATES, type UiPackId } from "@/lib/token-packages";
-import { VAT_RATE } from "@/lib/exchange-rates";
 import { COPY } from "@/lib/copy-variants";
 import type { Route } from "next";
 
@@ -1413,14 +1412,12 @@ export default function ChaletcoachingPrototype() {
 
         if (typeof window !== "undefined") {
           const netAmount = amount!;
-          const vatAmt = Math.round(netAmount * VAT_RATE * 100) / 100;
-          const grossAmount = Math.round((netAmount + vatAmt) * 100) / 100;
 
           const checkoutData = {
             packageId,
             amount: netAmount,
-            grossAmount,
-            vatAmount: vatAmt,
+            grossAmount: netAmount,
+            vatAmount: 0,
             currency,
             tokens,
             description,
@@ -1645,3 +1642,5 @@ export default function ChaletcoachingPrototype() {
     </div>
   );
 }
+
+

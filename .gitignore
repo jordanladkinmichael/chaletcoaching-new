@@ -11,7 +11,7 @@ build/
 
 # Environment variables
 .env
-.env.local
+.env
 .env.development.local
 .env.test.local
 .env.production.local
@@ -134,3 +134,5 @@ Temporary Items
 # Markdown files (exclude all except README.md)
 *.md
 !README.md
+.vercel
+.env
