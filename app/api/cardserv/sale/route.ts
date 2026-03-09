@@ -34,11 +34,16 @@ const BodySchema = z.object({
 });
 
 function getAppUrl(req: Request): string {
+  const requestUrl = new URL(req.url);
+  const origin = `${requestUrl.protocol}//${requestUrl.host}`;
+  if (origin.includes("localhost") || origin.includes("127.0.0.1")) {
+    return origin;
+  }
+
   const envUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXTAUTH_URL;
   if (envUrl) return envUrl.replace(/\/$/, "");
 
-  const requestUrl = new URL(req.url);
-  return `${requestUrl.protocol}//${requestUrl.host}`;
+  return origin;
 }
 
 function expectedAmounts(packageId: TokenPackageId, currency: Currency, amount: number) {
@@ -145,4 +150,3 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: false, error: message }, { status: 500 });
   }
 }
-

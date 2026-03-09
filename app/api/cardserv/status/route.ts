@@ -12,6 +12,12 @@ const BodySchema = z.object({
   orderMerchantId: z.string().min(4),
 });
 
+function isForceSuccessEnabled(): boolean {
+  const flag = (process.env.PAYMENTS_FORCE_SUCCESS || "").toLowerCase();
+  const enabled = ["1", "true", "yes", "on"].includes(flag);
+  return enabled && process.env.NODE_ENV !== "production";
+}
+
 export async function POST(req: Request) {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
@@ -24,6 +30,32 @@ export async function POST(req: Request) {
 
     if (!order || order.userId !== session.user.id) {
       return NextResponse.json({ error: "Order not found" }, { status: 404 });
+    }
+
+    if (isForceSuccessEnabled()) {
+      const forced = await applyCardServGatewayUpdate({
+        orderMerchantId,
+        orderState: "APPROVED",
+        orderSystemId: order.orderSystemId ?? `forced_${orderMerchantId}`,
+        errorCode: null,
+        errorMessage: null,
+        raw: { forced: true, source: "status", at: new Date().toISOString() },
+        source: "status",
+      });
+
+      return NextResponse.json({
+        ok: true,
+        orderMerchantId,
+        orderSystemId: order.orderSystemId ?? `forced_${orderMerchantId}`,
+        state: "APPROVED",
+        redirectUrl: null,
+        errorCode: null,
+        errorMessage: null,
+        finalized: forced.ok ? forced.finalized : false,
+        credited: forced.ok && "credited" in forced ? forced.credited : false,
+        tokensAdded: forced.ok && "tokensAdded" in forced ? forced.tokensAdded : 0,
+        newBalance: forced.ok && "newBalance" in forced ? forced.newBalance : null,
+      });
     }
 
     const status = await getCardServStatus(
@@ -61,4 +93,3 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: false, error: message }, { status: 500 });
   }
 }
-

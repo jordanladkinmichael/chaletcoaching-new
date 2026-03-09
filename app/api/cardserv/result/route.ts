@@ -6,30 +6,40 @@ import { prisma } from "@/lib/db";
 import { applyCardServGatewayUpdate } from "@/lib/payment-orders";
 
 function getAppUrl(req: Request): string {
+  const requestUrl = new URL(req.url);
+  const origin = `${requestUrl.protocol}//${requestUrl.host}`;
+  if (origin.includes("localhost") || origin.includes("127.0.0.1")) {
+    return origin;
+  }
+
   const envUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXTAUTH_URL;
   if (envUrl) return envUrl.replace(/\/$/, "");
-  const requestUrl = new URL(req.url);
-  return `${requestUrl.protocol}//${requestUrl.host}`;
+  return origin;
 }
 
-function getOrderMerchantId(form: FormData, req: Request): string | null {
+function isForceSuccessEnabled(): boolean {
+  const flag = (process.env.PAYMENTS_FORCE_SUCCESS || "").toLowerCase();
+  const enabled = ["1", "true", "yes", "on"].includes(flag);
+  return enabled && process.env.NODE_ENV !== "production";
+}
+
+function getOrderMerchantId(req: Request, form?: FormData): string | null {
   const { searchParams } = new URL(req.url);
 
   return (
-    form.get("MD")?.toString() ||
-    form.get("threeDSSessionData")?.toString() ||
+    form?.get("MD")?.toString() ||
+    form?.get("threeDSSessionData")?.toString() ||
     searchParams.get("order") ||
     searchParams.get("orderId") ||
     searchParams.get("orderMerchantId") ||
-    form.get("order")?.toString() ||
-    form.get("orderId")?.toString() ||
+    form?.get("order")?.toString() ||
+    form?.get("orderId")?.toString() ||
     null
   );
 }
 
-async function handleResult(req: Request) {
-  const form = await req.formData();
-  const orderMerchantId = getOrderMerchantId(form, req);
+async function handleResult(req: Request, form?: FormData) {
+  const orderMerchantId = getOrderMerchantId(req, form);
   const appUrl = getAppUrl(req);
 
   if (!orderMerchantId) {
@@ -44,11 +54,21 @@ async function handleResult(req: Request) {
     );
   }
 
-  const status = await getCardServStatus(
-    orderMerchantId,
-    order.currency as CardServCurrency,
-    order.orderSystemId,
-  );
+  const forceSuccess = isForceSuccessEnabled();
+  const status = forceSuccess
+    ? {
+        orderState: "APPROVED",
+        orderSystemId: order.orderSystemId ?? `forced_${orderMerchantId}`,
+        redirectUrl: null,
+        errorCode: null,
+        errorMessage: null,
+        raw: { forced: true, source: "result", at: new Date().toISOString() },
+      }
+    : await getCardServStatus(
+        orderMerchantId,
+        order.currency as CardServCurrency,
+        order.orderSystemId,
+      );
 
   await applyCardServGatewayUpdate({
     orderMerchantId,
@@ -58,13 +78,14 @@ async function handleResult(req: Request) {
     errorCode: status.errorCode,
     errorMessage: status.errorMessage,
     raw: {
-      form: Object.fromEntries(form.entries()),
+      form: form ? Object.fromEntries(form.entries()) : {},
       status: status.raw,
+      forced: forceSuccess,
     },
     source: "result",
   });
 
-  if (["DECLINED", "ERROR"].includes(status.orderState)) {
+  if (!forceSuccess && ["DECLINED", "ERROR"].includes(status.orderState)) {
     return NextResponse.redirect(
       `${appUrl}/payment-failed?order=${encodeURIComponent(orderMerchantId)}&reason=${encodeURIComponent(status.errorMessage || status.orderState)}`,
       302,
@@ -79,7 +100,8 @@ async function handleResult(req: Request) {
 
 export async function POST(req: Request) {
   try {
-    return await handleResult(req);
+    const form = await req.formData().catch(() => undefined);
+    return await handleResult(req, form);
   } catch (error) {
     const appUrl = getAppUrl(req);
     const message = error instanceof Error ? error.message : "result_error";
@@ -91,20 +113,14 @@ export async function POST(req: Request) {
 }
 
 export async function GET(req: Request) {
-  const appUrl = getAppUrl(req);
-  const { searchParams } = new URL(req.url);
-  const orderMerchantId =
-    searchParams.get("order") ||
-    searchParams.get("orderId") ||
-    searchParams.get("orderMerchantId");
-
-  if (!orderMerchantId) {
-    return NextResponse.redirect(`${appUrl}/payment-failed?reason=missing_order`, 302);
+  try {
+    return await handleResult(req);
+  } catch (error) {
+    const appUrl = getAppUrl(req);
+    const message = error instanceof Error ? error.message : "result_error";
+    return NextResponse.redirect(
+      `${appUrl}/payment-failed?reason=${encodeURIComponent(message)}`,
+      302,
+    );
   }
-
-  return NextResponse.redirect(
-    `${appUrl}/payment-success?order=${encodeURIComponent(orderMerchantId)}`,
-    302,
-  );
 }
-
