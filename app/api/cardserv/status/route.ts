@@ -13,6 +13,14 @@ const BodySchema = z.object({
   orderMerchantId: z.string().min(4),
 });
 
+type PaymentOrderLookup = {
+  findUnique(args: { where: { orderMerchantId: string } }): Promise<{
+    userId: string;
+    orderSystemId: string | null;
+    currency: string;
+  } | null>;
+};
+
 export async function POST(req: Request) {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
@@ -21,7 +29,7 @@ export async function POST(req: Request) {
 
   try {
     const { orderMerchantId } = BodySchema.parse(await req.json());
-    const paymentOrders = (prisma as unknown as { paymentOrder: { findUnique: typeof prisma.user.findUnique } }).paymentOrder;
+    const paymentOrders = (prisma as unknown as { paymentOrder: PaymentOrderLookup }).paymentOrder;
     const order = await paymentOrders.findUnique({ where: { orderMerchantId } });
 
     if (!order || order.userId !== session.user.id) {
