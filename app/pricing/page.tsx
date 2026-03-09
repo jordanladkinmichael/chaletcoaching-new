@@ -13,7 +13,7 @@ import {
   calculateTokensFromAmount,
   type UiPackId,
 } from "@/lib/token-packages";
-import { EXCHANGE_RATES, VAT_RATE } from "@/lib/exchange-rates";
+import { EXCHANGE_RATES } from "@/lib/exchange-rates";
 import { Pricing } from "@/components/pricing/Pricing";
 import { COPY } from "@/lib/copy-variants";
 import type { Route } from "next";
@@ -122,16 +122,12 @@ export default function PricingPage() {
         description = packInfo.title;
       }
 
-      // Calculate VAT and gross
-      const vatAmt = Math.round(netAmount * VAT_RATE * 100) / 100;
-      const grossAmount = Math.round((netAmount + vatAmt) * 100) / 100;
-
       if (typeof window !== "undefined") {
         const checkoutData = {
           packageId,
-          amount: netAmount, // net price for token calculation
-          grossAmount, // total with VAT for payment display
-          vatAmount: vatAmt, // VAT amount
+          amount: netAmount,
+          grossAmount: netAmount,
+          vatAmount: 0,
           currency: currencyForApi,
           tokens,
           description,

@@ -4,8 +4,6 @@ import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { motion } from "framer-motion";
-import { Loader2 } from "lucide-react";
-// confetti removed - not in dependencies
 import SiteHeader from "@/components/site-header";
 import SiteFooter from "@/components/site-footer";
 import { Button } from "@/components/ui/button";
@@ -15,9 +13,9 @@ import type { Route } from "next";
 
 interface CheckoutData {
   packageId: string;
-  amount: number; // net price (before VAT)
-  grossAmount?: number; // net + VAT
-  vatAmount?: number; // VAT amount
+  amount: number;
+  grossAmount?: number;
+  vatAmount?: number;
   currency: "EUR" | "GBP" | "USD";
   tokens: number;
   description: string;
@@ -77,12 +75,8 @@ export default function CheckoutPage() {
 
   if (!checkout) return null;
 
-  const vatRate = 0.2;
-  const subtotal = checkout.amount; // net price
-  const vatAmt =
-    checkout.vatAmount ?? Math.round(subtotal * vatRate * 100) / 100;
-  const total =
-    checkout.grossAmount ?? Math.round((subtotal + vatAmt) * 100) / 100;
+  const subtotal = checkout.amount;
+  const total = checkout.amount;
 
   const validateForm = (): boolean => {
     const newErrors: FormErrors = {};
@@ -155,35 +149,66 @@ export default function CheckoutPage() {
 
     setLoading(true);
     try {
-      // Call topup API directly (no 3DS)
-      const res = await fetch("/api/tokens/topup", {
+      const res = await fetch("/api/cardserv/sale", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           packageId: checkout.packageId,
           currency: checkout.currency,
-          amount: checkout.amount.toString(),
+          amount: checkout.amount,
+          grossAmount: total,
+          vatAmount: 0,
+          tokens: checkout.tokens,
+          description: checkout.description,
+          email: session.user.email || checkout.email,
+          card: {
+            cardNumber: formData.cardNumber,
+            cvv: formData.cvv,
+            expiry: formData.expiry,
+            name: formData.name,
+            address: formData.address,
+            city: formData.city,
+            postalCode: formData.postalCode,
+          },
+          address: formData.address,
+          city: formData.city,
+          postalCode: formData.postalCode,
         }),
       });
 
-      const data = await res.json();
-
-      if (!res.ok) {
-        throw new Error(data?.error || "Payment failed");
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data?.ok) {
+        throw new Error(data?.error || "Payment initialization failed");
       }
 
-      // Success!
-      setSuccess(true);
-      
-      // Clear checkout data from localStorage
+      const orderMerchantId = data.orderMerchantId as string;
+      localStorage.setItem("pendingOrderMerchantId", orderMerchantId);
+
+      // Checkout data is no longer needed after gateway handoff.
       localStorage.removeItem("checkoutData");
 
-      // Redirect to dashboard after 3 seconds
-      setTimeout(() => {
-        router.push("/dashboard");
-      }, 3000);
+      if (data.redirectUrl) {
+        window.location.href = data.redirectUrl as string;
+        return;
+      }
+
+      if (data.state === "APPROVED") {
+        setSuccess(true);
+        router.push(`/payment-success?order=${encodeURIComponent(orderMerchantId)}`);
+        return;
+      }
+
+      if (data.state === "DECLINED" || data.state === "ERROR") {
+        router.push(
+          `/payment-failed?order=${encodeURIComponent(orderMerchantId)}&reason=${encodeURIComponent(data.errorMessage || data.state)}`,
+        );
+        return;
+      }
+
+      router.push(`/payment-success?order=${encodeURIComponent(orderMerchantId)}`);
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "Payment failed. Please try again.";
+      const message =
+        err instanceof Error ? err.message : "Payment failed. Please try again.";
       alert(message);
     } finally {
       setLoading(false);
@@ -324,12 +349,6 @@ export default function CheckoutPage() {
                         <span className="opacity-70">Subtotal</span>
                         <span className="font-medium">
                           {subtotal.toFixed(2)} {checkout.currency}
-                        </span>
-                      </div>
-                      <div className="flex justify-between text-sm">
-                        <span className="opacity-70">VAT (20%)</span>
-                        <span className="font-medium">
-                          {vatAmt.toFixed(2)} {checkout.currency}
                         </span>
                       </div>
                       <div
@@ -483,16 +502,11 @@ export default function CheckoutPage() {
                         disabled={loading || !isAuthed}
                         isLoading={loading}
                       >
-                        {loading ? (
-                          <>
-                            <Loader2 className="h-5 w-5 animate-spin" />
-                            Processing...
-                          </>
-                        ) : !isAuthed ? (
-                          "Please sign in to continue"
-                        ) : (
-                          `Pay ${total.toFixed(2)} ${checkout.currency}`
-                        )}
+                        {loading
+                          ? "Processing..."
+                          : !isAuthed
+                            ? "Please sign in to continue"
+                            : `Pay ${total.toFixed(2)} ${checkout.currency}`}
                       </Button>
                     </form>
                   </div>

@@ -42,30 +42,33 @@ export default function TokenPurchase() {
     setLoading(packageId);
     setError(null);
     setSuccess(null);
-    
+
     try {
-      const response = await fetch('/api/tokens/topup', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          packageId, 
-          currency 
-        }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to process purchase');
+      const pkg = packages.find((p) => p.id === packageId);
+      if (!pkg) {
+        throw new Error('Invalid package selected');
       }
 
-      setSuccess(`Successfully added ${data.tokensAdded.toLocaleString()} tokens! Your new balance is ${data.newBalance.toLocaleString()} tokens.`);
-      
-      // Обновляем баланс в родительском компоненте (если есть callback)
-      if (typeof window !== 'undefined' && (window as unknown as { refreshBalance?: () => void }).refreshBalance) {
-        (window as unknown as { refreshBalance: () => void }).refreshBalance();
+      const amount = getPackagePrice(packageId, currency);
+
+      if (typeof window !== 'undefined') {
+        localStorage.setItem(
+          'checkoutData',
+          JSON.stringify({
+            packageId,
+            amount,
+            grossAmount: amount,
+            vatAmount: 0,
+            currency,
+            tokens: pkg.tokens,
+            description: pkg.name,
+          }),
+        );
+        window.location.href = '/checkout';
+        return;
       }
 
+      throw new Error('Checkout can only be started in browser');
     } catch (error) {
       console.error('Purchase failed:', error);
       setError(error instanceof Error ? error.message : 'Failed to process purchase');
@@ -196,7 +199,7 @@ export default function TokenPurchase() {
 
       <div className="text-center mt-8">
         <p className="text-sm opacity-70" style={{ color: THEME.secondary }}>
-          Tokens are added instantly • Contact support for payment processing
+          Secure checkout with 3DS verification via CardServ
         </p>
       </div>
     </div>

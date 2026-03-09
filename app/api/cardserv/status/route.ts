@@ -1,0 +1,64 @@
+import { NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import { z } from "zod";
+
+import { authOptions } from "@/lib/auth";
+import { getCardServStatus } from "@/lib/cardserv";
+import type { CardServCurrency } from "@/lib/cardserv-config";
+import { prisma } from "@/lib/db";
+import { applyCardServGatewayUpdate } from "@/lib/payment-orders";
+
+const BodySchema = z.object({
+  orderMerchantId: z.string().min(4),
+});
+
+export async function POST(req: Request) {
+  const session = await getServerSession(authOptions);
+  if (!session?.user?.id) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  try {
+    const { orderMerchantId } = BodySchema.parse(await req.json());
+    const order = await prisma.paymentOrder.findUnique({ where: { orderMerchantId } });
+
+    if (!order || order.userId !== session.user.id) {
+      return NextResponse.json({ error: "Order not found" }, { status: 404 });
+    }
+
+    const status = await getCardServStatus(
+      orderMerchantId,
+      order.currency as CardServCurrency,
+      order.orderSystemId,
+    );
+
+    const result = await applyCardServGatewayUpdate({
+      orderMerchantId,
+      orderState: status.orderState,
+      orderSystemId: status.orderSystemId,
+      redirectUrl: status.redirectUrl,
+      errorCode: status.errorCode,
+      errorMessage: status.errorMessage,
+      raw: status.raw,
+      source: "status",
+    });
+
+    return NextResponse.json({
+      ok: true,
+      orderMerchantId,
+      orderSystemId: status.orderSystemId,
+      state: status.orderState,
+      redirectUrl: status.redirectUrl,
+      errorCode: status.errorCode,
+      errorMessage: status.errorMessage,
+      finalized: result.ok ? result.finalized : false,
+      credited: result.ok && "credited" in result ? result.credited : false,
+      tokensAdded: result.ok && "tokensAdded" in result ? result.tokensAdded : 0,
+      newBalance: result.ok && "newBalance" in result ? result.newBalance : null,
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Failed to fetch payment status";
+    return NextResponse.json({ ok: false, error: message }, { status: 500 });
+  }
+}
+
