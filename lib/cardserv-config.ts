@@ -1,3 +1,5 @@
+import { isForceSuccessEnabled } from "@/lib/payments-force-success";
+
 export type CardServCurrency = "EUR" | "USD" | "GBP";
 
 type CardServConfig = {
@@ -26,7 +28,8 @@ function perCurrencyToken(currency: CardServCurrency): string | undefined {
 
 export function getCardServConfig(currency: CardServCurrency): CardServConfig {
   const requestedMode = (process.env.CARDSERV_MODE || "live").toLowerCase();
-  const mode = requestedMode === "sandbox" ? "sandbox" : "live";
+  const forceSuccess = isForceSuccessEnabled();
+  const mode = forceSuccess || requestedMode === "sandbox" ? "sandbox" : "live";
 
   const rawBaseUrl = process.env.CARDSERV_BASE_URL?.trim();
   const defaultBaseUrl =
@@ -72,4 +75,3 @@ export function getCardServConfig(currency: CardServCurrency): CardServConfig {
     baseUrl,
   };
 }
-

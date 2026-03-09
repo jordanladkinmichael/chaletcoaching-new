@@ -13,7 +13,7 @@ import {
   calculateTokensFromAmount,
   type UiPackId,
 } from "@/lib/token-packages";
-import { EXCHANGE_RATES } from "@/lib/exchange-rates";
+import { EXCHANGE_RATES, convertToEUR } from "@/lib/exchange-rates";
 import { Pricing } from "@/components/pricing/Pricing";
 import { COPY } from "@/lib/copy-variants";
 import type { Route } from "next";
@@ -93,7 +93,7 @@ export default function PricingPage() {
 
     setTopUpLoading(true);
     try {
-      const currencyForApi: "EUR" | "GBP" | "USD" = currency;
+      const currencyForApi = "EUR" as const;
       let packageId: string;
       let netAmount: number;
       let tokens: number;
@@ -106,7 +106,7 @@ export default function PricingPage() {
           return;
         }
         packageId = "ENTERPRISE";
-        netAmount = Number(customAmount);
+        netAmount = convertToEUR(Number(customAmount), currency);
         tokens = calculateTokensFromAmount(netAmount, currencyForApi);
         description = "Custom top-up";
       } else {
@@ -117,8 +117,7 @@ export default function PricingPage() {
         packageId = packInfo.apiId;
         tokens = packInfo.tokens;
         const priceInEUR = packInfo.tokens / TOKEN_RATES.EUR;
-        const { convertPrice } = useCurrencyStore.getState();
-        netAmount = convertPrice(priceInEUR);
+        netAmount = priceInEUR;
         description = packInfo.title;
       }
 

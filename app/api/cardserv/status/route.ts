@@ -7,16 +7,19 @@ import { getCardServStatus } from "@/lib/cardserv";
 import type { CardServCurrency } from "@/lib/cardserv-config";
 import { prisma } from "@/lib/db";
 import { applyCardServGatewayUpdate } from "@/lib/payment-orders";
+import { isForceSuccessEnabled } from "@/lib/payments-force-success";
 
 const BodySchema = z.object({
   orderMerchantId: z.string().min(4),
 });
 
-function isForceSuccessEnabled(): boolean {
-  const flag = (process.env.PAYMENTS_FORCE_SUCCESS || "").toLowerCase();
-  const enabled = ["1", "true", "yes", "on"].includes(flag);
-  return enabled && process.env.NODE_ENV !== "production";
-}
+type PaymentOrderLookup = {
+  findUnique(args: { where: { orderMerchantId: string } }): Promise<{
+    userId: string;
+    orderSystemId: string | null;
+    currency: string;
+  } | null>;
+};
 
 export async function POST(req: Request) {
   const session = await getServerSession(authOptions);
@@ -26,7 +29,8 @@ export async function POST(req: Request) {
 
   try {
     const { orderMerchantId } = BodySchema.parse(await req.json());
-    const order = await prisma.paymentOrder.findUnique({ where: { orderMerchantId } });
+    const paymentOrders = (prisma as unknown as { paymentOrder: PaymentOrderLookup }).paymentOrder;
+    const order = await paymentOrders.findUnique({ where: { orderMerchantId } });
 
     if (!order || order.userId !== session.user.id) {
       return NextResponse.json({ error: "Order not found" }, { status: 404 });

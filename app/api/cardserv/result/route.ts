@@ -4,6 +4,7 @@ import { getCardServStatus } from "@/lib/cardserv";
 import type { CardServCurrency } from "@/lib/cardserv-config";
 import { prisma } from "@/lib/db";
 import { applyCardServGatewayUpdate } from "@/lib/payment-orders";
+import { isForceSuccessEnabled } from "@/lib/payments-force-success";
 
 function getAppUrl(req: Request): string {
   const requestUrl = new URL(req.url);
@@ -14,13 +15,7 @@ function getAppUrl(req: Request): string {
   const envUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXTAUTH_URL;
   if (envUrl) return envUrl.replace(/\/$/, "");
 
-  return "http://localhost:3000";
-}
-
-function isForceSuccessEnabled(): boolean {
-  const flag = (process.env.PAYMENTS_FORCE_SUCCESS || "").toLowerCase();
-  const enabled = ["1", "true", "yes", "on"].includes(flag);
-  return enabled && process.env.NODE_ENV !== "production";
+  throw new Error("Unable to resolve app base URL");
 }
 
 function getOrderMerchantId(req: Request, form?: FormData): string | null {

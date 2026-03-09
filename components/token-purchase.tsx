@@ -49,7 +49,7 @@ export default function TokenPurchase() {
         throw new Error('Invalid package selected');
       }
 
-      const amount = getPackagePrice(packageId, currency);
+      const amount = getPackagePrice(packageId, 'EUR');
 
       if (typeof window !== 'undefined') {
         localStorage.setItem(
@@ -59,7 +59,7 @@ export default function TokenPurchase() {
             amount,
             grossAmount: amount,
             vatAmount: 0,
-            currency,
+            currency: 'EUR',
             tokens: pkg.tokens,
             description: pkg.name,
           }),
