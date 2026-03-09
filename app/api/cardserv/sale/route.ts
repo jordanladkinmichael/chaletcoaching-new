@@ -36,14 +36,14 @@ const BodySchema = z.object({
 function getAppUrl(req: Request): string {
   const requestUrl = new URL(req.url);
   const origin = `${requestUrl.protocol}//${requestUrl.host}`;
-  if (origin.includes("localhost") || origin.includes("127.0.0.1")) {
-    return origin;
-  }
+
+  // Always prefer the actual request origin (works correctly on prod domains and localhost).
+  if (origin) return origin;
 
   const envUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXTAUTH_URL;
   if (envUrl) return envUrl.replace(/\/$/, "");
 
-  return origin;
+  return "http://localhost:3000";
 }
 
 function expectedAmounts(packageId: TokenPackageId, currency: Currency, amount: number) {
