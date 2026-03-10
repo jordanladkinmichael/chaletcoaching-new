@@ -42,7 +42,7 @@ export default function SiteFooter({ onNavigate }: SiteFooterProps) {
               <div>Company number: 15587263</div>
               <div>20 Wenlock Road, London, England, N1 7GU</div>
               <div>Email: <a href="mailto:info@chaletcoaching.co.uk" className="underline">info@chaletcoaching.co.uk</a></div>
-              <div>Phone: +44 7441 392840</div>
+              <div>Phone: +44 7782 358363</div>
             </div>
           </div>
 

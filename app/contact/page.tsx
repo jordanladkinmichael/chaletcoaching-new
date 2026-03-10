@@ -234,10 +234,10 @@ export default function ContactPage() {
                       <H2 className="text-xl">Phone</H2>
                     </div>
                     <Paragraph className="mb-4 flex-1">
-                      +44 7441 392840
+                      +44 7782 358363
                     </Paragraph>
                     <Button variant="outline" asChild>
-                      <Link href="tel:+447441392840">Call</Link>
+                      <Link href="tel:+44 7782 358363">Call</Link>
                     </Button>
                   </Card>
                 </motion.div>

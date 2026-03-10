@@ -170,7 +170,7 @@ export default function AboutPage() {
     { id: "name", label: "Company name", value: "CHALET AQUARIUS LTD" },
     { id: "number", label: "Company number", value: "15587263" },
     { id: "address", label: "Address", value: "20 Wenlock Road, London, England, N1 7GU" },
-    { id: "phone", label: "Phone", value: "+44 7441 392840" },
+    { id: "phone", label: "Phone", value: "+44 7782 358363" },
     { id: "email", label: "Email", value: "info@chaletcoaching.co.uk" },
   ];
 

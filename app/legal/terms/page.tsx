@@ -191,7 +191,7 @@ export default function TermsPage() {
             <p><strong>CHALET AQUARIUS LTD</strong></p>
             <p><strong>Address:</strong> 20 Wenlock Road, London, England, N1 7GU</p>
             <p><strong>Email:</strong> info@chaletcoaching.co.uk</p>
-            <p><strong>Phone:</strong> +44 7441 392840</p>
+            <p><strong>Phone:</strong> +44 7782 358363</p>
           </div>
         </div>
       </Card>
