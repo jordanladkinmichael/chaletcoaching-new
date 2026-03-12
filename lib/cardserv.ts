@@ -1,4 +1,5 @@
 import { CardServCurrency, getCardServConfig } from "@/lib/cardserv-config";
+import { logCardServEvent, redactCardServData } from "@/lib/cardserv-observability";
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -118,13 +119,27 @@ export async function createCardServOrder(payload: {
     expiry: string;
     name: string;
     address?: string;
+    country?: string;
     city?: string;
     postalCode?: string;
   };
   address?: string;
+  countryCode?: string | null;
   city?: string;
   postalCode?: string;
   appUrl: string;
+  browser?: {
+    ipAddress?: string;
+    acceptHeader?: string;
+    colorDepth?: number;
+    javascriptEnabled?: boolean;
+    acceptLanguage?: string;
+    screenHeight?: number;
+    screenWidth?: number;
+    timeZone?: number;
+    userAgent?: string;
+    javaEnabled?: boolean;
+  };
 }) {
   const cfg = getCardServConfig(payload.currency);
 
@@ -142,6 +157,7 @@ export async function createCardServOrder(payload: {
   const billingAddress = payload.address || payload.card.address || "10 Downing Street";
   const billingCity = payload.city || payload.card.city || "London";
   const billingPostalCode = payload.postalCode || payload.card.postalCode || "SW1A1AA";
+  const browser = payload.browser ?? {};
 
   const body = {
     order: {
@@ -152,24 +168,25 @@ export async function createCardServOrder(payload: {
       challengeIndicator: "01",
     },
     browser: {
-      ipAddress: "8.8.8.8",
+      ipAddress: browser.ipAddress || "127.0.0.1",
       acceptHeader:
+        browser.acceptHeader ||
         "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-      colorDepth: 32,
-      javascriptEnabled: "true",
-      acceptLanguage: "en-US",
-      screenHeight: 1080,
-      screenWidth: 1920,
-      timeZone: 0,
-      userAgent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)",
-      javaEnabled: "false",
+      colorDepth: browser.colorDepth || 32,
+      javascriptEnabled: String(browser.javascriptEnabled ?? true),
+      acceptLanguage: browser.acceptLanguage || "en-US",
+      screenHeight: browser.screenHeight || 1080,
+      screenWidth: browser.screenWidth || 1920,
+      timeZone: browser.timeZone ?? 0,
+      userAgent: browser.userAgent || "Mozilla/5.0",
+      javaEnabled: String(browser.javaEnabled ?? false),
     },
     customer: {
       firstname: payload.card.name.split(" ")[0] || "John",
       lastname: payload.card.name.split(" ").slice(1).join(" ") || "Doe",
       customerEmail: payload.email,
       address: {
-        countryCode: cfg.country,
+        countryCode: payload.countryCode || cfg.country,
         zipCode: billingPostalCode,
         city: billingCity,
         line1: billingAddress,
@@ -188,6 +205,13 @@ export async function createCardServOrder(payload: {
     },
   };
 
+  logCardServEvent("sale.request", {
+    saleUrl,
+    statusUrl,
+    requestorId: cfg.requestorId,
+    payload: body,
+  });
+
   const saleRes = await fetch(saleUrl, {
     method: "POST",
     headers,
@@ -195,11 +219,24 @@ export async function createCardServOrder(payload: {
   });
 
   const saleText = await saleRes.text();
-  const saleData = JSON.parse(saleText);
+  let saleData: unknown;
+  try {
+    saleData = JSON.parse(saleText);
+  } catch {
+    throw new Error(`CardServ sale returned non-JSON response: ${saleText.slice(0, 300)}`);
+  }
+
+  logCardServEvent("sale.response", {
+    status: saleRes.status,
+    ok: saleRes.ok,
+    data: saleData,
+  });
+
   const saleMeta = normalizeCardServPayload(saleData);
 
   const hardFailure =
-    !saleRes.ok || saleMeta.orderState === "ERROR" || saleMeta.orderState === "DECLINED";
+    !saleRes.ok ||
+    ["ERROR", "DECLINED", "FILTERED", "CHAIN_STEP"].includes(saleMeta.orderState);
 
   if (hardFailure && !saleMeta.redirectUrl && !saleMeta.threeDSAuth) {
     throw new Error(
@@ -210,10 +247,10 @@ export async function createCardServOrder(payload: {
   let statusData = saleData;
   let statusMeta = saleMeta;
 
-  const pollDelays = [800, 1200, 1800, 2500, 3200];
+  const pollDelays = [3000, 5000, 5000];
   for (let i = 0; i < pollDelays.length; i += 1) {
     if (statusMeta.redirectUrl || statusMeta.threeDSAuth) break;
-    if (["APPROVED", "DECLINED", "ERROR"].includes(statusMeta.orderState)) break;
+    if (["APPROVED", "DECLINED", "ERROR", "FILTERED", "CHAIN_STEP"].includes(statusMeta.orderState)) break;
 
     await sleep(pollDelays[i]);
 
@@ -229,7 +266,21 @@ export async function createCardServOrder(payload: {
     });
 
     const statusText = await statusRes.text();
-    statusData = JSON.parse(statusText);
+    try {
+      statusData = JSON.parse(statusText);
+    } catch {
+      throw new Error(`CardServ status returned non-JSON response: ${statusText.slice(0, 300)}`);
+    }
+
+    logCardServEvent("sale.poll_response", {
+      attempt: i + 1,
+      delayMs: pollDelays[i],
+      request: statusRequestBody,
+      status: statusRes.status,
+      ok: statusRes.ok,
+      data: statusData,
+    });
+
     statusMeta = normalizeCardServPayload(statusData);
   }
 
@@ -270,7 +321,20 @@ export async function getCardServStatus(
   });
 
   const responseText = await res.text();
-  const data = JSON.parse(responseText);
+  let data: unknown;
+  try {
+    data = JSON.parse(responseText);
+  } catch {
+    throw new Error(`CardServ status returned non-JSON response: ${responseText.slice(0, 300)}`);
+  }
+
+  logCardServEvent("status.response", {
+    request: redactCardServData(requestBody),
+    status: res.status,
+    ok: res.ok,
+    data,
+  });
+
   const normalized = normalizeCardServPayload(data);
 
   return {
@@ -283,4 +347,3 @@ export async function getCardServStatus(
     raw: data,
   };
 }
-

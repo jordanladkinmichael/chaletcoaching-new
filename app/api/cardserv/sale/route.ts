@@ -10,6 +10,8 @@ import { applyCardServGatewayUpdate } from "@/lib/payment-orders";
 import { isForceSuccessEnabled } from "@/lib/payments-force-success";
 import { Currency, getPackagePrice, TOKEN_PACKAGES, TokenPackageId } from "@/lib/payment";
 import { calculateTokensFromAmount } from "@/lib/token-packages";
+import { logCardServEvent } from "@/lib/cardserv-observability";
+import { countryNameToIso2 } from "@/lib/country-codes";
 
 const BodySchema = z.object({
   packageId: z.enum(["STARTER", "POPULAR", "PRO", "ENTERPRISE"] as const),
@@ -26,10 +28,22 @@ const BodySchema = z.object({
     expiry: z.string().regex(/^(0[1-9]|1[0-2])\/\d{2}$/),
     name: z.string().min(2),
     address: z.string().optional(),
+    country: z.string().min(2),
     city: z.string().optional(),
     postalCode: z.string().optional(),
   }),
+  browser: z.object({
+    colorDepth: z.number().int().positive().optional(),
+    screenHeight: z.number().int().positive().optional(),
+    screenWidth: z.number().int().positive().optional(),
+    timeZone: z.number().int().optional(),
+    javaEnabled: z.boolean().optional(),
+    javascriptEnabled: z.boolean().optional(),
+    acceptLanguage: z.string().min(2).optional(),
+    userAgent: z.string().min(4).optional(),
+  }).optional(),
   address: z.string().optional(),
+  country: z.string().min(2),
   city: z.string().optional(),
   postalCode: z.string().optional(),
 });
@@ -37,14 +51,35 @@ const BodySchema = z.object({
 function getAppUrl(req: Request): string {
   const requestUrl = new URL(req.url);
   const origin = `${requestUrl.protocol}//${requestUrl.host}`;
+  const hostname = requestUrl.hostname.toLowerCase();
+  const isLocalHost =
+    hostname === "localhost" ||
+    hostname === "127.0.0.1" ||
+    hostname === "::1" ||
+    hostname.endsWith(".local");
+  const envUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXTAUTH_URL;
 
-  // Always prefer the actual request origin (works on prod domains and localhost).
+  if (!isLocalHost && origin) return origin;
+  if (envUrl) return envUrl.replace(/\/$/, "");
   if (origin) return origin;
 
-  const envUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXTAUTH_URL;
-  if (envUrl) return envUrl.replace(/\/$/, "");
-
   throw new Error("Unable to resolve app base URL");
+}
+
+function normalizeCardServIp(value: string | undefined): string {
+  const trimmed = value?.trim();
+  if (!trimmed || trimmed === "::1" || trimmed === "0:0:0:0:0:0:0:1") {
+    return "127.0.0.1";
+  }
+  return trimmed;
+}
+
+function normalizeAcceptHeader(value: string | undefined): string {
+  const trimmed = value?.trim();
+  if (!trimmed || trimmed.length < 10 || trimmed === "*/*") {
+    return "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8";
+  }
+  return trimmed;
 }
 
 function expectedAmounts(packageId: TokenPackageId, currency: Currency, amount: number) {
@@ -71,12 +106,18 @@ export async function POST(req: Request) {
 
   try {
     const parsed = BodySchema.parse(await req.json());
+    const forwardedFor = req.headers.get("x-forwarded-for");
+    const browserIp = normalizeCardServIp(
+      forwardedFor?.split(",")[0]?.trim() || req.headers.get("x-real-ip") || undefined,
+    );
+    const acceptHeader = normalizeAcceptHeader(req.headers.get("accept") || undefined);
+    const requestUserAgent = req.headers.get("user-agent") || undefined;
     const payerEmail = parsed.email || session.user.email;
     if (!payerEmail) {
       return NextResponse.json({ error: "Missing customer email" }, { status: 400 });
     }
 
-    const currency: CardServCurrency = "EUR";
+    const currency: CardServCurrency = parsed.currency;
     const expected = expectedAmounts(parsed.packageId, currency, parsed.amount);
 
     if (
@@ -116,10 +157,40 @@ export async function POST(req: Request) {
       email: payerEmail,
       card: parsed.card,
       address: parsed.address,
+      countryCode: countryNameToIso2(parsed.country) ?? countryNameToIso2(parsed.card.country),
       city: parsed.city,
       postalCode: parsed.postalCode,
       appUrl: getAppUrl(req),
+      browser: {
+        ipAddress: browserIp,
+        acceptHeader,
+        colorDepth: parsed.browser?.colorDepth,
+        screenHeight: parsed.browser?.screenHeight,
+        screenWidth: parsed.browser?.screenWidth,
+        timeZone: parsed.browser?.timeZone,
+        javaEnabled: parsed.browser?.javaEnabled,
+        javascriptEnabled: parsed.browser?.javascriptEnabled,
+        acceptLanguage: parsed.browser?.acceptLanguage || req.headers.get("accept-language") || undefined,
+        userAgent: parsed.browser?.userAgent || requestUserAgent,
+      },
     };
+
+    logCardServEvent("sale.route_request", {
+      orderMerchantId,
+      userId: session.user.id,
+      packageId: parsed.packageId,
+      currency,
+      amount: expected.grossAmount,
+      email: payerEmail,
+      browser: salePayload.browser,
+      billingCountry: parsed.country,
+      countryCode: salePayload.countryCode,
+      forceSuccess: isForceSuccessEnabled(),
+    });
+
+    if (!salePayload.countryCode) {
+      return NextResponse.json({ ok: false, error: "Unsupported billing country" }, { status: 400 });
+    }
 
     if (isForceSuccessEnabled()) {
       const fallbackRedirect = `${salePayload.appUrl}/api/cardserv/result?order=${encodeURIComponent(orderMerchantId)}&forced=1`;
@@ -193,6 +264,9 @@ export async function POST(req: Request) {
       tokensAdded: stateResult.ok && "tokensAdded" in stateResult ? stateResult.tokensAdded : 0,
     });
   } catch (error) {
+    logCardServEvent("sale.route_error", {
+      error: error instanceof Error ? error.message : String(error),
+    });
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         { ok: false, error: "Invalid request payload", details: error.flatten() },

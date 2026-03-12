@@ -15,7 +15,11 @@ type GatewayUpdate = {
 
 function normalizeState(state: string | null | undefined): string {
   const normalized = (state || "PROCESSING").toUpperCase();
-  if (["APPROVED", "DECLINED", "ERROR", "PROCESSING", "UNKNOWN"].includes(normalized)) {
+  if (
+    ["APPROVED", "DECLINED", "ERROR", "FILTERED", "PROCESSING", "UNKNOWN", "CHAIN_STEP"].includes(
+      normalized,
+    )
+  ) {
     return normalized;
   }
   return "PROCESSING";
@@ -65,7 +69,7 @@ export async function applyCardServGatewayUpdate(update: GatewayUpdate) {
 
   if (update.orderSystemId) updateData.orderSystemId = update.orderSystemId;
   if (update.redirectUrl) updateData.redirectUrl = update.redirectUrl;
-  if (update.errorMessage && ["DECLINED", "ERROR"].includes(nextState)) {
+  if (update.errorMessage && ["DECLINED", "ERROR", "FILTERED", "CHAIN_STEP"].includes(nextState)) {
     updateData.failureReason = update.errorMessage;
   }
   if (update.raw !== undefined) {
@@ -152,4 +156,3 @@ export async function applyCardServGatewayUpdate(update: GatewayUpdate) {
     ...finalized,
   };
 }
-

@@ -5,15 +5,22 @@ import type { CardServCurrency } from "@/lib/cardserv-config";
 import { prisma } from "@/lib/db";
 import { applyCardServGatewayUpdate } from "@/lib/payment-orders";
 import { isForceSuccessEnabled } from "@/lib/payments-force-success";
+import { logCardServEvent } from "@/lib/cardserv-observability";
 
 function getAppUrl(req: Request): string {
   const requestUrl = new URL(req.url);
   const origin = `${requestUrl.protocol}//${requestUrl.host}`;
-
-  if (origin) return origin;
-
+  const hostname = requestUrl.hostname.toLowerCase();
+  const isLocalHost =
+    hostname === "localhost" ||
+    hostname === "127.0.0.1" ||
+    hostname === "::1" ||
+    hostname.endsWith(".local");
   const envUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXTAUTH_URL;
+
+  if (!isLocalHost && origin) return origin;
   if (envUrl) return envUrl.replace(/\/$/, "");
+  if (origin) return origin;
 
   throw new Error("Unable to resolve app base URL");
 }
@@ -36,6 +43,13 @@ function getOrderMerchantId(req: Request, form?: FormData): string | null {
 async function handleResult(req: Request, form?: FormData) {
   const orderMerchantId = getOrderMerchantId(req, form);
   const appUrl = getAppUrl(req);
+
+  logCardServEvent("result.route_request", {
+    orderMerchantId,
+    url: req.url,
+    form: form ? Object.fromEntries(form.entries()) : {},
+    forceSuccess: isForceSuccessEnabled(),
+  });
 
   if (!orderMerchantId) {
     return NextResponse.redirect(`${appUrl}/payment-failed?reason=missing_order`, 302);
@@ -80,7 +94,7 @@ async function handleResult(req: Request, form?: FormData) {
     source: "result",
   });
 
-  if (!forceSuccess && ["DECLINED", "ERROR"].includes(status.orderState)) {
+  if (!forceSuccess && ["DECLINED", "ERROR", "FILTERED", "CHAIN_STEP"].includes(status.orderState)) {
     return NextResponse.redirect(
       `${appUrl}/payment-failed?order=${encodeURIComponent(orderMerchantId)}&reason=${encodeURIComponent(status.errorMessage || status.orderState)}`,
       302,
@@ -98,6 +112,10 @@ export async function POST(req: Request) {
     const form = await req.formData().catch(() => undefined);
     return await handleResult(req, form);
   } catch (error) {
+    logCardServEvent("result.route_error", {
+      method: "POST",
+      error: error instanceof Error ? error.message : String(error),
+    });
     const appUrl = getAppUrl(req);
     const message = error instanceof Error ? error.message : "result_error";
     return NextResponse.redirect(
@@ -111,6 +129,10 @@ export async function GET(req: Request) {
   try {
     return await handleResult(req);
   } catch (error) {
+    logCardServEvent("result.route_error", {
+      method: "GET",
+      error: error instanceof Error ? error.message : String(error),
+    });
     const appUrl = getAppUrl(req);
     const message = error instanceof Error ? error.message : "result_error";
     return NextResponse.redirect(

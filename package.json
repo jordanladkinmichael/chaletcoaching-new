@@ -7,6 +7,7 @@
     "build": "prisma generate && next build",
     "start": "next start -p 3000",
     "lint": "next lint",
+    "cardserv:sandbox:smoke": "node scripts/cardserv-sandbox-smoke.mjs",
     "postinstall": "prisma generate",
     "migrate:deploy": "prisma migrate deploy",
     "migrate:status": "prisma migrate status",
