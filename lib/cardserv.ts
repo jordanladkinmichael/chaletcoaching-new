@@ -146,12 +146,12 @@ export function normalizeCardServPayload(payload: unknown): CardServNormalizedPa
       ]) ?? "PROCESSING",
     redirectUrl: firstString(payload, [
       "outputRedirectToUrl",
+      "data.outputRedirectToUrl",
+      "result.outputRedirectToUrl",
       "redirectUrl",
       "redirectData.redirectUrl",
       "redirectData.threeDSRedirectUrl",
-      "data.outputRedirectToUrl",
       "data.redirectUrl",
-      "result.outputRedirectToUrl",
       "result.redirectUrl",
     ]),
     threeDSAuth: firstRecord(payload, [
@@ -366,6 +366,7 @@ export async function createCardServSaleForm(payload: CardServHostedSalePayload)
   const cfg = getCardServConfig(payload.currency);
   const saleUrl = `${cfg.baseUrl}/api/payments/sale-form/${cfg.requestorId}`;
   const statusUrl = `${cfg.baseUrl}/api/payments/status/${cfg.requestorId}`;
+
   const customerName = splitCustomerName(payload.customerName);
   const address = fallbackAddress(payload.countryCode || cfg.country);
 
@@ -373,9 +374,9 @@ export async function createCardServSaleForm(payload: CardServHostedSalePayload)
     order: {
       orderMerchantId: payload.orderMerchantId,
       orderDescription: payload.description || "Token purchase",
+      orderPurpose: payload.email || "Token purchase",
       orderAmount: payload.amountGross.toFixed(2),
       orderCurrencyCode: cfg.currency,
-      challengeIndicator: "01",
     },
     browser: buildBrowserInfo(payload.browser),
     customer: {
@@ -384,13 +385,11 @@ export async function createCardServSaleForm(payload: CardServHostedSalePayload)
       customerEmail: payload.email,
       address,
     },
-    paymentMethod: "CARD_PROVIDER_FORM",
-    feature: {
-      redirectUrlCreation: "CREATE_IN_RESPONSE",
-    },
     urls: {
       resultUrl: `${payload.appUrl}/api/cardserv/result?order=${encodeURIComponent(payload.orderMerchantId)}`,
+      cresUrl: `${payload.appUrl}/api/cardserv/cres`,
       webhookUrl: `${payload.appUrl}/api/cardserv/webhook`,
+      redirectWebhookUrl: `${payload.appUrl}/api/cardserv/redirect-webhook`,
     },
   };
 
