@@ -116,6 +116,17 @@ function splitCustomerName(name: string) {
   };
 }
 
+function fallbackAddress(countryCode: string) {
+  switch (countryCode) {
+    case "GB":
+      return { countryCode, zipCode: "SW1A1AA", city: "London", line1: "10 Downing Street" };
+    case "US":
+      return { countryCode, zipCode: "10001", city: "New York", line1: "350 5th Avenue" };
+    default:
+      return { countryCode, zipCode: "10115", city: "Berlin", line1: "Friedrichstrasse 123" };
+  }
+}
+
 export function normalizeCardServPayload(payload: unknown): CardServNormalizedPayload {
   return {
     orderSystemId: firstString(payload, [
@@ -356,6 +367,7 @@ export async function createCardServSaleForm(payload: CardServHostedSalePayload)
   const saleUrl = `${cfg.baseUrl}/api/payments/sale-form/${cfg.requestorId}`;
   const statusUrl = `${cfg.baseUrl}/api/payments/status/${cfg.requestorId}`;
   const customerName = splitCustomerName(payload.customerName);
+  const address = fallbackAddress(payload.countryCode || cfg.country);
 
   const body = {
     order: {
@@ -370,16 +382,11 @@ export async function createCardServSaleForm(payload: CardServHostedSalePayload)
       firstname: customerName.firstname,
       lastname: customerName.lastname,
       customerEmail: payload.email,
-      ...(payload.countryCode
-        ? {
-            address: {
-              countryCode: payload.countryCode,
-              zipCode: "00000",
-              city: "N/A",
-              line1: "N/A",
-            },
-          }
-        : {}),
+      address,
+    },
+    paymentMethod: "CARD_PROVIDER_FORM",
+    feature: {
+      redirectUrlCreation: "CREATE_IN_RESPONSE",
     },
     urls: {
       resultUrl: `${payload.appUrl}/api/cardserv/result?order=${encodeURIComponent(payload.orderMerchantId)}`,

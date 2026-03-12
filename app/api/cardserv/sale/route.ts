@@ -22,6 +22,8 @@ const BodySchema = z.object({
   description: z.string().min(1),
   email: z.string().email().optional(),
   browser: z.object({
+    ipAddress: z.string().min(7).max(45).optional(),
+    acceptHeader: z.string().min(10).max(2048).optional(),
     colorDepth: z.number().int().positive().optional(),
     screenHeight: z.number().int().positive().optional(),
     screenWidth: z.number().int().positive().optional(),
@@ -93,9 +95,12 @@ export async function POST(req: Request) {
     const parsed = BodySchema.parse(await req.json());
     const forwardedFor = req.headers.get("x-forwarded-for");
     const browserIp = normalizeCardServIp(
-      forwardedFor?.split(",")[0]?.trim() || req.headers.get("x-real-ip") || undefined,
+      parsed.browser?.ipAddress ||
+        forwardedFor?.split(",")[0]?.trim() ||
+        req.headers.get("x-real-ip") ||
+        undefined,
     );
-    const acceptHeader = normalizeAcceptHeader(req.headers.get("accept") || undefined);
+    const acceptHeader = normalizeAcceptHeader(parsed.browser?.acceptHeader || req.headers.get("accept") || undefined);
     const requestUserAgent = req.headers.get("user-agent") || undefined;
     const payerEmail = parsed.email || session.user.email;
     const customerName = session.user.name?.trim() || payerEmail?.split("@")[0] || "Customer";
@@ -142,7 +147,7 @@ export async function POST(req: Request) {
       description: parsed.description,
       email: payerEmail,
       customerName,
-      countryCode: null,
+      countryCode: currency === "EUR" ? "DE" : currency === "GBP" ? "GB" : "US",
       appUrl: getAppUrl(req),
       browser: {
         ipAddress: browserIp,

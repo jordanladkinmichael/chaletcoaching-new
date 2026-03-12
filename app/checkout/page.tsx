@@ -30,6 +30,17 @@ export default function CheckoutPage() {
   const [loading, setLoading] = useState(false);
   const startedRef = useRef(false);
 
+  async function resolvePublicIp() {
+    try {
+      const response = await fetch("https://api.ipify.org?format=json");
+      if (!response.ok) return undefined;
+      const data = (await response.json()) as { ip?: string };
+      return data.ip;
+    } catch {
+      return undefined;
+    }
+  }
+
   useEffect(() => {
     const data = localStorage.getItem("checkoutData");
     if (!data) {
@@ -61,6 +72,7 @@ export default function CheckoutPage() {
 
     void (async () => {
       try {
+        const publicIp = await resolvePublicIp();
         const res = await fetch("/api/cardserv/sale", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -74,6 +86,8 @@ export default function CheckoutPage() {
             description: checkout.description,
             email: session.user.email || checkout.email,
             browser: {
+              ipAddress: publicIp,
+              acceptHeader: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
               colorDepth: window.screen?.colorDepth || 24,
               screenHeight: window.screen?.height || 0,
               screenWidth: window.screen?.width || 0,
