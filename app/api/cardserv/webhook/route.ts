@@ -4,6 +4,7 @@ import { getCardServStatus } from "@/lib/cardserv";
 import type { CardServCurrency } from "@/lib/cardserv-config";
 import { prisma } from "@/lib/db";
 import { applyCardServGatewayUpdate } from "@/lib/payment-orders";
+import { logCardServEvent } from "@/lib/cardserv-observability";
 
 function readOrderMerchantId(payload: Record<string, unknown>): string | null {
   const direct = payload.orderMerchantId;
@@ -22,6 +23,11 @@ export async function POST(req: Request) {
   try {
     const payload = (await req.json().catch(() => ({}))) as Record<string, unknown>;
     const orderMerchantId = readOrderMerchantId(payload);
+
+    logCardServEvent("webhook.route_request", {
+      orderMerchantId,
+      payload,
+    });
 
     if (!orderMerchantId) {
       return NextResponse.json({ ok: false, error: "Missing orderMerchantId" }, { status: 400 });
@@ -58,8 +64,10 @@ export async function POST(req: Request) {
       tokensAdded: result.ok && "tokensAdded" in result ? result.tokensAdded : 0,
     });
   } catch (error) {
+    logCardServEvent("webhook.route_error", {
+      error: error instanceof Error ? error.message : String(error),
+    });
     const message = error instanceof Error ? error.message : "Webhook processing failed";
     return NextResponse.json({ ok: false, error: message }, { status: 500 });
   }
 }
-

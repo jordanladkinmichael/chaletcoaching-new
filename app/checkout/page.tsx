@@ -7,8 +7,10 @@ import { motion } from "framer-motion";
 import SiteHeader from "@/components/site-header";
 import SiteFooter from "@/components/site-footer";
 import { Button } from "@/components/ui/button";
+import { Select } from "@/components/ui/select";
 import { THEME } from "@/lib/theme";
 import { formatNumber } from "@/lib/tokens";
+import { COUNTRIES } from "@/lib/countries";
 import type { Route } from "next";
 
 interface CheckoutData {
@@ -28,6 +30,7 @@ interface FormData {
   cvv: string;
   name: string;
   address: string;
+  country: string;
   city: string;
   postalCode: string;
 }
@@ -38,6 +41,7 @@ interface FormErrors {
   cvv?: string;
   name?: string;
   address?: string;
+  country?: string;
   city?: string;
   postalCode?: string;
 }
@@ -54,6 +58,7 @@ export default function CheckoutPage() {
     cvv: "",
     name: "",
     address: "",
+    country: "",
     city: "",
     postalCode: "",
   });
@@ -105,6 +110,10 @@ export default function CheckoutPage() {
     // Address
     if (!formData.address.trim()) {
       newErrors.address = "Billing address is required";
+    }
+
+    if (!formData.country.trim()) {
+      newErrors.country = "Billing country is required";
     }
 
     // City
@@ -167,10 +176,23 @@ export default function CheckoutPage() {
             expiry: formData.expiry,
             name: formData.name,
             address: formData.address,
+            country: formData.country,
             city: formData.city,
             postalCode: formData.postalCode,
           },
+          browser: {
+            colorDepth: window.screen?.colorDepth || 24,
+            screenHeight: window.screen?.height || 0,
+            screenWidth: window.screen?.width || 0,
+            timeZone: new Date().getTimezoneOffset(),
+            javaEnabled:
+              typeof navigator.javaEnabled === "function" ? navigator.javaEnabled() : false,
+            javascriptEnabled: true,
+            acceptLanguage: navigator.language,
+            userAgent: navigator.userAgent,
+          },
           address: formData.address,
+          country: formData.country,
           city: formData.city,
           postalCode: formData.postalCode,
         }),
@@ -386,6 +408,24 @@ export default function CheckoutPage() {
                         )}
                       </div>
 
+                      <div>
+                        <Select
+                          value={formData.country}
+                          onChange={(e) => handleChange("country", e.target.value)}
+                          options={[
+                            { value: "", label: "Billing country" },
+                            ...COUNTRIES,
+                          ]}
+                          className="rounded-lg border bg-transparent"
+                          style={{ borderColor: THEME.border }}
+                        />
+                        {errors.country && (
+                          <div className="text-xs mt-1" style={{ color: THEME.danger }}>
+                            {errors.country}
+                          </div>
+                        )}
+                      </div>
+
                       <div className="flex gap-3">
                         <div className="w-1/2">
                           <input
@@ -510,4 +550,3 @@ export default function CheckoutPage() {
     </div>
   );
 }
-
