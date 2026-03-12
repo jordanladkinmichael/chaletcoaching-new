@@ -3,7 +3,7 @@ import { getServerSession } from "next-auth";
 import { z } from "zod";
 
 import { authOptions } from "@/lib/auth";
-import { createCardServOrder } from "@/lib/cardserv";
+import { createCardServSaleForm } from "@/lib/cardserv";
 import type { CardServCurrency } from "@/lib/cardserv-config";
 import { prisma } from "@/lib/db";
 import { applyCardServGatewayUpdate } from "@/lib/payment-orders";
@@ -11,7 +11,6 @@ import { isForceSuccessEnabled } from "@/lib/payments-force-success";
 import { Currency, getPackagePrice, TOKEN_PACKAGES, TokenPackageId } from "@/lib/payment";
 import { calculateTokensFromAmount } from "@/lib/token-packages";
 import { logCardServEvent } from "@/lib/cardserv-observability";
-import { countryNameToIso2 } from "@/lib/country-codes";
 
 const BodySchema = z.object({
   packageId: z.enum(["STARTER", "POPULAR", "PRO", "ENTERPRISE"] as const),
@@ -22,16 +21,6 @@ const BodySchema = z.object({
   tokens: z.number().int().positive(),
   description: z.string().min(1),
   email: z.string().email().optional(),
-  card: z.object({
-    cardNumber: z.string().min(12),
-    cvv: z.string().min(3).max(4),
-    expiry: z.string().regex(/^(0[1-9]|1[0-2])\/\d{2}$/),
-    name: z.string().min(2),
-    address: z.string().optional(),
-    country: z.string().min(2),
-    city: z.string().optional(),
-    postalCode: z.string().optional(),
-  }),
   browser: z.object({
     colorDepth: z.number().int().positive().optional(),
     screenHeight: z.number().int().positive().optional(),
@@ -42,10 +31,6 @@ const BodySchema = z.object({
     acceptLanguage: z.string().min(2).optional(),
     userAgent: z.string().min(4).optional(),
   }).optional(),
-  address: z.string().optional(),
-  country: z.string().min(2),
-  city: z.string().optional(),
-  postalCode: z.string().optional(),
 });
 
 function getAppUrl(req: Request): string {
@@ -113,6 +98,7 @@ export async function POST(req: Request) {
     const acceptHeader = normalizeAcceptHeader(req.headers.get("accept") || undefined);
     const requestUserAgent = req.headers.get("user-agent") || undefined;
     const payerEmail = parsed.email || session.user.email;
+    const customerName = session.user.name?.trim() || payerEmail?.split("@")[0] || "Customer";
     if (!payerEmail) {
       return NextResponse.json({ error: "Missing customer email" }, { status: 400 });
     }
@@ -155,11 +141,8 @@ export async function POST(req: Request) {
       currency,
       description: parsed.description,
       email: payerEmail,
-      card: parsed.card,
-      address: parsed.address,
-      countryCode: countryNameToIso2(parsed.country) ?? countryNameToIso2(parsed.card.country),
-      city: parsed.city,
-      postalCode: parsed.postalCode,
+      customerName,
+      countryCode: null,
       appUrl: getAppUrl(req),
       browser: {
         ipAddress: browserIp,
@@ -182,15 +165,11 @@ export async function POST(req: Request) {
       currency,
       amount: expected.grossAmount,
       email: payerEmail,
+      customerName,
       browser: salePayload.browser,
-      billingCountry: parsed.country,
       countryCode: salePayload.countryCode,
       forceSuccess: isForceSuccessEnabled(),
     });
-
-    if (!salePayload.countryCode) {
-      return NextResponse.json({ ok: false, error: "Unsupported billing country" }, { status: 400 });
-    }
 
     if (isForceSuccessEnabled()) {
       const fallbackRedirect = `${salePayload.appUrl}/api/cardserv/result?order=${encodeURIComponent(orderMerchantId)}&forced=1`;
@@ -199,7 +178,7 @@ export async function POST(req: Request) {
 
       // Try to get a real CardServ redirect URL so forced mode keeps gateway redirect UX.
       try {
-        const probe = await createCardServOrder(salePayload);
+        const probe = await createCardServSaleForm(salePayload);
         if (probe.redirectUrl) redirectUrl = probe.redirectUrl;
         probeRaw = probe.raw;
       } catch {
@@ -238,7 +217,7 @@ export async function POST(req: Request) {
       });
     }
 
-    const sale = await createCardServOrder(salePayload);
+    const sale = await createCardServSaleForm(salePayload);
 
     const stateResult = await applyCardServGatewayUpdate({
       orderMerchantId,
