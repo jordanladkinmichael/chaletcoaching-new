@@ -64,6 +64,58 @@ export type CardServNormalizedPayload = {
   errorMessage: string | null;
 };
 
+type CardServBrowser = {
+  ipAddress?: string;
+  acceptHeader?: string;
+  colorDepth?: number;
+  javascriptEnabled?: boolean;
+  acceptLanguage?: string;
+  screenHeight?: number;
+  screenWidth?: number;
+  timeZone?: number;
+  userAgent?: string;
+  javaEnabled?: boolean;
+};
+
+type CardServHostedSalePayload = {
+  orderMerchantId: string;
+  amountGross: number;
+  currency: CardServCurrency;
+  description?: string;
+  email: string;
+  customerName: string;
+  countryCode?: string | null;
+  appUrl: string;
+  browser?: CardServBrowser;
+};
+
+function buildBrowserInfo(browser: CardServBrowser | undefined) {
+  const source = browser ?? {};
+
+  return {
+    ipAddress: source.ipAddress || "127.0.0.1",
+    acceptHeader:
+      source.acceptHeader ||
+      "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+    colorDepth: source.colorDepth || 32,
+    javascriptEnabled: String(source.javascriptEnabled ?? true),
+    acceptLanguage: source.acceptLanguage || "en-US",
+    screenHeight: source.screenHeight || 1080,
+    screenWidth: source.screenWidth || 1920,
+    timeZone: source.timeZone ?? 0,
+    userAgent: source.userAgent || "Mozilla/5.0",
+    javaEnabled: String(source.javaEnabled ?? false),
+  };
+}
+
+function splitCustomerName(name: string) {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  return {
+    firstname: parts[0] || "John",
+    lastname: parts.slice(1).join(" ") || "Doe",
+  };
+}
+
 export function normalizeCardServPayload(payload: unknown): CardServNormalizedPayload {
   return {
     orderSystemId: firstString(payload, [
@@ -294,6 +346,141 @@ export async function createCardServOrder(payload: {
     errorMessage: statusMeta.errorMessage ?? saleMeta.errorMessage,
     raw: {
       sale: saleData,
+      status: statusData,
+    },
+  };
+}
+
+export async function createCardServSaleForm(payload: CardServHostedSalePayload) {
+  const cfg = getCardServConfig(payload.currency);
+  const saleUrl = `${cfg.baseUrl}/api/payments/sale-form/${cfg.requestorId}`;
+  const statusUrl = `${cfg.baseUrl}/api/payments/status/${cfg.requestorId}`;
+  const customerName = splitCustomerName(payload.customerName);
+
+  const body = {
+    order: {
+      orderMerchantId: payload.orderMerchantId,
+      orderDescription: payload.description || "Token purchase",
+      orderAmount: payload.amountGross.toFixed(2),
+      orderCurrencyCode: cfg.currency,
+      challengeIndicator: "01",
+    },
+    browser: buildBrowserInfo(payload.browser),
+    customer: {
+      firstname: customerName.firstname,
+      lastname: customerName.lastname,
+      customerEmail: payload.email,
+      ...(payload.countryCode
+        ? {
+            address: {
+              countryCode: payload.countryCode,
+              zipCode: "00000",
+              city: "N/A",
+              line1: "N/A",
+            },
+          }
+        : {}),
+    },
+    urls: {
+      resultUrl: `${payload.appUrl}/api/cardserv/result?order=${encodeURIComponent(payload.orderMerchantId)}`,
+      webhookUrl: `${payload.appUrl}/api/cardserv/webhook`,
+    },
+  };
+
+  logCardServEvent("sale_form.request", {
+    saleUrl,
+    statusUrl,
+    requestorId: cfg.requestorId,
+    payload: body,
+  });
+
+  const saleRes = await fetch(saleUrl, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${cfg.token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(body),
+  });
+
+  const saleText = await saleRes.text();
+  let saleData: unknown;
+  try {
+    saleData = JSON.parse(saleText);
+  } catch {
+    throw new Error(`CardServ sale-form returned non-JSON response: ${saleText.slice(0, 300)}`);
+  }
+
+  logCardServEvent("sale_form.response", {
+    status: saleRes.status,
+    ok: saleRes.ok,
+    data: saleData,
+  });
+
+  const saleMeta = normalizeCardServPayload(saleData);
+  const hardFailure =
+    !saleRes.ok ||
+    ["ERROR", "DECLINED", "FILTERED", "CHAIN_STEP"].includes(saleMeta.orderState);
+
+  if (hardFailure && !saleMeta.redirectUrl && !saleMeta.threeDSAuth) {
+    throw new Error(
+      `CardServ sale-form failed: ${saleMeta.errorCode ?? "n/a"} ${saleMeta.errorMessage ?? saleMeta.orderState}`,
+    );
+  }
+
+  let statusData = saleData;
+  let statusMeta = saleMeta;
+  const pollDelays = [3000, 5000, 5000];
+
+  for (let i = 0; i < pollDelays.length; i += 1) {
+    if (statusMeta.redirectUrl || statusMeta.threeDSAuth) break;
+    if (["APPROVED", "DECLINED", "ERROR", "FILTERED", "CHAIN_STEP"].includes(statusMeta.orderState)) break;
+
+    await sleep(pollDelays[i]);
+
+    const statusRequestBody = {
+      orderMerchantId: payload.orderMerchantId,
+      ...(statusMeta.orderSystemId ? { orderSystemId: statusMeta.orderSystemId } : {}),
+    };
+
+    const statusRes = await fetch(statusUrl, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${cfg.token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(statusRequestBody),
+    });
+
+    const statusText = await statusRes.text();
+    try {
+      statusData = JSON.parse(statusText);
+    } catch {
+      throw new Error(`CardServ status returned non-JSON response: ${statusText.slice(0, 300)}`);
+    }
+
+    logCardServEvent("sale_form.poll_response", {
+      attempt: i + 1,
+      delayMs: pollDelays[i],
+      request: statusRequestBody,
+      status: statusRes.status,
+      ok: statusRes.ok,
+      data: statusData,
+    });
+
+    statusMeta = normalizeCardServPayload(statusData);
+  }
+
+  return {
+    orderMerchantId: payload.orderMerchantId,
+    orderSystemId: statusMeta.orderSystemId ?? saleMeta.orderSystemId,
+    orderState: statusMeta.orderState ?? saleMeta.orderState,
+    redirectUrl: statusMeta.redirectUrl ?? saleMeta.redirectUrl,
+    threeDSAuth: statusMeta.threeDSAuth ?? saleMeta.threeDSAuth,
+    errorCode: statusMeta.errorCode ?? saleMeta.errorCode,
+    errorMessage: statusMeta.errorMessage ?? saleMeta.errorMessage,
+    raw: {
+      saleForm: saleData,
       status: statusData,
     },
   };
