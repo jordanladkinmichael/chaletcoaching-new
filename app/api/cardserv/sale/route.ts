@@ -3,8 +3,8 @@ import { getServerSession } from "next-auth";
 import { z } from "zod";
 
 import { authOptions } from "@/lib/auth";
-import { createCardServSaleForm } from "@/lib/cardserv";
-import type { CardServCurrency } from "@/lib/cardserv-config";
+import { createCardServH2hSale, createCardServRedirectSession } from "@/lib/cardserv";
+import { getCardServConfig, getCardServFlow, type CardServCurrency } from "@/lib/cardserv-config";
 import { prisma } from "@/lib/db";
 import { applyCardServGatewayUpdate } from "@/lib/payment-orders";
 import { isForceSuccessEnabled } from "@/lib/payments-force-success";
@@ -32,6 +32,16 @@ const BodySchema = z.object({
     javascriptEnabled: z.boolean().optional(),
     acceptLanguage: z.string().min(2).optional(),
     userAgent: z.string().min(4).optional(),
+  }).optional(),
+  card: z.object({
+    cardNumber: z.string().min(12),
+    cvv: z.string().min(3).max(4),
+    expiry: z.string().regex(/^\d{2}\/\d{2,4}$/),
+    name: z.string().min(2),
+    address: z.string().min(3).optional(),
+    city: z.string().min(2).optional(),
+    postalCode: z.string().min(2).optional(),
+    countryCode: z.string().length(2).optional(),
   }).optional(),
 });
 
@@ -109,6 +119,8 @@ export async function POST(req: Request) {
     }
 
     const currency: CardServCurrency = parsed.currency;
+    const gatewayConfig = getCardServConfig(currency);
+    const flow = getCardServFlow();
     const expected = expectedAmounts(parsed.packageId, currency, parsed.amount);
 
     if (
@@ -163,6 +175,26 @@ export async function POST(req: Request) {
       },
     };
 
+    const h2hPayload = parsed.card
+      ? {
+          ...salePayload,
+          card: {
+            cardNumber: parsed.card.cardNumber,
+            cvv: parsed.card.cvv,
+            expiry: parsed.card.expiry,
+            name: parsed.card.name,
+            address: parsed.card.address,
+            city: parsed.card.city,
+            postalCode: parsed.card.postalCode,
+            countryCode: parsed.card.countryCode,
+          },
+        }
+      : null;
+
+    if (flow === "h2h" && !h2hPayload) {
+      return NextResponse.json({ error: "Missing card payload for H2H flow" }, { status: 400 });
+    }
+
     logCardServEvent("sale.route_request", {
       orderMerchantId,
       userId: session.user.id,
@@ -173,17 +205,23 @@ export async function POST(req: Request) {
       customerName,
       browser: salePayload.browser,
       countryCode: salePayload.countryCode,
+      flow,
+      integrationMode: gatewayConfig.integrationMode,
+      requestorId: gatewayConfig.requestorId,
       forceSuccess: isForceSuccessEnabled(),
     });
 
     if (isForceSuccessEnabled()) {
-      const fallbackRedirect = `${salePayload.appUrl}/api/cardserv/result?order=${encodeURIComponent(orderMerchantId)}&forced=1`;
+      const fallbackRedirect = `${salePayload.appUrl}/api/cardserv/result/${encodeURIComponent(orderMerchantId)}?forced=1`;
       let redirectUrl = fallbackRedirect;
       let probeRaw: unknown = null;
 
       // Try to get a real CardServ redirect URL so forced mode keeps gateway redirect UX.
       try {
-        const probe = await createCardServSaleForm(salePayload);
+        const probe =
+          flow === "h2h" && h2hPayload
+            ? await createCardServH2hSale(h2hPayload)
+            : await createCardServRedirectSession(salePayload);
         if (probe.redirectUrl) redirectUrl = probe.redirectUrl;
         probeRaw = probe.raw;
       } catch {
@@ -222,7 +260,10 @@ export async function POST(req: Request) {
       });
     }
 
-    const sale = await createCardServSaleForm(salePayload);
+    const sale =
+      flow === "h2h" && h2hPayload
+        ? await createCardServH2hSale(h2hPayload)
+        : await createCardServRedirectSession(salePayload);
 
     const stateResult = await applyCardServGatewayUpdate({
       orderMerchantId,
