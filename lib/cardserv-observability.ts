@@ -53,5 +53,6 @@ export function redactCardServData(value: unknown): unknown {
 }
 
 export function logCardServEvent(event: string, payload: unknown) {
-  console.info(`[CardServ] ${event}`, JSON.stringify(redactCardServData(payload)));
+  const formatted = JSON.stringify(redactCardServData(payload), null, 2);
+  console.info(`[CardServ] ${event}\n${formatted}`);
 }

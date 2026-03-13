@@ -26,9 +26,19 @@ function getAppUrl(req: Request): string {
 }
 
 function getOrderMerchantId(req: Request, form?: FormData): string | null {
-  const { searchParams } = new URL(req.url);
+  const url = new URL(req.url);
+  const { searchParams, pathname } = url;
+  const pathParts = pathname.split("/").filter(Boolean);
+  const pathOrder =
+    pathParts.length >= 4 &&
+    pathParts[0] === "api" &&
+    pathParts[1] === "cardserv" &&
+    pathParts[2] === "result"
+      ? decodeURIComponent(pathParts[3] || "")
+      : null;
 
   return (
+    pathOrder ||
     form?.get("MD")?.toString() ||
     form?.get("threeDSSessionData")?.toString() ||
     searchParams.get("order") ||
@@ -40,47 +50,71 @@ function getOrderMerchantId(req: Request, form?: FormData): string | null {
   );
 }
 
+function getOrderSystemId(req: Request, form?: FormData): string | null {
+  const { searchParams } = new URL(req.url);
+
+  return (
+    searchParams.get("orderSystemId") ||
+    form?.get("orderSystemId")?.toString() ||
+    form?.get("order_system_id")?.toString() ||
+    form?.get("id")?.toString() ||
+    null
+  );
+}
+
 async function handleResult(req: Request, form?: FormData) {
   const orderMerchantId = getOrderMerchantId(req, form);
+  const orderSystemId = getOrderSystemId(req, form);
   const appUrl = getAppUrl(req);
 
   logCardServEvent("result.route_request", {
     orderMerchantId,
+    orderSystemId,
     url: req.url,
     form: form ? Object.fromEntries(form.entries()) : {},
     forceSuccess: isForceSuccessEnabled(),
   });
 
   if (!orderMerchantId) {
-    return NextResponse.redirect(`${appUrl}/payment-failed?reason=missing_order`, 302);
+    if (!orderSystemId) {
+      return NextResponse.redirect(`${appUrl}/payment-failed?reason=missing_order`, 302);
+    }
   }
 
-  const order = await prisma.paymentOrder.findUnique({ where: { orderMerchantId } });
+  const order =
+    (orderMerchantId
+      ? await prisma.paymentOrder.findUnique({ where: { orderMerchantId } })
+      : null) ||
+    (orderSystemId
+      ? await prisma.paymentOrder.findFirst({ where: { orderSystemId } })
+      : null);
   if (!order) {
     return NextResponse.redirect(
-      `${appUrl}/payment-failed?reason=order_not_found&order=${encodeURIComponent(orderMerchantId)}`,
+      `${appUrl}/payment-failed?reason=order_not_found${orderMerchantId ? `&order=${encodeURIComponent(orderMerchantId)}` : ""}`,
       302,
     );
   }
+
+  const resolvedOrderMerchantId = order.orderMerchantId;
 
   const forceSuccess = isForceSuccessEnabled();
   const status = forceSuccess
     ? {
         orderState: "APPROVED",
-        orderSystemId: order.orderSystemId ?? `forced_${orderMerchantId}`,
+        orderSystemId: order.orderSystemId ?? `forced_${resolvedOrderMerchantId}`,
         redirectUrl: null,
         errorCode: null,
         errorMessage: null,
         raw: { forced: true, source: "result", at: new Date().toISOString() },
       }
     : await getCardServStatus(
-        orderMerchantId,
+        resolvedOrderMerchantId,
         order.currency as CardServCurrency,
         order.orderSystemId,
       );
 
   await applyCardServGatewayUpdate({
-    orderMerchantId,
+    orderMerchantId: resolvedOrderMerchantId,
     orderState: status.orderState,
     orderSystemId: status.orderSystemId,
     redirectUrl: status.redirectUrl,
@@ -96,13 +130,13 @@ async function handleResult(req: Request, form?: FormData) {
 
   if (!forceSuccess && ["DECLINED", "ERROR", "FILTERED", "CHAIN_STEP"].includes(status.orderState)) {
     return NextResponse.redirect(
-      `${appUrl}/payment-failed?order=${encodeURIComponent(orderMerchantId)}&reason=${encodeURIComponent(status.errorMessage || status.orderState)}`,
+      `${appUrl}/payment-failed?order=${encodeURIComponent(resolvedOrderMerchantId)}&reason=${encodeURIComponent(status.errorMessage || status.orderState)}`,
       302,
     );
   }
 
   return NextResponse.redirect(
-    `${appUrl}/payment-success?order=${encodeURIComponent(orderMerchantId)}`,
+    `${appUrl}/payment-success?order=${encodeURIComponent(resolvedOrderMerchantId)}`,
     302,
   );
 }
