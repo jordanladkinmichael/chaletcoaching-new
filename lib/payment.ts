@@ -1,5 +1,4 @@
 import {
-  EXCHANGE_RATES,
   convertFromEUR,
   type Currency as FxCurrency,
 } from "@/lib/exchange-rates";

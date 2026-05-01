@@ -5,9 +5,11 @@ import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import SiteHeader from "@/components/site-header";
 import SiteFooter from "@/components/site-footer";
-import { Card, Container, H1, Paragraph, Button, Input } from "@/components/ui";
+import { Card, Container, H1, Button, Input } from "@/components/ui";
 import { useCurrencyStore } from "@/lib/stores/currency-store";
 import { COUNTRIES } from "@/lib/countries";
+import { getAppFlowCopy } from "@/lib/app-flow-copy";
+import { useLocale } from "@/lib/i18n/client";
 import { THEME } from "@/lib/theme";
 import { AlertCircle, CheckCircle2, Loader2 } from "lucide-react";
 import type { Route } from "next";
@@ -30,6 +32,8 @@ export default function AccountClient() {
   const router = useRouter();
   const { data: session } = useSession();
   const { currency } = useCurrencyStore();
+  const { locale } = useLocale();
+  const copy = getAppFlowCopy(locale).account;
   const region: Region =
     currency === "USD" ? "US" : currency === "GBP" ? "UK" : "EU";
 
@@ -64,7 +68,7 @@ export default function AccountClient() {
     setProfileLoading(true);
     try {
       const res = await fetch("/api/user/profile");
-      if (!res.ok) throw new Error("Failed to load profile");
+      if (!res.ok) throw new Error(copy.profileLoadFailed);
       const data: ProfileData = await res.json();
       setProfile(data);
 
@@ -87,7 +91,7 @@ export default function AccountClient() {
     } finally {
       setProfileLoading(false);
     }
-  }, []);
+  }, [copy.profileLoadFailed]);
 
   useEffect(() => {
     if (session?.user) {
@@ -127,7 +131,7 @@ export default function AccountClient() {
 
       const data = await res.json();
       if (!res.ok) {
-        throw new Error(data.error || "Failed to save profile");
+        throw new Error(data.error || copy.profileSaveFailed);
       }
 
       setProfileSuccess(true);
@@ -135,7 +139,7 @@ export default function AccountClient() {
       await loadProfile();
     } catch (err) {
       setProfileError(
-        err instanceof Error ? err.message : "Failed to save profile"
+        err instanceof Error ? err.message : copy.profileSaveFailed
       );
     } finally {
       setProfileSaving(false);
@@ -149,11 +153,11 @@ export default function AccountClient() {
     setPasswordSuccess(false);
 
     if (newPassword.length < 6) {
-      setPasswordError("New password must be at least 6 characters.");
+      setPasswordError(copy.passwordTooShort);
       return;
     }
     if (newPassword !== confirmNewPassword) {
-      setPasswordError("New passwords do not match.");
+      setPasswordError(copy.passwordsNoMatch);
       return;
     }
 
@@ -167,7 +171,7 @@ export default function AccountClient() {
 
       const data = await res.json();
       if (!res.ok) {
-        throw new Error(data.error || "Failed to change password");
+        throw new Error(data.error || copy.passwordChangeFailed);
       }
 
       setPasswordSuccess(true);
@@ -177,7 +181,7 @@ export default function AccountClient() {
       setTimeout(() => setPasswordSuccess(false), 3000);
     } catch (err) {
       setPasswordError(
-        err instanceof Error ? err.message : "Failed to change password"
+        err instanceof Error ? err.message : copy.passwordChangeFailed
       );
     } finally {
       setPasswordSaving(false);
@@ -214,14 +218,14 @@ export default function AccountClient() {
       <main className="flex-1 py-8 md:py-12">
         <Container>
           <div className="space-y-8 max-w-2xl">
-            <H1>Account Settings</H1>
+            <H1>{copy.title}</H1>
 
             {profileLoading ? (
               <Card>
                 <div className="flex items-center justify-center py-12">
                   <Loader2 className="h-6 w-6 animate-spin text-text-muted" />
                   <span className="ml-2 text-text-muted">
-                    Loading profile...
+                    {copy.loadingProfile}
                   </span>
                 </div>
               </Card>
@@ -231,7 +235,7 @@ export default function AccountClient() {
                 <Card>
                   <form onSubmit={handleSaveProfile} className="space-y-4">
                     <h2 className="text-lg font-semibold mb-4">
-                      Personal Information
+                      {copy.personal}
                     </h2>
 
                     {/* Name */}
@@ -241,7 +245,7 @@ export default function AccountClient() {
                           htmlFor="acc-firstName"
                           className="block text-sm font-medium mb-1.5"
                         >
-                          First name
+                          {copy.firstName}
                         </label>
                         <Input
                           id="acc-firstName"
@@ -258,7 +262,7 @@ export default function AccountClient() {
                           htmlFor="acc-lastName"
                           className="block text-sm font-medium mb-1.5"
                         >
-                          Last name
+                          {copy.lastName}
                         </label>
                         <Input
                           id="acc-lastName"
@@ -278,7 +282,7 @@ export default function AccountClient() {
                         htmlFor="acc-email"
                         className="block text-sm font-medium mb-1.5"
                       >
-                        Email
+                        {copy.email}
                       </label>
                       <Input
                         id="acc-email"
@@ -297,7 +301,7 @@ export default function AccountClient() {
                         htmlFor="acc-phone"
                         className="block text-sm font-medium mb-1.5"
                       >
-                        Phone number
+                        {copy.phone}
                       </label>
                       <Input
                         id="acc-phone"
@@ -316,7 +320,7 @@ export default function AccountClient() {
                         htmlFor="acc-dob"
                         className="block text-sm font-medium mb-1.5"
                       >
-                        Date of birth
+                        {copy.dob}
                       </label>
                       <input
                         id="acc-dob"
@@ -333,7 +337,7 @@ export default function AccountClient() {
                     {/* Address */}
                     <fieldset className="space-y-3">
                       <legend className="text-sm font-medium mb-1">
-                        Address
+                        {copy.address}
                       </legend>
 
                       <Input
@@ -342,7 +346,7 @@ export default function AccountClient() {
                         value={street}
                         onChange={(e) => setStreet(e.target.value)}
                         disabled={profileSaving}
-                        placeholder="Street address"
+                        placeholder={copy.street}
                         autoComplete="street-address"
                       />
 
@@ -353,7 +357,7 @@ export default function AccountClient() {
                           value={city}
                           onChange={(e) => setCity(e.target.value)}
                           disabled={profileSaving}
-                          placeholder="City"
+                          placeholder={copy.city}
                           autoComplete="address-level2"
                         />
                         <Input
@@ -362,7 +366,7 @@ export default function AccountClient() {
                           value={postalCode}
                           onChange={(e) => setPostalCode(e.target.value)}
                           disabled={profileSaving}
-                          placeholder="Postal code"
+                          placeholder={copy.postalCode}
                           autoComplete="postal-code"
                         />
                       </div>
@@ -376,7 +380,7 @@ export default function AccountClient() {
                         style={{ borderColor: THEME.border }}
                         autoComplete="country-name"
                       >
-                        <option value="">Select country</option>
+                        <option value="">{copy.selectCountry}</option>
                         {COUNTRIES.map((c) => (
                           <option key={c.value} value={c.value}>
                             {c.label}
@@ -402,7 +406,7 @@ export default function AccountClient() {
                     {profileSuccess && (
                       <div className="flex items-center gap-2 p-3 rounded-lg border text-sm bg-green-50 border-green-300 text-green-800">
                         <CheckCircle2 size={16} className="flex-shrink-0" />
-                        Profile updated successfully.
+                        {copy.profileSaved}
                       </div>
                     )}
 
@@ -412,7 +416,7 @@ export default function AccountClient() {
                       isLoading={profileSaving}
                       disabled={profileSaving}
                     >
-                      Save changes
+                      {copy.saveChanges}
                     </Button>
                   </form>
                 </Card>
@@ -424,7 +428,7 @@ export default function AccountClient() {
                     className="space-y-4"
                   >
                     <h2 className="text-lg font-semibold mb-4">
-                      Change Password
+                      {copy.changePassword}
                     </h2>
 
                     <div>
@@ -432,7 +436,7 @@ export default function AccountClient() {
                         htmlFor="acc-currentPw"
                         className="block text-sm font-medium mb-1.5"
                       >
-                        Current password
+                        {copy.currentPassword}
                       </label>
                       <Input
                         id="acc-currentPw"
@@ -440,7 +444,7 @@ export default function AccountClient() {
                         value={currentPassword}
                         onChange={(e) => setCurrentPassword(e.target.value)}
                         disabled={passwordSaving}
-                        placeholder="Enter current password"
+                        placeholder={copy.currentPasswordPlaceholder}
                         autoComplete="current-password"
                       />
                     </div>
@@ -450,7 +454,7 @@ export default function AccountClient() {
                         htmlFor="acc-newPw"
                         className="block text-sm font-medium mb-1.5"
                       >
-                        New password
+                        {copy.newPassword}
                       </label>
                       <Input
                         id="acc-newPw"
@@ -458,7 +462,7 @@ export default function AccountClient() {
                         value={newPassword}
                         onChange={(e) => setNewPassword(e.target.value)}
                         disabled={passwordSaving}
-                        placeholder="At least 6 characters"
+                        placeholder={copy.newPasswordPlaceholder}
                         autoComplete="new-password"
                         minLength={6}
                       />
@@ -469,7 +473,7 @@ export default function AccountClient() {
                         htmlFor="acc-confirmPw"
                         className="block text-sm font-medium mb-1.5"
                       >
-                        Confirm new password
+                        {copy.confirmPassword}
                       </label>
                       <Input
                         id="acc-confirmPw"
@@ -477,7 +481,7 @@ export default function AccountClient() {
                         value={confirmNewPassword}
                         onChange={(e) => setConfirmNewPassword(e.target.value)}
                         disabled={passwordSaving}
-                        placeholder="Re-enter new password"
+                        placeholder={copy.confirmPasswordPlaceholder}
                         autoComplete="new-password"
                         minLength={6}
                       />
@@ -499,7 +503,7 @@ export default function AccountClient() {
                     {passwordSuccess && (
                       <div className="flex items-center gap-2 p-3 rounded-lg border text-sm bg-green-50 border-green-300 text-green-800">
                         <CheckCircle2 size={16} className="flex-shrink-0" />
-                        Password changed successfully.
+                        {copy.passwordChanged}
                       </div>
                     )}
 
@@ -514,7 +518,7 @@ export default function AccountClient() {
                         !confirmNewPassword
                       }
                     >
-                      Change password
+                      {copy.changePassword}
                     </Button>
                   </form>
                 </Card>

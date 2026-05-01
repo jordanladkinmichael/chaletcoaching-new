@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState } from "react";
 import Link from "next/link";
@@ -34,7 +34,8 @@ import {
   type GeneratorOpts,
 } from "@/lib/tokens";
 import { cn } from "@/lib/utils";
-import { COPY } from "@/lib/copy-variants";
+import { getAppFlowCopy, formatTokenAmount } from "@/lib/app-flow-copy";
+import { useLocale } from "@/lib/i18n/client";
 
 type Region = "EU" | "UK" | "US";
 
@@ -69,13 +70,15 @@ export function Generator({
   onClearError,
   onClearSuccess,
 }: GeneratorProps) {
+  const { locale } = useLocale();
+  const copy = getAppFlowCopy(locale).generator;
   const [weeks, setWeeks] = useState<number>(4);
   const [sessions, setSessions] = useState<number>(4);
-  const [injurySafe, _setInjurySafe] = useState<boolean>(true);
-  const [specEq, _setSpecEq] = useState<boolean>(false);
-  const [nutrition, _setNutrition] = useState<boolean>(false);
-  const [pdf, _setPdf] = useState<"text" | "illustrated">("text");
-  const [images, _setImages] = useState<number>(12);
+  const [injurySafe] = useState<boolean>(true);
+  const [specEq] = useState<boolean>(false);
+  const [nutrition] = useState<boolean>(false);
+  const [pdf] = useState<"text" | "illustrated">("text");
+  const [images] = useState<number>(12);
   const [gender, setGender] = useState<"male" | "female">("male");
   const [workoutTypes, setWorkoutTypes] = useState<string[]>([]);
   const [targetMuscles, setTargetMuscles] = useState<string[]>([]);
@@ -205,9 +208,9 @@ export function Generator({
 
   const handlePublish = async () => {
     const nextErrors: typeof errorsMap = {};
-    if (!gender) nextErrors.gender = "Select gender";
-    if (workoutTypes.length === 0) nextErrors.workoutTypes = "Select at least one workout type";
-    if (targetMuscles.length === 0) nextErrors.targetMuscles = "Select at least one target muscle";
+    if (!gender) nextErrors.gender = copy.selectGender;
+    if (workoutTypes.length === 0) nextErrors.workoutTypes = copy.selectWorkoutType;
+    if (targetMuscles.length === 0) nextErrors.targetMuscles = copy.selectTargetMuscle;
 
     setErrorsMap(nextErrors);
     if (Object.keys(nextErrors).length > 0) {
@@ -228,16 +231,16 @@ export function Generator({
       <div className="space-y-8">
         {/* Header Section */}
         <div className="text-center space-y-4">
-          <H1>Instant AI Training Plan Generator</H1>
+          <H1>{copy.title}</H1>
           <Paragraph className="text-lg max-w-2xl mx-auto">
-            {COPY.generator.subtitle}
+            {copy.subtitle}
           </Paragraph>
           <div>
             <Link
               href="/coaches"
               className="text-primary hover:text-primary-hover underline text-sm font-medium"
             >
-              {COPY.generator.coachCta}
+              {copy.coachCta}
             </Link>
           </div>
         </div>
@@ -255,7 +258,7 @@ export function Generator({
                     <ShieldAlert size={16} className="mt-0.5 text-danger" />
                     <div className="flex-1">
                       <div className="font-semibold">
-                        Error{errorType ? ` (${errorType.replace("_", " ")})` : ""}
+                        {copy.error}{errorType ? ` (${errorType.replace("_", " ")})` : ""}
                       </div>
                       <div className="opacity-80">{errorMsg}</div>
                     </div>
@@ -265,7 +268,7 @@ export function Generator({
                         className="text-xs underline opacity-80 hover:opacity-100"
                         onClick={onClearError}
                       >
-                        Dismiss
+                        {copy.dismiss}
                       </button>
                     )}
                   </div>
@@ -277,7 +280,7 @@ export function Generator({
                   >
                     <Sparkles size={16} className="mt-0.5" />
                     <div className="flex-1">
-                      <div className="font-semibold">Success</div>
+                      <div className="font-semibold">{copy.success}</div>
                       <div className="opacity-80">{successMsg}</div>
                     </div>
                     {onClearSuccess && (
@@ -286,7 +289,7 @@ export function Generator({
                         className="text-xs underline opacity-80 hover:opacity-100"
                         onClick={onClearSuccess}
                       >
-                        Dismiss
+                        {copy.dismiss}
                       </button>
                     )}
                   </div>
@@ -294,7 +297,7 @@ export function Generator({
               </div>
             )}
             <h3 className="text-xl font-semibold flex items-center gap-2">
-              <Settings2 size={18} /> Generator
+              <Settings2 size={18} /> {copy.cardTitle}
             </h3>
 
             {/* Progressive Disclosure: 3 Accordion sections */}
@@ -303,14 +306,14 @@ export function Generator({
                 items={[
                   {
                     id: "required",
-                    title: "Required inputs",
+                    title: copy.requiredInputs,
                     content: (
                       <div className="space-y-6">
                         {/* Основные параметры */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           <div>
                             <label className="text-sm font-medium opacity-80">
-                              Program Duration (1-12 weeks)
+                              {copy.duration}
                             </label>
                             <input
                               type="range"
@@ -326,17 +329,17 @@ export function Generator({
                               className="w-full mt-2"
                             />
                             <div className="text-sm mt-1 opacity-70 flex justify-between">
-                              <span>1 week</span>
+                              <span>1 {copy.week}</span>
                               <span>
-                                <b>{weeks}</b> weeks
+                                <b>{weeks}</b> {copy.weeks}
                               </span>
-                              <span>12 weeks</span>
+                              <span>12 {copy.weeks}</span>
                             </div>
                           </div>
 
                           <div>
                             <label className="text-sm font-medium opacity-80">
-                              Training Frequency (2-6 sessions/week)
+                              {copy.frequency}
                             </label>
                             <input
                               type="range"
@@ -352,11 +355,11 @@ export function Generator({
                               className="w-full mt-2"
                             />
                             <div className="text-sm mt-1 opacity-70 flex justify-between">
-                              <span>2 sessions</span>
+                              <span>2 {copy.sessions}</span>
                               <span>
-                                <b>{sessions}</b> sessions
+                                <b>{sessions}</b> {copy.sessions}
                               </span>
-                              <span>6 sessions</span>
+                              <span>6 {copy.sessions}</span>
                             </div>
                           </div>
                         </div>
@@ -369,7 +372,7 @@ export function Generator({
                             errorsMap.gender ? "text-red-400" : "opacity-80"
                           )}
                         >
-                          Gender
+                          {copy.gender}
                         </label>
                           <div className="flex items-center gap-4 mt-2">
                             {(["male", "female"] as const).map((g) => (
@@ -382,7 +385,7 @@ export function Generator({
                                   onChange={(e) => setGender(e.target.value as "male" | "female")}
                                   className="rounded"
                                 />
-                                <span className="text-sm capitalize">{g}</span>
+                                <span className="text-sm">{g === "male" ? copy.male : copy.female}</span>
                               </label>
                             ))}
                           </div>
@@ -400,17 +403,17 @@ export function Generator({
                                 errorsMap.workoutTypes ? "text-red-400" : "opacity-80"
                               )}
                             >
-                              Workout Types
+                              {copy.workoutTypes}
                             </label>
                             {workoutTypes.length > 0 && (
-                              <div className="text-xs opacity-70">Selected ({workoutTypes.length})</div>
+                              <div className="text-xs opacity-70">{copy.selected(workoutTypes.length)}</div>
                             )}
                           </div>
 
                           {/* Search input */}
                           <div className="mb-3">
                             <SearchInput
-                              placeholder="Search workout types..."
+                              placeholder={copy.workoutSearch}
                               value={workoutTypesSearch}
                               onChange={(e) => setWorkoutTypesSearch(e.target.value)}
                             />
@@ -424,7 +427,7 @@ export function Generator({
                               onClick={() => handlePresetToggle("strength")}
                               className="text-xs"
                             >
-                              Strength
+                              {copy.strength}
                             </Button>
                             <Button
                               variant="outline"
@@ -432,7 +435,7 @@ export function Generator({
                               onClick={() => handlePresetToggle("home")}
                               className="text-xs"
                             >
-                              Home
+                              {copy.home}
                             </Button>
                             <Button
                               variant="outline"
@@ -440,7 +443,7 @@ export function Generator({
                               onClick={() => handlePresetToggle("mobility")}
                               className="text-xs"
                             >
-                              Mobility
+                              {copy.mobility}
                             </Button>
                             {workoutTypes.length > 0 && (
                               <Button
@@ -449,7 +452,7 @@ export function Generator({
                                 onClick={() => setWorkoutTypes([])}
                                 className="text-xs"
                               >
-                                Clear
+                                {copy.clear}
                               </Button>
                             )}
                           </div>
@@ -461,7 +464,7 @@ export function Generator({
                           >
                             {filteredWorkoutTypes.length === 0 ? (
                               <div className="text-sm text-text-muted text-center py-4">
-                                No workout types found
+                                {copy.noWorkoutTypes}
                               </div>
                             ) : (
                               <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
@@ -491,17 +494,17 @@ export function Generator({
                         <div>
                           <div className="flex items-center justify-between mb-2">
                             <label className="text-sm font-medium opacity-80">
-                              Target Muscle Groups
+                              {copy.targetMuscles}
                             </label>
                             {targetMuscles.length > 0 && (
-                              <div className="text-xs opacity-70">Selected ({targetMuscles.length})</div>
+                              <div className="text-xs opacity-70">{copy.selected(targetMuscles.length)}</div>
                             )}
                           </div>
 
                           {/* Search input */}
                           <div className="mb-3">
                             <SearchInput
-                              placeholder="Search muscle groups..."
+                              placeholder={copy.muscleSearch}
                               value={targetMusclesSearch}
                               onChange={(e) => setTargetMusclesSearch(e.target.value)}
                             />
@@ -516,7 +519,7 @@ export function Generator({
                                 onClick={() => setTargetMuscles([])}
                                 className="text-xs"
                               >
-                                Clear
+                                {copy.clear}
                               </Button>
                             </div>
                           )}
@@ -528,7 +531,7 @@ export function Generator({
                           >
                             {filteredMuscleGroups.length === 0 ? (
                               <div className="text-sm text-text-muted text-center py-4">
-                                No muscle groups found
+                                {copy.noMuscles}
                               </div>
                             ) : (
                               filteredMuscleGroups.map((group) => (
@@ -581,15 +584,15 @@ export function Generator({
 
           <Card>
             <h3 className="text-xl font-semibold flex items-center gap-2">
-              <Sparkles size={18} /> Cost Breakdown
+              <Sparkles size={18} /> {copy.costBreakdown}
             </h3>
 
             <div className="mt-4 space-y-4">
               {/* Your balance (only for authenticated) */}
               {!requireAuth && (
                 <div className="pb-4 border-b" style={{ borderColor: THEME.cardBorder }}>
-                  <div className="text-sm opacity-80 mb-1">Your balance</div>
-                  <div className="text-2xl font-semibold">◎ {balance}</div>
+                  <div className="text-sm opacity-80 mb-1">{copy.yourBalance}</div>
+                  <div className="text-2xl font-semibold">{formatTokenAmount(balance, locale)}</div>
                   <div className="text-xs opacity-70 mt-1">
                     {currencyForRegion(region).symbol} {(balance / TOKENS_PER_UNIT).toFixed(2)}
                   </div>
@@ -598,14 +601,14 @@ export function Generator({
 
               {/* Preview cost (always visible) */}
               <div className="pb-4 border-b" style={{ borderColor: THEME.cardBorder }}>
-                <div className="text-sm opacity-80 mb-1">Preview cost</div>
-                <div className="text-lg font-semibold">50 tokens</div>
+                <div className="text-sm opacity-80 mb-1">{copy.previewCost}</div>
+                <div className="text-lg font-semibold">{formatTokenAmount(PREVIEW_COST, locale)}</div>
               </div>
 
               {/* Full plan cost */}
               <div className="pb-4 border-b" style={{ borderColor: THEME.cardBorder }}>
-                <div className="text-sm opacity-80 mb-1">Full plan cost</div>
-                <div className="text-2xl font-semibold">◎ {courseCost}</div>
+                <div className="text-sm opacity-80 mb-1">{copy.fullPlanCost}</div>
+                <div className="text-2xl font-semibold">{formatTokenAmount(courseCost, locale)}</div>
                 <div className="text-xs opacity-70 mt-1">
                   {currencyForRegion(region).symbol} {(courseCost / TOKENS_PER_UNIT).toFixed(2)}
                 </div>
@@ -613,63 +616,63 @@ export function Generator({
 
               {/* What affects the price */}
               <div>
-                <div className="text-sm font-medium opacity-80 mb-3">What affects the price</div>
+                <div className="text-sm font-medium opacity-80 mb-3">{copy.affectsPrice}</div>
                 <div className="space-y-2">
                   <div className="flex justify-between items-center text-sm">
                     <span className="opacity-80">
-                      Base cost ({weeks} weeks × {sessions} sessions)
+                      {copy.baseCost(weeks, sessions)}
                     </span>
                     <span className="font-mono">
-                      ◎ {Math.round((400 + weeks * 120 + sessions * weeks * 8) * 1.3)}
+                      {formatTokenAmount(Math.round((400 + weeks * 120 + sessions * weeks * 8) * 1.3), locale)}
                     </span>
                   </div>
 
                   {workoutTypes.length > 0 && (
                     <div className="flex justify-between items-center text-sm">
                       <span className="opacity-80">
-                        Workout types ({workoutTypes.length} selected)
+                        {copy.workoutTypesSelected(workoutTypes.length)}
                       </span>
-                      <span className="font-mono">◎ {Math.round(workoutTypes.length * 15 * 1.3)}</span>
+                      <span className="font-mono">{formatTokenAmount(Math.round(workoutTypes.length * 15 * 1.3), locale)}</span>
                     </div>
                   )}
 
                   {targetMuscles.length > 0 && (
                         <div className="flex justify-between items-center text-sm">
                           <span className={cn("opacity-80", errorsMap.targetMuscles && "text-red-400")}>
-                            Target muscles ({targetMuscles.length} selected)
+                            {copy.targetMusclesSelected(targetMuscles.length)}
                           </span>
-                      <span className="font-mono">◎ {Math.round(targetMuscles.length * 8 * 1.3)}</span>
+                      <span className="font-mono">{formatTokenAmount(Math.round(targetMuscles.length * 8 * 1.3), locale)}</span>
                     </div>
                   )}
 
                   {injurySafe && (
                     <div className="flex justify-between items-center text-sm">
-                      <span className="opacity-80">Injury-safe modifications</span>
-                      <span className="font-mono">◎ {Math.round(120 * 1.3)}</span>
+                      <span className="opacity-80">{copy.injurySafe}</span>
+                      <span className="font-mono">{formatTokenAmount(Math.round(120 * 1.3), locale)}</span>
                     </div>
                   )}
 
                   {specEq && (
                     <div className="flex justify-between items-center text-sm">
-                      <span className="opacity-80">Special equipment</span>
-                      <span className="font-mono">◎ {Math.round(80 * 1.3)}</span>
+                      <span className="opacity-80">{copy.specialEquipment}</span>
+                      <span className="font-mono">{formatTokenAmount(Math.round(80 * 1.3), locale)}</span>
                     </div>
                   )}
 
                   {nutrition && (
                     <div className="flex justify-between items-center text-sm">
-                      <span className="opacity-80">Nutrition tips</span>
-                      <span className="font-mono">◎ {Math.round(100 * 1.3)}</span>
+                      <span className="opacity-80">{copy.nutritionTips}</span>
+                      <span className="font-mono">{formatTokenAmount(Math.round(100 * 1.3), locale)}</span>
                     </div>
                   )}
 
                   {/* PDF export (always included) */}
                   <div className="flex justify-between items-center text-sm">
                     <span className="opacity-80">
-                      PDF export {pdf === "illustrated" ? `(${images} images)` : ""}
+                      {copy.pdfExport(pdf === "illustrated" ? images : undefined)}
                     </span>
                     <span className="font-mono">
-                      ◎ {pdf === "text" ? Math.round(60 * 1.3) : Math.round((60 + images * 10) * 1.3)}
+                      {formatTokenAmount(pdf === "text" ? Math.round(60 * 1.3) : Math.round((60 + images * 10) * 1.3), locale)}
                     </span>
                   </div>
                 </div>
@@ -678,11 +681,11 @@ export function Generator({
               {/* Missing required inputs checklist */}
               {(!gender || workoutTypes.length === 0 || targetMuscles.length === 0) && (
                 <div className="pt-4 border-t" style={{ borderColor: THEME.cardBorder }}>
-                  <div className="text-sm font-medium opacity-80 mb-2">Missing required inputs</div>
+                  <div className="text-sm font-medium opacity-80 mb-2">{copy.missingRequired}</div>
                   <div className="space-y-1 text-sm">
-                    {!gender && <div className="opacity-70">• Gender</div>}
-                    {workoutTypes.length === 0 && <div className="opacity-70">• Workout types</div>}
-                    {targetMuscles.length === 0 && <div className="opacity-70">• Target muscles</div>}
+                    {!gender && <div className="opacity-70">• {copy.gender}</div>}
+                    {workoutTypes.length === 0 && <div className="opacity-70">• {copy.workoutTypes}</div>}
+                    {targetMuscles.length === 0 && <div className="opacity-70">• {copy.targetMuscles}</div>}
                   </div>
                 </div>
               )}
@@ -693,7 +696,7 @@ export function Generator({
                   href="/pricing"
                   className="text-primary hover:text-primary-hover underline text-sm font-medium"
                 >
-                  See pricing
+                  {copy.seePricing}
                 </Link>
               </div>
 
@@ -703,7 +706,7 @@ export function Generator({
                   {requireAuth ? (
                     // Для гостей: кнопка с просьбой авторизироваться
                     <AccentButton onClick={openAuth} className="w-full justify-center">
-                      <Lock size={16} /> Sign in to generate
+                      <Lock size={16} /> {copy.signInGenerate}
                     </AccentButton>
                   ) : (
                     // Для авторизованных: обычные кнопки генерации
@@ -714,7 +717,7 @@ export function Generator({
                           className="p-3 rounded-lg border"
                           style={{ borderColor: THEME.cardBorder, background: "#19191f" }}
                         >
-                          <div className="text-sm text-text-muted mb-2">Not enough tokens</div>
+                          <div className="text-sm text-text-muted mb-2">{copy.notEnoughTokens}</div>
                           <Button
                             variant="outline"
                             size="sm"
@@ -726,7 +729,7 @@ export function Generator({
                             }}
                             className="text-xs"
                           >
-                            Top up tokens
+                            {copy.topUpTokens}
                           </Button>
                         </div>
                       )}
@@ -746,16 +749,16 @@ export function Generator({
                         {loading === "publish" ? (
                           <>
                             <Spinner size={16} className="text-current" />
-                            <span>Publishing...</span>
+                            <span>{copy.publishing}</span>
                           </>
                         ) : !gender || workoutTypes.length === 0 || targetMuscles.length === 0 ? (
-                          <>Fill required fields</>
+                          <>{copy.fillRequired}</>
                         ) : balance < courseCost ? (
                           <>
-                            Insufficient tokens ({balance}/{courseCost})
+                            {copy.insufficientTokens(balance, courseCost)}
                           </>
                         ) : (
-                          <>Generate Plan ({courseCost} tokens)</>
+                          <>{copy.generatePlan(courseCost)}</>
                         )}
                       </GhostButton>
                     </>
@@ -765,7 +768,7 @@ export function Generator({
                 {!requireAuth && (
                   <div className="mt-4 text-xs opacity-70 flex items-center gap-2">
                     <Info size={14} />
-                    Regenerate: day −{REGEN_DAY} • week −{REGEN_WEEK}
+                    {copy.regenerate(REGEN_DAY, REGEN_WEEK)}
                   </div>
                 )}
               </div>
@@ -776,4 +779,3 @@ export function Generator({
     </Container>
   );
 }
-

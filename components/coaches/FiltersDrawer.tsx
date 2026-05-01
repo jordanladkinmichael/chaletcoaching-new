@@ -4,6 +4,7 @@ import React from "react";
 import { Drawer } from "@/components/ui/drawer";
 import { FiltersSidebar, FilterState } from "./FiltersSidebar";
 import { Button } from "@/components/ui/button";
+import type { Locale } from "@/lib/i18n/config";
 
 interface FiltersDrawerProps {
   isOpen: boolean;
@@ -11,6 +12,20 @@ interface FiltersDrawerProps {
   filters: FilterState;
   onFiltersChange: (filters: FilterState) => void;
   onApply: () => void;
+  copy: {
+    title: string;
+    clear: string;
+    apply: string;
+    clearFilters: string;
+    sections: {
+      goals: string;
+      level: string;
+      trainingType: string;
+      languages: string;
+      focusAreas: string;
+    };
+  };
+  locale: Locale;
 }
 
 export function FiltersDrawer({
@@ -19,6 +34,8 @@ export function FiltersDrawer({
   filters,
   onFiltersChange,
   onApply,
+  copy,
+  locale,
 }: FiltersDrawerProps) {
   const [tempFilters, setTempFilters] = React.useState<FilterState>(filters);
 
@@ -49,7 +66,7 @@ export function FiltersDrawer({
     <Drawer
       isOpen={isOpen}
       onClose={onClose}
-      title="Filters"
+      title={copy.title}
       side="left"
       className="flex flex-col"
     >
@@ -57,16 +74,18 @@ export function FiltersDrawer({
         <FiltersSidebar
           filters={tempFilters}
           onFiltersChange={setTempFilters}
+          copy={copy}
+          locale={locale}
         />
       </div>
       
       {/* Sticky footer with buttons */}
       <div className="sticky bottom-0 left-0 right-0 p-4 bg-surface border-t border-border flex gap-3">
         <Button variant="outline" size="md" fullWidth onClick={handleClear}>
-          Clear
+          {copy.clear}
         </Button>
         <Button variant="primary" size="md" fullWidth onClick={handleApply}>
-          Apply
+          {copy.apply}
         </Button>
       </div>
     </Drawer>

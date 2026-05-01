@@ -3,13 +3,23 @@
 import { Suspense, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
+import { getAppFlowCopy, formatTokenAmount } from "@/lib/app-flow-copy";
+import { useLocale } from "@/lib/i18n/client";
 
 type UiStatus = "processing" | "success" | "failed";
 
+function PaymentStatusFallback() {
+  const { locale } = useLocale();
+  const copy = getAppFlowCopy(locale).paymentStatus;
+  return <div className="p-8 text-center">{copy.loading}</div>;
+}
+
 function PaymentSuccessInner() {
   const params = useSearchParams();
+  const { locale } = useLocale();
+  const copy = getAppFlowCopy(locale).paymentStatus;
   const [uiStatus, setUiStatus] = useState<UiStatus>("processing");
-  const [message, setMessage] = useState("Waiting for payment confirmation...");
+  const [message, setMessage] = useState<string>(copy.waiting);
   const [tokensAdded, setTokensAdded] = useState<number>(0);
 
   const orderMerchantId = useMemo(() => {
@@ -24,7 +34,7 @@ function PaymentSuccessInner() {
   useEffect(() => {
     if (!orderMerchantId) {
       setUiStatus("failed");
-      setMessage("Order ID is missing. Please retry payment from checkout.");
+      setMessage(copy.missingOrder);
       return;
     }
 
@@ -43,7 +53,7 @@ function PaymentSuccessInner() {
 
           const data = await res.json().catch(() => ({}));
           if (!res.ok) {
-            throw new Error(data?.error || "Status check failed");
+            throw new Error(data?.error || copy.statusFailed);
           }
 
           const state = String(data?.state || "PROCESSING").toUpperCase();
@@ -53,7 +63,7 @@ function PaymentSuccessInner() {
             if (!cancelled) {
               setTokensAdded(added);
               setUiStatus("success");
-              setMessage("Payment approved. Crediting tokens...");
+              setMessage(copy.approved);
               localStorage.removeItem("pendingOrderMerchantId");
               localStorage.removeItem("checkoutData");
               setTimeout(() => {
@@ -69,11 +79,11 @@ function PaymentSuccessInner() {
             return;
           }
 
-          setMessage("Payment is still processing. Please wait...");
+          setMessage(copy.processingMessage);
         } catch (error) {
           if (!cancelled) {
             setUiStatus("failed");
-            setMessage(error instanceof Error ? error.message : "Payment status polling failed.");
+            setMessage(error instanceof Error ? error.message : copy.pollingFailed);
           }
           return;
         }
@@ -83,7 +93,7 @@ function PaymentSuccessInner() {
 
       if (!cancelled) {
         setUiStatus("failed");
-        setMessage("Payment confirmation timed out. Please refresh this page.");
+        setMessage(copy.timedOut);
       }
     };
 
@@ -92,7 +102,7 @@ function PaymentSuccessInner() {
     return () => {
       cancelled = true;
     };
-  }, [orderMerchantId]);
+  }, [copy, orderMerchantId]);
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center text-center p-8">
@@ -105,18 +115,18 @@ function PaymentSuccessInner() {
               : "text-yellow-400"
         }`}
       >
-        {uiStatus === "processing" && "Processing payment..."}
-        {uiStatus === "success" && "Payment successful"}
-        {uiStatus === "failed" && "Payment failed"}
+        {uiStatus === "processing" && copy.processingTitle}
+        {uiStatus === "success" && copy.successTitle}
+        {uiStatus === "failed" && copy.failedTitle}
       </h1>
 
       <p className="text-gray-300 mb-6">{message}</p>
       {uiStatus === "success" && tokensAdded > 0 && (
-        <p className="text-green-300 mb-6">{tokensAdded.toLocaleString()} tokens added.</p>
+        <p className="text-green-300 mb-6">{copy.tokensAdded(formatTokenAmount(tokensAdded, locale))}</p>
       )}
 
       <Link href="/pricing" className="text-yellow-400 underline">
-        Back to pricing
+        {copy.backPricing}
       </Link>
     </div>
   );
@@ -124,7 +134,7 @@ function PaymentSuccessInner() {
 
 export default function PaymentSuccessPage() {
   return (
-    <Suspense fallback={<div className="p-8 text-center">Loading...</div>}>
+    <Suspense fallback={<PaymentStatusFallback />}>
       <PaymentSuccessInner />
     </Suspense>
   );

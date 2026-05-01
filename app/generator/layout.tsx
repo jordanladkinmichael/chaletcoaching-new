@@ -1,12 +1,18 @@
 import { generatePageMetadata } from "@/lib/metadata";
-import { COPY } from "@/lib/copy-variants";
+import { getServerLocale } from "@/lib/i18n/server";
+import { messages } from "@/lib/i18n/messages";
 
-export const metadata = generatePageMetadata({
-  title: "AI Course Generator",
-  description: COPY.generator.metaDescription,
-  url: "/generator",
-  image: "/logo.webp",
-});
+export async function generateMetadata() {
+  const locale = await getServerLocale();
+  const metadataCopy = messages[locale].metadata;
+
+  return generatePageMetadata({
+    title: metadataCopy.generatorTitle,
+    description: metadataCopy.generatorDescription,
+    url: "/generator",
+    image: "/logo.webp",
+  });
+}
 
 export default function GeneratorLayout({
   children,

@@ -7,6 +7,8 @@ import SiteHeader from "@/components/site-header";
 import SiteFooter from "@/components/site-footer";
 import { useCurrencyStore } from "@/lib/stores/currency-store";
 import { Generator } from "@/components/generator/Generator";
+import { getAppFlowCopy } from "@/lib/app-flow-copy";
+import { useLocale } from "@/lib/i18n/client";
 import {
   PREVIEW_COST,
   calcFullCourseTokens,
@@ -20,6 +22,8 @@ export default function GeneratorPage() {
   const { data: session } = useSession();
   const router = useRouter();
   const { currency } = useCurrencyStore();
+  const { locale } = useLocale();
+  const copy = getAppFlowCopy(locale).generator;
   const [balance, setBalance] = useState(0);
   const [balanceLoading, setBalanceLoading] = useState(false);
   const [generating, setGenerating] = useState<"preview" | "publish" | null>(null);
@@ -67,7 +71,7 @@ export default function GeneratorPage() {
     }
 
     if (balance < PREVIEW_COST) {
-      alert(`Insufficient tokens. You need ${PREVIEW_COST} tokens, but have ${balance}.`);
+      alert(copy.alerts.insufficient(PREVIEW_COST, balance));
       return;
     }
 
@@ -79,7 +83,7 @@ export default function GeneratorPage() {
         body: JSON.stringify({ options: opts }),
       });
       const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(data?.error ?? "Preview failed");
+      if (!res.ok) throw new Error(data?.error ?? copy.alerts.previewFailed);
       
       // Reload balance
       if (isAuthed) {
@@ -90,10 +94,10 @@ export default function GeneratorPage() {
         }
       }
       
-      alert("Preview generated successfully!");
+      alert(copy.alerts.previewSuccess);
     } catch (error) {
       console.error("Preview generation failed:", error);
-      alert(error instanceof Error ? error.message : "Failed to generate preview");
+      alert(error instanceof Error ? error.message : copy.alerts.previewFallback);
     } finally {
       setGenerating(null);
     }
@@ -108,7 +112,7 @@ export default function GeneratorPage() {
 
     const cost = calcFullCourseTokens(opts);
     if (balance < cost) {
-      alert(`Insufficient tokens. You need ${cost} tokens, but have ${balance}.`);
+      alert(copy.alerts.insufficient(cost, balance));
       return;
     }
 
@@ -120,7 +124,7 @@ export default function GeneratorPage() {
         body: JSON.stringify({ options: opts }),
       });
       const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(data?.error ?? "Publish failed");
+      if (!res.ok) throw new Error(data?.error ?? copy.alerts.publishFailed);
       
       // Reload balance
       if (isAuthed) {
@@ -131,10 +135,10 @@ export default function GeneratorPage() {
         }
       }
       
-      alert("Course published successfully!");
+      alert(copy.alerts.publishSuccess);
     } catch (error) {
       console.error("Course publication failed:", error);
-      alert(error instanceof Error ? error.message : "Failed to publish course");
+      alert(error instanceof Error ? error.message : copy.alerts.publishFallback);
     } finally {
       setGenerating(null);
     }

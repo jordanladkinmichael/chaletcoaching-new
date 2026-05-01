@@ -1,22 +1,22 @@
 "use client";
 
 import React, { useState } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
-import type { Route } from "next";
 import Link from "next/link";
-import { AuthShell } from "@/components/auth/AuthShell";
-import { Card, CardContent, H1, Paragraph, Button, Input } from "@/components/ui";
+import { useRouter, useSearchParams } from "next/navigation";
+import type { Route } from "next";
 import { AlertCircle, CheckCircle } from "lucide-react";
+import { AuthShell } from "@/components/auth/AuthShell";
+import { Button, Card, CardContent, H1, Input, Paragraph } from "@/components/ui";
+import { useTranslations } from "@/lib/i18n/client";
 import { THEME } from "@/lib/theme";
 
 export default function ResetPasswordClient() {
   const searchParams = useSearchParams();
   const router = useRouter();
+  const tAuth = useTranslations("auth");
   const returnTo = searchParams.get("returnTo");
   const tokenParam = searchParams.get("token");
   const emailParam = searchParams.get("email");
-
-  // Determine which state we're in
   const isSettingPassword = !!(tokenParam && emailParam);
 
   const [email, setEmail] = useState(emailParam || "");
@@ -27,25 +27,24 @@ export default function ResetPasswordClient() {
   const [success, setSuccess] = useState(false);
   const [devResetLink, setDevResetLink] = useState<string | null>(null);
 
-  // Handle setting new password
-  const handleSetPassword = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSetPassword = async (event: React.FormEvent) => {
+    event.preventDefault();
     setError(null);
 
     if (password.length < 6) {
-      setError("Password must be at least 6 characters long.");
+      setError(tAuth("passwordMinLength"));
       return;
     }
 
     if (password !== confirmPassword) {
-      setError("Passwords do not match.");
+      setError(tAuth("passwordsMismatch"));
       return;
     }
 
     setLoading(true);
 
     try {
-      const res = await fetch("/api/auth/reset/confirm", {
+      const response = await fetch("/api/auth/reset/confirm", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -55,14 +54,13 @@ export default function ResetPasswordClient() {
         }),
       });
 
-      const data = await res.json().catch(() => ({}));
+      const data = await response.json().catch(() => ({}));
 
-      if (!res.ok) {
-        throw new Error(data.error || "Failed to reset password");
+      if (!response.ok) {
+        throw new Error(data.error || tAuth("resetPasswordFailed"));
       }
 
       setSuccess(true);
-      // Redirect to sign-in after 2 seconds
       setTimeout(() => {
         const signInUrl = returnTo
           ? `/auth/sign-in?returnTo=${encodeURIComponent(returnTo)}`
@@ -70,76 +68,68 @@ export default function ResetPasswordClient() {
         router.push(signInUrl as Route);
       }, 2000);
     } catch (err) {
-      setError(
-        err instanceof Error
-          ? err.message
-          : "An unexpected error occurred. Please try again."
-      );
+      setError(err instanceof Error ? err.message : tAuth("unexpectedError"));
     } finally {
       setLoading(false);
     }
   };
 
-  // Handle requesting reset link
-  const handleRequestReset = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleRequestReset = async (event: React.FormEvent) => {
+    event.preventDefault();
     setError(null);
     setLoading(true);
 
     try {
-      const res = await fetch("/api/auth/reset/request", {
+      const response = await fetch("/api/auth/reset/request", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: email.trim() }),
       });
 
-      const data = await res.json().catch(() => ({}));
+      const data = await response.json().catch(() => ({}));
 
-      if (!res.ok) {
-        throw new Error(data.error || "Failed to request reset link");
+      if (!response.ok) {
+        throw new Error(data.error || tAuth("requestResetFailed"));
       }
 
       setSuccess(true);
-      // In dev mode, show the link
       if (data.devResetLink) {
         setDevResetLink(data.devResetLink);
       }
     } catch (err) {
-      setError(
-        err instanceof Error
-          ? err.message
-          : "An unexpected error occurred. Please try again."
-      );
+      setError(err instanceof Error ? err.message : tAuth("unexpectedError"));
     } finally {
       setLoading(false);
     }
   };
 
-  // Build sign-in link with returnTo preserved
   const signInLink = returnTo
     ? `/auth/sign-in?returnTo=${encodeURIComponent(returnTo)}`
     : "/auth/sign-in";
 
   return (
-    <AuthShell title={isSettingPassword ? "Set a new password" : "Reset your password"}>
-      <div className="max-w-md mx-auto">
+    <AuthShell
+      title={isSettingPassword ? tAuth("setPasswordTitle") : tAuth("resetPasswordTitle")}
+    >
+      <div className="mx-auto max-w-md">
         <div className="mb-8 text-center">
-          <H1>{isSettingPassword ? "Set a new password" : "Reset your password"}</H1>
+          <H1>
+            {isSettingPassword ? tAuth("setPasswordTitle") : tAuth("resetPasswordTitle")}
+          </H1>
           <Paragraph className="mt-2 text-text-muted">
             {isSettingPassword
-              ? "Enter your new password below."
-              : "We'll email you a link to set a new password."}
+              ? tAuth("setPasswordSubtitle")
+              : tAuth("resetPasswordSubtitle")}
           </Paragraph>
         </div>
 
         <Card>
           <CardContent className="p-6">
             {isSettingPassword ? (
-              // State B: Set new password
               <form onSubmit={handleSetPassword} className="space-y-4">
                 <div>
-                  <label htmlFor="email" className="block text-sm font-medium mb-1.5">
-                    Email
+                  <label htmlFor="email" className="mb-1.5 block text-sm font-medium">
+                    {tAuth("email")}
                   </label>
                   <Input
                     id="email"
@@ -151,68 +141,82 @@ export default function ResetPasswordClient() {
                 </div>
 
                 <div>
-                  <label htmlFor="password" className="block text-sm font-medium mb-1.5">
-                    New password
+                  <label
+                    htmlFor="password"
+                    className="mb-1.5 block text-sm font-medium"
+                  >
+                    {tAuth("newPassword")}
                   </label>
                   <Input
                     id="password"
                     type="password"
                     value={password}
-                    onChange={(e) => setPassword(e.target.value)}
+                    onChange={(event) => setPassword(event.target.value)}
                     required
                     disabled={loading}
-                    placeholder="At least 6 characters"
+                    placeholder={tAuth("placeholderPasswordShort")}
                     autoComplete="new-password"
                     minLength={6}
                   />
                 </div>
 
                 <div>
-                  <label htmlFor="confirmPassword" className="block text-sm font-medium mb-1.5">
-                    Confirm new password
+                  <label
+                    htmlFor="confirmPassword"
+                    className="mb-1.5 block text-sm font-medium"
+                  >
+                    {tAuth("confirmNewPassword")}
                   </label>
                   <Input
                     id="confirmPassword"
                     type="password"
                     value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    onChange={(event) => setConfirmPassword(event.target.value)}
                     required
                     disabled={loading}
-                    placeholder="Re-enter your password"
+                    placeholder={tAuth("placeholderPasswordRepeat")}
                     autoComplete="new-password"
                     minLength={6}
                   />
                 </div>
 
-                {error && (
+                {error ? (
                   <div
-                    className="flex items-start gap-2 p-3 rounded-lg border"
+                    className="flex items-start gap-2 rounded-lg border p-3"
                     style={{
                       backgroundColor: `${THEME.danger}10`,
                       borderColor: THEME.danger,
                     }}
                   >
-                    <AlertCircle size={18} style={{ color: THEME.danger }} className="flex-shrink-0 mt-0.5" />
+                    <AlertCircle
+                      size={18}
+                      style={{ color: THEME.danger }}
+                      className="mt-0.5 flex-shrink-0"
+                    />
                     <p className="text-sm" style={{ color: THEME.danger }}>
                       {error}
                     </p>
                   </div>
-                )}
+                ) : null}
 
-                {success && (
+                {success ? (
                   <div
-                    className="flex items-start gap-2 p-3 rounded-lg border"
+                    className="flex items-start gap-2 rounded-lg border p-3"
                     style={{
                       backgroundColor: `${THEME.success}10`,
                       borderColor: THEME.success,
                     }}
                   >
-                    <CheckCircle size={18} style={{ color: THEME.success }} className="flex-shrink-0 mt-0.5" />
+                    <CheckCircle
+                      size={18}
+                      style={{ color: THEME.success }}
+                      className="mt-0.5 flex-shrink-0"
+                    />
                     <p className="text-sm" style={{ color: THEME.success }}>
-                      Password updated successfully! Redirecting to sign in...
+                      {tAuth("passwordUpdated")}
                     </p>
                   </div>
-                )}
+                ) : null}
 
                 <Button
                   type="submit"
@@ -221,60 +225,72 @@ export default function ResetPasswordClient() {
                   isLoading={loading}
                   disabled={loading || success}
                 >
-                  Update password
+                  {tAuth("updatePassword")}
                 </Button>
               </form>
             ) : (
-              // State A: Request reset link
               <>
                 <form onSubmit={handleRequestReset} className="space-y-4">
                   <div>
-                    <label htmlFor="email" className="block text-sm font-medium mb-1.5">
-                      Email
+                    <label
+                      htmlFor="email"
+                      className="mb-1.5 block text-sm font-medium"
+                    >
+                      {tAuth("email")}
                     </label>
                     <Input
                       id="email"
                       type="email"
                       value={email}
-                      onChange={(e) => setEmail(e.target.value)}
+                      onChange={(event) => setEmail(event.target.value)}
                       required
                       disabled={loading || success}
-                      placeholder="you@example.com"
+                      placeholder={tAuth("placeholderEmail")}
                       autoComplete="email"
                     />
                   </div>
 
-                  {error && (
+                  {error ? (
                     <div
-                      className="flex items-start gap-2 p-3 rounded-lg border"
+                      className="flex items-start gap-2 rounded-lg border p-3"
                       style={{
                         backgroundColor: `${THEME.danger}10`,
                         borderColor: THEME.danger,
                       }}
                     >
-                      <AlertCircle size={18} style={{ color: THEME.danger }} className="flex-shrink-0 mt-0.5" />
+                      <AlertCircle
+                        size={18}
+                        style={{ color: THEME.danger }}
+                        className="mt-0.5 flex-shrink-0"
+                      />
                       <p className="text-sm" style={{ color: THEME.danger }}>
                         {error}
                       </p>
                     </div>
-                  )}
+                  ) : null}
 
-                  {success && (
+                  {success ? (
                     <div
-                      className="flex items-start gap-2 p-3 rounded-lg border"
+                      className="flex items-start gap-2 rounded-lg border p-3"
                       style={{
                         backgroundColor: `${THEME.success}10`,
                         borderColor: THEME.success,
                       }}
                     >
-                      <CheckCircle size={18} style={{ color: THEME.success }} className="flex-shrink-0 mt-0.5" />
+                      <CheckCircle
+                        size={18}
+                        style={{ color: THEME.success }}
+                        className="mt-0.5 flex-shrink-0"
+                      />
                       <div className="flex-1">
                         <p className="text-sm" style={{ color: THEME.success }}>
-                          If the email exists, we sent a link to reset your password.
+                          {tAuth("resetLinkSent")}
                         </p>
-                        {devResetLink && (
-                          <div className="mt-2 p-2 rounded bg-surface text-xs break-all">
-                            <p className="text-text-muted mb-1">Dev mode reset link:</p>
+                        {devResetLink ? (
+                          <div className="mt-2 rounded bg-surface p-2 text-xs break-all">
+                            <p className="mb-1 text-text-muted">
+                              {tAuth("devResetLink")}
+                            </p>
                             <a
                               href={devResetLink}
                               className="text-primary underline break-all"
@@ -284,10 +300,10 @@ export default function ResetPasswordClient() {
                               {devResetLink}
                             </a>
                           </div>
-                        )}
+                        ) : null}
                       </div>
                     </div>
-                  )}
+                  ) : null}
 
                   <Button
                     type="submit"
@@ -296,16 +312,16 @@ export default function ResetPasswordClient() {
                     isLoading={loading}
                     disabled={loading || success}
                   >
-                    Send reset link
+                    {tAuth("sendResetLink")}
                   </Button>
                 </form>
 
                 <div className="mt-6 text-center text-sm">
                   <Link
                     href={signInLink as Route}
-                    className="text-primary hover:opacity-80 transition-opacity underline"
+                    className="text-primary underline transition-opacity hover:opacity-80"
                   >
-                    Back to sign in
+                    {tAuth("backToSignIn")}
                   </Link>
                 </div>
               </>

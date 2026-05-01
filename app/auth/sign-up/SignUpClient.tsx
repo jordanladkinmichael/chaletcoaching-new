@@ -1,27 +1,26 @@
 "use client";
 
 import React, { useState } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
-import type { Route } from "next";
-import { signIn } from "next-auth/react";
 import Link from "next/link";
-import { AuthShell } from "@/components/auth/AuthShell";
-import { Card, CardContent, H1, Paragraph, Button, Input } from "@/components/ui";
+import { useRouter, useSearchParams } from "next/navigation";
+import { signIn } from "next-auth/react";
+import type { Route } from "next";
 import { AlertCircle } from "lucide-react";
-import { THEME } from "@/lib/theme";
+import { AuthShell } from "@/components/auth/AuthShell";
+import { Button, Card, CardContent, H1, Input, Paragraph } from "@/components/ui";
 import { COUNTRIES } from "@/lib/countries";
+import { useTranslations } from "@/lib/i18n/client";
+import { THEME } from "@/lib/theme";
 
 export default function SignUpClient() {
   const searchParams = useSearchParams();
   const router = useRouter();
+  const tAuth = useTranslations("auth");
   const returnTo = searchParams.get("returnTo") || "/dashboard";
 
-  // Account fields
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-
-  // Profile fields
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [phone, setPhone] = useState("");
@@ -30,35 +29,35 @@ export default function SignUpClient() {
   const [city, setCity] = useState("");
   const [country, setCountry] = useState("");
   const [postalCode, setPostalCode] = useState("");
-
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const inputClass =
+    "w-full rounded-lg border bg-transparent px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-focus";
+
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
     setError(null);
 
-    // Client-side validation
     if (!firstName.trim() || !lastName.trim()) {
-      setError("First name and last name are required.");
+      setError(tAuth("nameRequired"));
       return;
     }
 
     if (password.length < 6) {
-      setError("Password must be at least 6 characters long.");
+      setError(tAuth("passwordMinLength"));
       return;
     }
 
     if (password !== confirmPassword) {
-      setError("Passwords do not match.");
+      setError(tAuth("passwordsMismatch"));
       return;
     }
 
     setLoading(true);
 
     try {
-      // Register user
       const registerRes = await fetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -83,15 +82,13 @@ export default function SignUpClient() {
           registerRes.status === 409 ||
           registerData.error?.includes("already")
         ) {
-          setError(
-            "An account with this email already exists. Please sign in instead."
-          );
+          setError(tAuth("existingAccount"));
           return;
         }
-        throw new Error(registerData.error || "Registration failed");
+
+        throw new Error(registerData.error || tAuth("somethingWentWrong"));
       }
 
-      // Auto sign-in after successful registration
       const signInResult = await signIn("credentials", {
         email: email.trim(),
         password,
@@ -99,9 +96,7 @@ export default function SignUpClient() {
       });
 
       if (signInResult?.error) {
-        setError(
-          "Account created but sign in failed. Please try signing in manually."
-        );
+        setError(tAuth("signInAfterRegisterFailed"));
         return;
       }
 
@@ -110,134 +105,114 @@ export default function SignUpClient() {
         return;
       }
 
-      setError(
-        "Account created but something went wrong. Please try signing in."
-      );
+      setError(tAuth("accountCreatedButIssue"));
     } catch (err) {
-      setError(
-        err instanceof Error
-          ? err.message
-          : "An unexpected error occurred. Please try again."
-      );
+      setError(err instanceof Error ? err.message : tAuth("unexpectedError"));
     } finally {
       setLoading(false);
     }
   };
 
-  // Build link with returnTo preserved
   const signInLink =
     returnTo !== "/dashboard"
       ? `/auth/sign-in?returnTo=${encodeURIComponent(returnTo)}`
       : "/auth/sign-in";
 
-  const inputClass =
-    "w-full rounded-lg border px-3 py-2 bg-transparent text-sm focus:outline-none focus:ring-2 focus:ring-focus";
-
   return (
-    <AuthShell title="Create your account">
-      <div className="max-w-lg mx-auto">
+    <AuthShell title={tAuth("createAccountTitle")}>
+      <div className="mx-auto max-w-lg">
         <div className="mb-8 text-center">
-          <H1>Create your account</H1>
+          <H1>{tAuth("createAccountTitle")}</H1>
           <Paragraph className="mt-2 text-text-muted">
-            Sign up to get started with personalized fitness plans.
+            {tAuth("createAccountSubtitle")}
           </Paragraph>
         </div>
 
         <Card>
           <CardContent className="p-6">
             <form onSubmit={handleSubmit} className="space-y-4">
-              {/* Name fields */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label
                     htmlFor="firstName"
-                    className="block text-sm font-medium mb-1.5"
+                    className="mb-1.5 block text-sm font-medium"
                   >
-                    First name <span className="text-red-500">*</span>
+                    {tAuth("firstName")} <span className="text-red-500">*</span>
                   </label>
                   <Input
                     id="firstName"
                     type="text"
                     value={firstName}
-                    onChange={(e) => setFirstName(e.target.value)}
+                    onChange={(event) => setFirstName(event.target.value)}
                     required
                     disabled={loading}
-                    placeholder="John"
+                    placeholder={tAuth("placeholderFirstName")}
                     autoComplete="given-name"
                   />
                 </div>
                 <div>
                   <label
                     htmlFor="lastName"
-                    className="block text-sm font-medium mb-1.5"
+                    className="mb-1.5 block text-sm font-medium"
                   >
-                    Last name <span className="text-red-500">*</span>
+                    {tAuth("lastName")} <span className="text-red-500">*</span>
                   </label>
                   <Input
                     id="lastName"
                     type="text"
                     value={lastName}
-                    onChange={(e) => setLastName(e.target.value)}
+                    onChange={(event) => setLastName(event.target.value)}
                     required
                     disabled={loading}
-                    placeholder="Doe"
+                    placeholder={tAuth("placeholderLastName")}
                     autoComplete="family-name"
                   />
                 </div>
               </div>
 
-              {/* Email */}
               <div>
-                <label
-                  htmlFor="email"
-                  className="block text-sm font-medium mb-1.5"
-                >
-                  Email <span className="text-red-500">*</span>
+                <label htmlFor="email" className="mb-1.5 block text-sm font-medium">
+                  {tAuth("email")} <span className="text-red-500">*</span>
                 </label>
                 <Input
                   id="email"
                   type="email"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={(event) => setEmail(event.target.value)}
                   required
                   disabled={loading}
-                  placeholder="you@example.com"
+                  placeholder={tAuth("placeholderEmail")}
                   autoComplete="email"
                 />
               </div>
 
-              {/* Phone */}
               <div>
-                <label
-                  htmlFor="phone"
-                  className="block text-sm font-medium mb-1.5"
-                >
-                  Phone number
+                <label htmlFor="phone" className="mb-1.5 block text-sm font-medium">
+                  {tAuth("phoneNumber")}
                 </label>
                 <Input
                   id="phone"
                   type="tel"
                   value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
+                  onChange={(event) => setPhone(event.target.value)}
                   disabled={loading}
-                  placeholder="+44 7700 900000"
+                  placeholder={tAuth("placeholderPhone")}
                   autoComplete="tel"
                 />
               </div>
 
-              {/* Date of birth */}
               <div>
                 <label
                   htmlFor="dateOfBirth"
-                  className="block text-sm font-medium mb-1.5"
+                  className="mb-1.5 block text-sm font-medium"
                 >
-                  Date of birth
+                  {tAuth("dateOfBirth")}
                 </label>
                 <input
                   id="dateOfBirth"
                   type="date"
                   value={dateOfBirth}
-                  onChange={(e) => setDateOfBirth(e.target.value)}
+                  onChange={(event) => setDateOfBirth(event.target.value)}
                   disabled={loading}
                   className={inputClass}
                   style={{ borderColor: THEME.border }}
@@ -245,21 +220,22 @@ export default function SignUpClient() {
                 />
               </div>
 
-              {/* Address section */}
               <fieldset className="space-y-3">
-                <legend className="text-sm font-medium mb-1">Address</legend>
+                <legend className="mb-1 text-sm font-medium">
+                  {tAuth("address")}
+                </legend>
 
                 <div>
                   <label htmlFor="street" className="sr-only">
-                    Street
+                    {tAuth("streetAddress")}
                   </label>
                   <Input
                     id="street"
                     type="text"
                     value={street}
-                    onChange={(e) => setStreet(e.target.value)}
+                    onChange={(event) => setStreet(event.target.value)}
                     disabled={loading}
-                    placeholder="Street address"
+                    placeholder={tAuth("streetAddress")}
                     autoComplete="street-address"
                   />
                 </div>
@@ -267,29 +243,29 @@ export default function SignUpClient() {
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <label htmlFor="city" className="sr-only">
-                      City
+                      {tAuth("city")}
                     </label>
                     <Input
                       id="city"
                       type="text"
                       value={city}
-                      onChange={(e) => setCity(e.target.value)}
+                      onChange={(event) => setCity(event.target.value)}
                       disabled={loading}
-                      placeholder="City"
+                      placeholder={tAuth("city")}
                       autoComplete="address-level2"
                     />
                   </div>
                   <div>
                     <label htmlFor="postalCode" className="sr-only">
-                      Postal code
+                      {tAuth("postalCode")}
                     </label>
                     <Input
                       id="postalCode"
                       type="text"
                       value={postalCode}
-                      onChange={(e) => setPostalCode(e.target.value)}
+                      onChange={(event) => setPostalCode(event.target.value)}
                       disabled={loading}
-                      placeholder="Postal code"
+                      placeholder={tAuth("postalCode")}
                       autoComplete="postal-code"
                     />
                   </div>
@@ -297,43 +273,42 @@ export default function SignUpClient() {
 
                 <div>
                   <label htmlFor="country" className="sr-only">
-                    Country
+                    {tAuth("country")}
                   </label>
                   <select
                     id="country"
                     value={country}
-                    onChange={(e) => setCountry(e.target.value)}
+                    onChange={(event) => setCountry(event.target.value)}
                     disabled={loading}
                     className={inputClass}
                     style={{ borderColor: THEME.border }}
                     autoComplete="country-name"
                   >
-                    <option value="">Select country</option>
-                    {COUNTRIES.map((c) => (
-                      <option key={c.value} value={c.value}>
-                        {c.label}
+                    <option value="">{tAuth("selectCountry")}</option>
+                    {COUNTRIES.map((countryOption) => (
+                      <option key={countryOption.value} value={countryOption.value}>
+                        {countryOption.label}
                       </option>
                     ))}
                   </select>
                 </div>
               </fieldset>
 
-              {/* Password fields */}
               <div>
                 <label
                   htmlFor="password"
-                  className="block text-sm font-medium mb-1.5"
+                  className="mb-1.5 block text-sm font-medium"
                 >
-                  Password <span className="text-red-500">*</span>
+                  {tAuth("password")} <span className="text-red-500">*</span>
                 </label>
                 <Input
                   id="password"
                   type="password"
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={(event) => setPassword(event.target.value)}
                   required
                   disabled={loading}
-                  placeholder="At least 6 characters"
+                  placeholder={tAuth("placeholderPasswordShort")}
                   autoComplete="new-password"
                   minLength={6}
                 />
@@ -342,26 +317,26 @@ export default function SignUpClient() {
               <div>
                 <label
                   htmlFor="confirmPassword"
-                  className="block text-sm font-medium mb-1.5"
+                  className="mb-1.5 block text-sm font-medium"
                 >
-                  Confirm password <span className="text-red-500">*</span>
+                  {tAuth("confirmPassword")} <span className="text-red-500">*</span>
                 </label>
                 <Input
                   id="confirmPassword"
                   type="password"
                   value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  onChange={(event) => setConfirmPassword(event.target.value)}
                   required
                   disabled={loading}
-                  placeholder="Re-enter your password"
+                  placeholder={tAuth("placeholderPasswordRepeat")}
                   autoComplete="new-password"
                   minLength={6}
                 />
               </div>
 
-              {error && (
+              {error ? (
                 <div
-                  className="flex items-start gap-2 p-3 rounded-lg border"
+                  className="flex items-start gap-2 rounded-lg border p-3"
                   style={{
                     backgroundColor: `${THEME.danger}10`,
                     borderColor: THEME.danger,
@@ -370,51 +345,50 @@ export default function SignUpClient() {
                   <AlertCircle
                     size={18}
                     style={{ color: THEME.danger }}
-                    className="flex-shrink-0 mt-0.5"
+                    className="mt-0.5 flex-shrink-0"
                   />
                   <div className="flex-1">
                     <p className="text-sm" style={{ color: THEME.danger }}>
                       {error}
                     </p>
-                    {error.includes("already exists") && (
+                    {error === tAuth("existingAccount") ? (
                       <Link
                         href={signInLink as Route}
-                        className="text-sm underline mt-1 block"
+                        className="mt-1 block text-sm underline"
                         style={{ color: THEME.primary }}
                       >
-                        Sign in instead
+                        {tAuth("signInInstead")}
                       </Link>
-                    )}
+                    ) : null}
                   </div>
                 </div>
-              )}
+              ) : null}
 
-              {/* Terms and Conditions checkbox */}
               <div className="flex items-start gap-2">
                 <input
                   type="checkbox"
                   id="terms-checkbox"
                   checked={agreedToTerms}
-                  onChange={(e) => setAgreedToTerms(e.target.checked)}
+                  onChange={(event) => setAgreedToTerms(event.target.checked)}
                   disabled={loading}
-                  className="mt-0.5 w-4 h-4 rounded border-border bg-surface text-primary focus:ring-2 focus:ring-focus focus:ring-offset-2 focus:ring-offset-bg cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="mt-0.5 h-4 w-4 cursor-pointer rounded border-border bg-surface text-primary focus:ring-2 focus:ring-focus focus:ring-offset-2 focus:ring-offset-bg disabled:cursor-not-allowed disabled:opacity-50"
                   style={{ borderColor: THEME.cardBorder }}
                 />
                 <label
                   htmlFor="terms-checkbox"
-                  className="text-sm cursor-pointer"
+                  className="text-sm"
                   style={{ color: THEME.text }}
                 >
-                  I read and agree to{" "}
+                  {tAuth("termsAgreementPrefix")}{" "}
                   <Link
                     href="/legal/terms"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="underline hover:opacity-80 transition-opacity"
+                    className="underline transition-opacity hover:opacity-80"
                     style={{ color: THEME.primary }}
-                    onClick={(e) => e.stopPropagation()}
+                    onClick={(event) => event.stopPropagation()}
                   >
-                    terms and conditions
+                    {tAuth("termsAgreementLink")}
                   </Link>
                 </label>
               </div>
@@ -434,19 +408,17 @@ export default function SignUpClient() {
                   !confirmPassword
                 }
               >
-                Create account
+                {tAuth("createAccountAction")}
               </Button>
             </form>
 
             <div className="mt-6 text-center text-sm">
-              <span className="text-text-muted">
-                Already have an account?{" "}
-              </span>
+              <span className="text-text-muted">{tAuth("alreadyHaveAccount")} </span>
               <Link
                 href={signInLink as Route}
-                className="text-primary hover:opacity-80 transition-opacity underline"
+                className="text-primary underline transition-opacity hover:opacity-80"
               >
-                Sign in
+                {tAuth("signInAction")}
               </Link>
             </div>
           </CardContent>

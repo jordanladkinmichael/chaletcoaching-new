@@ -3,6 +3,8 @@
  * Local data file - no API required
  */
 
+import { DEFAULT_LOCALE, type Locale } from "@/lib/i18n/config";
+
 export type SupportCategory =
   | "tokens_billing"
   | "coach_requests"
@@ -622,44 +624,590 @@ export const SUPPORT_ARTICLES: SupportArticle[] = [
   },
 ];
 
-// Helper functions
-export function getArticleBySlug(slug: string): SupportArticle | undefined {
-  return SUPPORT_ARTICLES.find((article) => article.slug === slug);
-}
+const SUPPORT_ARTICLES_TR: SupportArticle[] = [];
 
-export function getArticlesByCategory(category: SupportCategory | "all"): SupportArticle[] {
-  if (category === "all") return SUPPORT_ARTICLES;
-  return SUPPORT_ARTICLES.filter((article) => article.category === category);
-}
+SUPPORT_ARTICLES_TR.push(
+  {
+    slug: "tokens-what-are-they",
+    title: "Tokenlar nedir?",
+    description: "Tokenların ne olduğunu ve antrenman bakiyeniz olarak nasıl çalıştığını öğrenin.",
+    category: "tokens_billing",
+    keywords: ["token", "bakiye", "token nedir", "açıklama"],
+    body: [
+      {
+        paragraphs: [
+          "Tokenlar antrenman bakiyenizdir. Bir kez yükleme yapar ve özelliklerde token harcarsınız.",
+          "Farklı plan türleri ve seçenekleri arasında fiyatlandırmayı tutarlı tutarlar.",
+        ],
+      },
+      {
+        heading: "Tokenlar nasıl çalışır",
+        paragraphs: [
+          "100 token = €1.00 | £0.87 | $1.19. Bakiyenizi bir kez yüklersiniz ve koç talepleri veya Instant AI planlarında token harcarsınız.",
+          "Tokenlar kullanılana kadar bakiyenizde kalır. Son kullanma tarihleri yoktur.",
+        ],
+      },
+      {
+        heading: "Bakiyenizi nerede görürsünüz",
+        paragraphs: [
+          "Giriş yaptığınızda token bakiyeniz panelinizde görünür.",
+          "Giriş yaptıktan sonra bunu üst barda da görebilirsiniz.",
+        ],
+      },
+    ],
+    updatedAt: "2025-01-15",
+    popular: true,
+  },
+  {
+    slug: "token-rates-currencies",
+    title: "Token kurları ve para birimleri",
+    description: "Token dönüşüm kurlarını ve para birimi seçeneklerini anlayın.",
+    category: "tokens_billing",
+    keywords: ["kur", "para birimi", "eur", "gbp", "usd", "döviz"],
+    body: [
+      {
+        paragraphs: [
+          "100 token = €1.00 | £0.87 | $1.19",
+          "Temel para birimi EUR'dur. Seçtiğiniz para birimi üst barda gösterilir.",
+        ],
+      },
+      {
+        heading: "Para birimi seçenekleri",
+        paragraphs: [
+          "Fiyatları EUR, GBP veya USD olarak görebilirsiniz. Tercih ettiğiniz para birimini üst bardaki seçimden belirleyin.",
+          "Tüm token hesaplamaları önce EUR üzerinden yapılır, sonra seçtiğiniz para birimine çevrilir.",
+        ],
+      },
+      {
+        heading: "İlgili bağlantılar",
+        bullets: [
+          "[Ödeme ve tokenlar](/payments-tokens)",
+          "[Fiyatlandırma](/pricing)",
+        ],
+      },
+    ],
+    updatedAt: "2025-01-15",
+    popular: true,
+  },
+  {
+    slug: "top-up-tokens",
+    title: "Tokenlar nasıl yüklenir",
+    description: "Bakiyenize token eklemek için adım adım rehber.",
+    category: "tokens_billing",
+    keywords: ["yükleme", "token ekle", "satın al", "token satın al"],
+    body: [
+      {
+        heading: "Yükleme adımları",
+        bullets: [
+          "Fiyatlandırma sayfasına gidin",
+          "Bir paket seçin veya özel tutar girin",
+          "Güvenli ödeme adımını tamamlayın",
+          "Ödeme başarılı olduktan sonra tokenlar bakiyenize eklenir",
+        ],
+      },
+      {
+        paragraphs: [
+          "Aynı bakiyeyi hem Instant AI hem de koç talepleri için kullanabilirsiniz.",
+        ],
+      },
+      {
+        heading: "İlgili bağlantılar",
+        bullets: [
+          "[Fiyatlandırma](/pricing)",
+          "[Ödeme ve tokenlar](/payments-tokens)",
+        ],
+      },
+    ],
+    updatedAt: "2025-01-15",
+    popular: true,
+  },
+  {
+    slug: "pricing-packs-custom",
+    title: "Token paketleri ve özel yükleme",
+    description: "Token paketlerini ve özel tutarları anlayın.",
+    category: "tokens_billing",
+    keywords: ["paket", "özel", "starter", "momentum", "elite"],
+    body: [
+      {
+        heading: "Token paketleri",
+        paragraphs: [
+          "Üç hazır paket sunuyoruz: Starter Spark (10.000 token), Momentum Pack (20.000 token) ve Elite Performance (30.000 token).",
+          "Her paket farklı kullanım düzeyleri için tasarlanmıştır.",
+        ],
+      },
+      {
+        heading: "Özel yükleme",
+        paragraphs: [
+          "İsterseniz özel bir tutar da girebilirsiniz. Tokenlar seçtiğiniz para birimine göre hesaplanır.",
+          "Tutarlılık için özel miktarlar en yakın 10 tokena yuvarlanır.",
+        ],
+      },
+      {
+        heading: "İlgili bağlantılar",
+        bullets: [
+          "[Fiyatlandırma](/pricing)",
+          "[Ödeme ve tokenlar](/payments-tokens)",
+        ],
+      },
+    ],
+    updatedAt: "2025-01-15",
+  },
+  {
+    slug: "refunds-basics",
+    title: "İadelere hızlı bakış",
+    description: "Geri ödeme uygunluğu ve süreç hakkında kısa bir özet.",
+    category: "tokens_billing",
+    keywords: ["iade", "geri ödeme", "para iadesi"],
+    body: [
+      {
+        paragraphs: [
+          "Geri ödeme uygunluğu duruma ve kullanılan hizmete bağlıdır.",
+          "Ayrıntılar ve uygunluk için lütfen iade politikamızı inceleyin.",
+        ],
+      },
+      {
+        heading: "İlgili bağlantılar",
+        bullets: ["[İade politikası](/legal/refunds)"],
+      },
+    ],
+    updatedAt: "2025-01-15",
+  }
+);
 
-export function getPopularArticles(): SupportArticle[] {
-  return SUPPORT_ARTICLES.filter((article) => article.popular).slice(0, 6);
-}
+SUPPORT_ARTICLES_TR.push(
+  {
+    slug: "coach-request-overview",
+    title: "Koç talepleri nasıl çalışır",
+    description: "Koç talebi sürecini baştan sona anlayın.",
+    category: "coach_requests",
+    keywords: ["koç", "talep", "nasıl çalışır", "süreç"],
+    body: [
+      {
+        paragraphs: [
+          "Koç talepleri, belirli hedeflerinize ve tercihlerinize göre sertifikalı koçlar tarafından hazırlanan kişiselleştirilmiş planlardır.",
+          "Seviyeniz, antrenman türünüz, ekipmanınız ve haftalık gün sayınızla ilgili bir form doldurursunuz.",
+        ],
+      },
+      {
+        heading: "Süreç",
+        bullets: [
+          "Koçlara göz atın ve birini seçin",
+          "Talep formunu doldurun",
+          "Maliyet dökümünü gözden geçirin",
+          "Talebinizi gönderin",
+          "Kişiselleştirilmiş planınızı alın",
+        ],
+      },
+      {
+        heading: "İlgili bağlantılar",
+        bullets: [
+          "[Koçlara göz atın](/coaches)",
+          "[Nasıl çalışır](/how-it-works)",
+        ],
+      },
+    ],
+    updatedAt: "2025-01-15",
+    popular: true,
+  },
+  {
+    slug: "coach-request-pricing",
+    title: "Koç talebi fiyatı nasıl hesaplanır",
+    description: "Koç talepleri için maliyet dökümünü anlayın.",
+    category: "coach_requests",
+    keywords: ["fiyat", "maliyet", "hesaplama", "döküm"],
+    body: [
+      {
+        paragraphs: [
+          "Koç talebi fiyatlandırması 10.000 token temel maliyetle başlar.",
+          "Ek maliyetler seçiminize bağlıdır.",
+        ],
+      },
+      {
+        heading: "Maliyet faktörleri",
+        bullets: [
+          "Temel talep: 10.000 token",
+          "Seviye: Orta (+5.000) veya İleri (+12.000)",
+          "Antrenman türü: Karışık (+4.000)",
+          "Ekipman: Basic (+3.000) veya Full gym (+6.000)",
+          "Haftalık gün sayısı: 4 gün (+4.000), 5 gün (+8.000), 6 gün (+12.000)",
+        ],
+      },
+      {
+        heading: "İlgili bağlantılar",
+        bullets: [
+          "[Ödeme ve tokenlar](/payments-tokens)",
+          "[Koçlara göz atın](/coaches)",
+        ],
+      },
+    ],
+    updatedAt: "2025-01-15",
+  },
+  {
+    slug: "coach-request-tips",
+    title: "Daha iyi bir koç talebi için ipuçları",
+    description: "Koç talebinizden en iyi sonucu almak için en iyi uygulamalar.",
+    category: "coach_requests",
+    keywords: ["ipuçları", "en iyi uygulamalar", "iyileştir"],
+    body: [
+      {
+        heading: "Net olun",
+        paragraphs: [
+          "Hedefleriniz, mevcut kondisyon seviyeniz ve mevcut ekipmanınız hakkında net bilgiler verin.",
+          "Ne kadar çok ayrıntı paylaşırsanız kişiselleştirilmiş planınız o kadar iyi olur.",
+        ],
+      },
+      {
+        heading: "Doğru koçu seçin",
+        paragraphs: [
+          "Hedeflerinize uygun uzmanlığa sahip birini bulmak için koç profillerine göz atın.",
+          "Talep oluşturmadan önce uzmanlıklarını ve odak alanlarını okuyun.",
+        ],
+      },
+      {
+        heading: "İlgili bağlantılar",
+        bullets: ["[Koçlara göz atın](/coaches)"],
+      },
+    ],
+    updatedAt: "2025-01-15",
+  },
+  {
+    slug: "coach-profile-request",
+    title: "Bir koç profilinden plan istemek",
+    description: "Doğrudan koç profil sayfasından nasıl plan talep edilir.",
+    category: "coach_requests",
+    keywords: ["profil", "koç sayfası", "talep"],
+    body: [
+      {
+        paragraphs: [
+          "Herhangi bir koçun profil sayfasından doğrudan plan talep edebilirsiniz.",
+          "Koç profilindeki 'Plan talep et' düğmesine tıklayın.",
+        ],
+      },
+      {
+        heading: "Adımlar",
+        bullets: [
+          "Koçun profil sayfasını ziyaret edin",
+          "'Plan talep et' düğmesine tıklayın",
+          "Talep formunu doldurun",
+          "Gözden geçirip gönderin",
+        ],
+      },
+      {
+        heading: "İlgili bağlantılar",
+        bullets: ["[Koçlara göz atın](/coaches)"],
+      },
+    ],
+    updatedAt: "2025-01-15",
+  }
+);
 
-export function searchArticles(query: string): SupportArticle[] {
-  if (!query.trim()) return SUPPORT_ARTICLES;
-  
-  const lowerQuery = query.toLowerCase();
-  return SUPPORT_ARTICLES.filter((article) => {
-    // Search in title, description, keywords
-    if (
-      article.title.toLowerCase().includes(lowerQuery) ||
-      article.description.toLowerCase().includes(lowerQuery) ||
-      article.keywords.some((kw) => kw.toLowerCase().includes(lowerQuery))
-    ) {
-      return true;
-    }
-    
-    // Search in body paragraphs
-    return article.body.some((section) =>
-      (section.paragraphs ?? []).some((para) => para.toLowerCase().includes(lowerQuery))
-    );
-  });
-}
+SUPPORT_ARTICLES_TR.push(
+  {
+    slug: "instant-ai-preview",
+    title: "Instant AI önizlemeleri nasıl çalışır (50 token)",
+    description: "Önizleme özelliğini ve maliyetini anlayın.",
+    category: "instant_ai",
+    keywords: ["önizleme", "50 token", "instant ai"],
+    body: [
+      {
+        paragraphs: [
+          "Instant AI önizlemeleri, tam maliyete geçmeden önce planınızdan bir örnek görmenizi sağlar.",
+          "Önizleme 50 token tutar ve planınızın nasıl görüneceğine dair kısa bir görünüm sunar.",
+        ],
+      },
+      {
+        heading: "Nasıl çalışır",
+        bullets: [
+          "Oluşturucu formunu doldurun",
+          "'Planı önizle' düğmesine tıklayın (50 token)",
+          "Önizlemeyi inceleyin",
+          "Yayınlamaya veya değişiklik yapmaya karar verin",
+        ],
+      },
+      {
+        heading: "İlgili bağlantılar",
+        bullets: [
+          "[Oluşturucuyu açın](/generator)",
+          "[Ödeme ve tokenlar](/payments-tokens)",
+        ],
+      },
+    ],
+    updatedAt: "2025-01-15",
+    popular: true,
+  },
+  {
+    slug: "instant-ai-publish",
+    title: "Tam planınızı yayınlama",
+    description: "Önizlemeden sonra Instant AI planınızı nasıl yayınlayacağınız.",
+    category: "instant_ai",
+    keywords: ["yayınla", "tam plan", "oluştur"],
+    body: [
+      {
+        paragraphs: [
+          "Planınızı önizledikten sonra tam sürümü almak için yayınlayabilirsiniz.",
+          "Yayınlama maliyeti seçtiğiniz seçeneklere bağlıdır (haftalar, antrenman türleri, kas grupları).",
+        ],
+      },
+      {
+        heading: "Adımlar",
+        bullets: [
+          "Planınızı önizleyin (50 token)",
+          "Önizlemeyi inceleyin",
+          "'Planı yayınla' düğmesine tıklayın",
+          "Maliyeti onaylayın",
+          "Tam planınızı alın",
+        ],
+      },
+      {
+        heading: "İlgili bağlantılar",
+        bullets: [
+          "[Oluşturucuyu açın](/generator)",
+          "[Ödeme ve tokenlar](/payments-tokens)",
+        ],
+      },
+    ],
+    updatedAt: "2025-01-15",
+  },
+  {
+    slug: "instant-ai-costs",
+    title: "Instant AI maliyetini ne etkiler?",
+    description: "Instant AI plan fiyatlandırmasını etkileyen faktörleri anlayın.",
+    category: "instant_ai",
+    keywords: ["maliyet", "fiyat", "faktörler"],
+    body: [
+      {
+        paragraphs: [
+          "Instant AI plan maliyeti, yaptığınız seçimlere bağlı birkaç faktöre göre belirlenir.",
+        ],
+      },
+      {
+        heading: "Maliyet faktörleri",
+        bullets: [
+          "Hafta sayısı",
+          "Seçilen antrenman türleri",
+          "Hedeflenen kas grupları",
+          "Planın karmaşıklığı",
+        ],
+      },
+      {
+        heading: "İlgili bağlantılar",
+        bullets: [
+          "[Oluşturucuyu açın](/generator)",
+          "[Ödeme ve tokenlar](/payments-tokens)",
+        ],
+      },
+    ],
+    updatedAt: "2025-01-15",
+  }
+);
 
-export function getCategoryCount(category: SupportCategory | "all"): number {
-  return getArticlesByCategory(category).length;
-}
+SUPPORT_ARTICLES_TR.push(
+  {
+    slug: "sign-in-and-access",
+    title: "Giriş ve erişim temelleri",
+    description: "Hesabınıza nasıl giriş yapacağınızı ve erişeceğinizi öğrenin.",
+    category: "account_dashboard",
+    keywords: ["giriş", "oturum", "erişim", "hesap"],
+    body: [
+      {
+        paragraphs: [
+          "Panelinize erişmek, planlarınızı görmek ve token bakiyenizi yönetmek için giriş yapın.",
+        ],
+      },
+      {
+        heading: "Nasıl giriş yapılır",
+        bullets: [
+          "Üst bardaki 'Giriş yap' düğmesine tıklayın",
+          "E-posta adresinizi ve şifrenizi girin",
+          "Panelinize erişin",
+        ],
+      },
+      {
+        heading: "Hesap oluşturma",
+        paragraphs: [
+          "Hesabınız yoksa kayıt olmak için 'Hesap oluştur' düğmesine tıklayın.",
+        ],
+      },
+    ],
+    updatedAt: "2025-01-15",
+  },
+  {
+    slug: "where-to-find-plans",
+    title: "Planlarınızı panelde nerede bulursunuz",
+    description: "Koç taleplerinizi ve Instant AI planlarınızı bulun.",
+    category: "account_dashboard",
+    keywords: ["panel", "planlar", "bul", "nerede"],
+    body: [
+      {
+        paragraphs: [
+          "Tüm planlarınız, hem koç talepleri hem de Instant AI planları, panelinizde bulunur.",
+          "Oradan görüntüleyebilir, indirebilir ve ilerlemenizi takip edebilirsiniz.",
+        ],
+      },
+      {
+        heading: "Panel bölümleri",
+        bullets: [
+          "Token bakiyesi ve geçmişi",
+          "Oluşturulan kurslar",
+          "Son etkinlikler",
+          "Tüm planlarınız",
+        ],
+      },
+      {
+        heading: "İlgili bağlantılar",
+        bullets: ["[Panel](/dashboard)"],
+      },
+    ],
+    updatedAt: "2025-01-15",
+    popular: true,
+  },
+  {
+    slug: "balance-and-history",
+    title: "Token bakiyesi ve geçmişini kontrol etme",
+    description: "Token bakiyenizi ve işlem geçmişinizi nasıl göreceğinizi öğrenin.",
+    category: "account_dashboard",
+    keywords: ["bakiye", "geçmiş", "işlem", "token"],
+    body: [
+      {
+        paragraphs: [
+          "Token bakiyeniz giriş yaptıktan sonra üst barda görünür.",
+          "Ayrıntılı bakiye ve işlem geçmişini panelinizde de görebilirsiniz.",
+        ],
+      },
+      {
+        heading: "İşlem geçmişi",
+        paragraphs: [
+          "Yüklemeler ve harcamalar dahil tüm token işlemlerinizi panelde görüntüleyin.",
+          "Her işlem tarihini, tutarı ve sebebi gösterir.",
+        ],
+      },
+      {
+        heading: "İlgili bağlantılar",
+        bullets: [
+          "[Panel](/dashboard)",
+          "[Ödeme ve tokenlar](/payments-tokens)",
+        ],
+      },
+    ],
+    updatedAt: "2025-01-15",
+  },
+  {
+    slug: "generation-stuck",
+    title: "Oluşturma takıldı veya yavaş",
+    description: "Plan üretimi çok uzun sürüyorsa ne yapmanız gerektiği.",
+    category: "troubleshooting",
+    keywords: ["takıldı", "yavaş", "yükleniyor", "oluşturma"],
+    body: [
+      {
+        paragraphs: [
+          "Oluşturma takılmış gibi görünüyorsa veya beklenenden uzun sürüyorsa şu adımları deneyin.",
+        ],
+      },
+      {
+        heading: "Sorun giderme adımları",
+        bullets: [
+          "Biraz bekleyin - karmaşık planlar zaman alabilir",
+          "Sayfayı yenileyin",
+          "İnternet bağlantınızı kontrol edin",
+          "Yeniden oluşturmayı deneyin",
+          "Sorun devam ederse destekle iletişime geçin",
+        ],
+      },
+      {
+        heading: "İlgili bağlantılar",
+        bullets: ["[Destekle iletişime geçin](/contact)"],
+      },
+    ],
+    updatedAt: "2025-01-15",
+  },
+  {
+    slug: "payment-issues",
+    title: "Ödeme sorunları ve çözümleri",
+    description: "Yaygın ödeme sorunları ve çözümleri.",
+    category: "troubleshooting",
+    keywords: ["ödeme", "checkout", "başarısız", "hata"],
+    body: [
+      {
+        paragraphs: [
+          "Ödeme sorunları yaşıyorsanız, burada bazı yaygın çözümler bulunur.",
+        ],
+      },
+      {
+        heading: "Yaygın sorunlar",
+        bullets: [
+          "Ödeme reddedildi - kart bilgilerinizi ve bakiyenizi kontrol edin",
+          "Ödeme sayfası yüklenmiyor - yenilemeyi veya farklı bir tarayıcı kullanmayı deneyin",
+          "Tokenlar eklenmedi - işlem kimliğinizle birlikte destekle iletişime geçin",
+        ],
+      },
+      {
+        heading: "İlgili bağlantılar",
+        bullets: [
+          "[Destekle iletişime geçin](/contact)",
+          "[Ödeme ve tokenlar](/payments-tokens)",
+        ],
+      },
+    ],
+    updatedAt: "2025-01-15",
+  },
+  {
+    slug: "common-ui-issues",
+    title: "Yaygın arayüz sorunları (yüklenme, boş durumlar)",
+    description: "Yaygın arayüz problemlerini giderin.",
+    category: "troubleshooting",
+    keywords: ["arayüz", "yüklenme", "boş", "hata"],
+    body: [
+      {
+        paragraphs: [
+          "Yüklenme sorunları veya boş durumlar görüyorsanız şu çözümleri deneyin.",
+        ],
+      },
+      {
+        heading: "Hızlı çözümler",
+        bullets: [
+          "Sayfayı yenileyin",
+          "Tarayıcı önbelleğinizi temizleyin",
+          "Farklı bir tarayıcı deneyin",
+          "İnternet bağlantınızı kontrol edin",
+          "Tarayıcı eklentilerini geçici olarak devre dışı bırakın",
+        ],
+      },
+      {
+        heading: "İlgili bağlantılar",
+        bullets: ["[Destekle iletişime geçin](/contact)"],
+      },
+    ],
+    updatedAt: "2025-01-15",
+  },
+  {
+    slug: "trust-safety-basics",
+    title: "Planlarımızla güvenli şekilde antrenman yapmak",
+    description: "Önemli güvenlik yönergeleri ve uyarılar.",
+    category: "trust_safety",
+    keywords: ["güvenlik", "antrenman", "uyarı", "rehber"],
+    body: [
+      {
+        paragraphs: [
+          "Planlarımız güvenli antrenman yapmanıza yardımcı olmak için tasarlanmıştır, ancak yeni bir egzersiz programına başlamadan önce her zaman bir sağlık uzmanına danışmalısınız.",
+        ],
+      },
+      {
+        heading: "Güvenlik yönergeleri",
+        bullets: [
+          "Başlamadan önce bir sağlık uzmanına danışın",
+          "Vücudunuzu dinleyin ve ağrı hissederseniz durun",
+          "Yavaş başlayın ve kademeli ilerleyin",
+          "Doğru form ve teknik kullanın",
+        ],
+      },
+      {
+        heading: "İlgili bağlantılar",
+        bullets: ["[Güven ve emniyet](/trust-safety)"],
+      },
+    ],
+    updatedAt: "2025-01-15",
+  }
+);
 
 export const CATEGORY_LABELS: Record<SupportCategory, string> = {
   tokens_billing: "Tokens & billing",
@@ -669,5 +1217,92 @@ export const CATEGORY_LABELS: Record<SupportCategory, string> = {
   troubleshooting: "Troubleshooting",
   trust_safety: "Trust & safety",
 };
+
+const CATEGORY_LABELS_TR: Record<SupportCategory, string> = {
+  tokens_billing: "Tokenlar ve ödemeler",
+  coach_requests: "Koç talepleri",
+  instant_ai: "Instant AI oluşturucu",
+  account_dashboard: "Hesap ve panel",
+  troubleshooting: "Sorun giderme",
+  trust_safety: "Güven ve emniyet",
+};
+
+const SUPPORT_ARTICLE_DATA = {
+  en: {
+    articles: SUPPORT_ARTICLES,
+    categoryLabels: CATEGORY_LABELS,
+  },
+  tr: {
+    articles: SUPPORT_ARTICLES_TR,
+    categoryLabels: CATEGORY_LABELS_TR,
+  },
+} as const;
+
+// Helper functions
+function getSupportLocaleData(locale: Locale = DEFAULT_LOCALE) {
+  return SUPPORT_ARTICLE_DATA[locale] ?? SUPPORT_ARTICLE_DATA.en;
+}
+
+export function getSupportArticles(locale: Locale = DEFAULT_LOCALE): SupportArticle[] {
+  return getSupportLocaleData(locale).articles;
+}
+
+export function getCategoryLabels(locale: Locale = DEFAULT_LOCALE): Record<SupportCategory, string> {
+  return getSupportLocaleData(locale).categoryLabels;
+}
+
+export function getArticleBySlug(
+  slug: string,
+  locale: Locale = DEFAULT_LOCALE
+): SupportArticle | undefined {
+  return getSupportArticles(locale).find((article) => article.slug === slug);
+}
+
+export function getArticlesByCategory(
+  category: SupportCategory | "all",
+  locale: Locale = DEFAULT_LOCALE
+): SupportArticle[] {
+  const articles = getSupportArticles(locale);
+  if (category === "all") return articles;
+  return articles.filter((article) => article.category === category);
+}
+
+export function getPopularArticles(locale: Locale = DEFAULT_LOCALE): SupportArticle[] {
+  return getSupportArticles(locale)
+    .filter((article) => article.popular)
+    .slice(0, 6);
+}
+
+export function searchArticles(
+  query: string,
+  locale: Locale = DEFAULT_LOCALE
+): SupportArticle[] {
+  const articles = getSupportArticles(locale);
+  if (!query.trim()) return articles;
+
+  const lowerQuery = query.toLowerCase();
+  return articles.filter((article) => {
+    if (
+      article.title.toLowerCase().includes(lowerQuery) ||
+      article.description.toLowerCase().includes(lowerQuery) ||
+      article.keywords.some((keyword) => keyword.toLowerCase().includes(lowerQuery))
+    ) {
+      return true;
+    }
+
+    return article.body.some((section) =>
+      (section.paragraphs ?? []).some((paragraph) =>
+        paragraph.toLowerCase().includes(lowerQuery)
+      )
+    );
+  });
+}
+
+export function getCategoryCount(
+  category: SupportCategory | "all",
+  locale: Locale = DEFAULT_LOCALE
+): number {
+  return getArticlesByCategory(category, locale).length;
+}
 
 

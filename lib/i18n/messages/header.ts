@@ -1,0 +1,46 @@
+export const headerMessages = {
+  en: {
+    brandAlt: "Chalet Coaching",
+    nav: {
+      dashboard: "Dashboard",
+      generator: "Course",
+      coaches: "Coaches",
+      howItWorks: "How it Works",
+      pricing: "Pricing",
+    },
+    links: {
+      title: "Links",
+      whatYouReceive: "What you receive",
+      trustSafety: "Trust & safety",
+      paymentsTokens: "Payments & tokens",
+      contact: "Contact us",
+    },
+    signIn: "Sign in",
+    createAccount: "Create account",
+    signOut: "Sign out",
+    mobileMenu: "Menu",
+    linksSectionLabel: "Links",
+  },
+  tr: {
+    brandAlt: "Chalet Coaching",
+    nav: {
+      dashboard: "Panel",
+      generator: "Program",
+      coaches: "Koçlar",
+      howItWorks: "Nasıl çalışır",
+      pricing: "Fiyatlandırma",
+    },
+    links: {
+      title: "Bağlantılar",
+      whatYouReceive: "Neler alırsınız",
+      trustSafety: "Güven ve emniyet",
+      paymentsTokens: "Ödeme ve tokenlar",
+      contact: "Bize ulaşın",
+    },
+    signIn: "Giriş yap",
+    createAccount: "Hesap oluştur",
+    signOut: "Çıkış yap",
+    mobileMenu: "Menü",
+    linksSectionLabel: "Bağlantılar",
+  },
+} as const;

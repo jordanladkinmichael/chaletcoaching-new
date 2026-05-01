@@ -7,9 +7,11 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Select } from "@/components/ui/select";
-import { cn } from "@/lib/utils";
+import { getCoachesCopy, getCoachOptions, getCoachValueLabel } from "@/lib/coaches-copy";
+import { useLocale } from "@/lib/i18n/client";
 import { calcCoachRequestTokens, formatNumber } from "@/lib/tokens";
 import { THEME } from "@/lib/theme";
+import { cn } from "@/lib/utils";
 
 interface RequestCoachFormProps {
   coachId: string;
@@ -26,48 +28,21 @@ interface FormData {
   notes: string;
 }
 
-const GOAL_OPTIONS = [
-  { value: "", label: "Select goal..." },
-  { value: "Strength", label: "Strength" },
-  { value: "Fat loss", label: "Fat loss" },
-  { value: "Mobility", label: "Mobility" },
-  { value: "Endurance", label: "Endurance" },
-  { value: "Posture", label: "Posture" },
-];
+const GOAL_VALUES = ["Strength", "Fat loss", "Mobility", "Endurance", "Posture"];
+const LEVEL_VALUES = ["Beginner", "Intermediate", "Advanced"];
+const TRAINING_TYPE_VALUES = ["Home", "Gym", "Mixed"];
+const EQUIPMENT_VALUES = ["None", "Basic", "Full gym"];
+const DAYS_PER_WEEK_VALUES = ["2", "3", "4", "5", "6"];
 
-const LEVEL_OPTIONS = [
-  { value: "", label: "Select level..." },
-  { value: "Beginner", label: "Beginner" },
-  { value: "Intermediate", label: "Intermediate" },
-  { value: "Advanced", label: "Advanced" },
-];
-
-const TRAINING_TYPE_OPTIONS = [
-  { value: "", label: "Select training type..." },
-  { value: "Home", label: "Home" },
-  { value: "Gym", label: "Gym" },
-  { value: "Mixed", label: "Mixed" },
-];
-
-const EQUIPMENT_OPTIONS = [
-  { value: "", label: "Select equipment..." },
-  { value: "None", label: "None" },
-  { value: "Basic", label: "Basic" },
-  { value: "Full gym", label: "Full gym" },
-];
-
-const DAYS_PER_WEEK_OPTIONS = [
-  { value: "", label: "Select days..." },
-  { value: "2", label: "2 days" },
-  { value: "3", label: "3 days" },
-  { value: "4", label: "4 days" },
-  { value: "5", label: "5 days" },
-  { value: "6", label: "6 days" },
-];
+function formatTokens(value: number) {
+  return `${formatNumber(value)} tokens`;
+}
 
 export function RequestCoachForm({ coachId, coachSlug, className }: RequestCoachFormProps) {
   const { data: session } = useSession();
   const router = useRouter();
+  const { locale } = useLocale();
+  const copy = getCoachesCopy(locale).requestCoachForm;
   const [formData, setFormData] = React.useState<FormData>({
     goal: "",
     level: "",
@@ -82,15 +57,36 @@ export function RequestCoachForm({ coachId, coachSlug, className }: RequestCoach
   const [balance, setBalance] = React.useState<number>(0);
   const [balanceLoading, setBalanceLoading] = React.useState(false);
 
-  // Load draft from localStorage on mount
+  const goalOptions = React.useMemo(
+    () => getCoachOptions(GOAL_VALUES, locale, copy.options.goal),
+    [copy.options.goal, locale]
+  );
+  const levelOptions = React.useMemo(
+    () => getCoachOptions(LEVEL_VALUES, locale, copy.options.level),
+    [copy.options.level, locale]
+  );
+  const trainingTypeOptions = React.useMemo(
+    () => getCoachOptions(TRAINING_TYPE_VALUES, locale, copy.options.trainingType),
+    [copy.options.trainingType, locale]
+  );
+  const equipmentOptions = React.useMemo(
+    () => getCoachOptions(EQUIPMENT_VALUES, locale, copy.options.equipment),
+    [copy.options.equipment, locale]
+  );
+  const daysPerWeekOptions = React.useMemo(
+    () => [
+      { value: "", label: copy.options.daysPerWeek },
+      ...DAYS_PER_WEEK_VALUES.map((value) => ({ value, label: copy.options.days(value) })),
+    ],
+    [copy.options]
+  );
+
   React.useEffect(() => {
     const draftKey = `coachRequestDraft:${coachSlug}`;
-    const draft = localStorage.getItem(draftKey);
-    if (draft) {
+    const restoreDraft = (raw: string | null) => {
+      if (!raw) return;
       try {
-        const parsed = JSON.parse(draft);
-        console.log("Draft loaded from localStorage:", parsed);
-        // Убеждаемся, что все поля установлены корректно
+        const parsed = JSON.parse(raw);
         setFormData({
           goal: parsed.goal || "",
           level: parsed.level || "",
@@ -99,70 +95,48 @@ export function RequestCoachForm({ coachId, coachSlug, className }: RequestCoach
           daysPerWeek: parsed.daysPerWeek || "",
           notes: parsed.notes || "",
         });
-        // Очищаем ошибки при загрузке draft
         setErrors({});
-        console.log("Draft restored and form data set");
       } catch (err) {
         console.error("Failed to parse draft:", err);
       }
-    }
+    };
 
-    // Check if we're returning from auth (URL has #request)
+    restoreDraft(localStorage.getItem(draftKey));
+
     if (window.location.hash === "#request") {
-      const draftAfterAuth = localStorage.getItem(draftKey);
-      if (draftAfterAuth) {
-        try {
-          const parsed = JSON.parse(draftAfterAuth);
-          console.log("Draft loaded after auth:", parsed);
-          setFormData({
-            goal: parsed.goal || "",
-            level: parsed.level || "",
-            trainingType: parsed.trainingType || "",
-            equipment: parsed.equipment || "",
-            daysPerWeek: parsed.daysPerWeek || "",
-            notes: parsed.notes || "",
-          });
-          setErrors({});
-          // Scroll to form
-          setTimeout(() => {
-            document.getElementById("request-form")?.scrollIntoView({ behavior: "smooth" });
-          }, 100);
-        } catch (err) {
-          console.error("Failed to parse draft:", err);
-        }
-      }
+      restoreDraft(localStorage.getItem(draftKey));
+      setTimeout(() => {
+        document.getElementById("request-form")?.scrollIntoView({ behavior: "smooth" });
+      }, 100);
     }
   }, [coachSlug]);
 
-  // Save draft to localStorage on change
   React.useEffect(() => {
     const draftKey = `coachRequestDraft:${coachSlug}`;
-    const hasData = Object.values(formData).some((v) => v !== "");
+    const hasData = Object.values(formData).some((value) => value !== "");
     if (hasData) {
       localStorage.setItem(draftKey, JSON.stringify(formData));
     }
   }, [formData, coachSlug]);
 
-  // Load balance for authenticated users
   React.useEffect(() => {
-    if (session?.user) {
-      setBalanceLoading(true);
-      fetch("/api/tokens/balance")
-        .then((res) => res.json())
-        .then((data) => {
-          setBalance(typeof data.balance === "number" ? data.balance : 0);
-        })
-        .catch((err) => {
-          console.error("Error loading balance:", err);
-          setBalance(0);
-        })
-        .finally(() => {
-          setBalanceLoading(false);
-        });
-    }
+    if (!session?.user) return;
+
+    setBalanceLoading(true);
+    fetch("/api/tokens/balance")
+      .then((res) => res.json())
+      .then((data) => {
+        setBalance(typeof data.balance === "number" ? data.balance : 0);
+      })
+      .catch((err) => {
+        console.error("Error loading balance:", err);
+        setBalance(0);
+      })
+      .finally(() => {
+        setBalanceLoading(false);
+      });
   }, [session?.user]);
 
-  // Calculate cost breakdown
   const costBreakdown = React.useMemo(() => {
     if (!formData.level || !formData.trainingType || !formData.equipment || !formData.daysPerWeek) {
       return null;
@@ -176,32 +150,32 @@ export function RequestCoachForm({ coachId, coachSlug, className }: RequestCoach
   }, [formData.level, formData.trainingType, formData.equipment, formData.daysPerWeek]);
 
   const hasInsufficientBalance = Boolean(session?.user && costBreakdown && balance < costBreakdown.total);
+  const displayValue = React.useCallback((value: string) => getCoachValueLabel(value, locale), [locale]);
+
+  const updateField = (field: keyof FormData, value: string) => {
+    setFormData((current) => ({ ...current, [field]: value }));
+    if (errors[field]) {
+      setErrors((current) => ({ ...current, [field]: undefined }));
+    }
+  };
 
   const validate = (): boolean => {
-    console.log("Validating form data:", formData);
     const newErrors: Partial<FormData> = {};
-    if (!formData.goal || formData.goal.trim() === "") newErrors.goal = "Required";
-    if (!formData.level || formData.level.trim() === "") newErrors.level = "Required";
-    if (!formData.trainingType || formData.trainingType.trim() === "") newErrors.trainingType = "Required";
-    if (!formData.equipment || formData.equipment.trim() === "") newErrors.equipment = "Required";
-    if (!formData.daysPerWeek || formData.daysPerWeek.trim() === "") newErrors.daysPerWeek = "Required";
-    
-    console.log("Validation errors:", newErrors);
+    if (!formData.goal.trim()) newErrors.goal = copy.required;
+    if (!formData.level.trim()) newErrors.level = copy.required;
+    if (!formData.trainingType.trim()) newErrors.trainingType = copy.required;
+    if (!formData.equipment.trim()) newErrors.equipment = copy.required;
+    if (!formData.daysPerWeek.trim()) newErrors.daysPerWeek = copy.required;
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    console.log("Form submit triggered with data:", formData);
-    
-    if (!validate()) {
-      console.log("Validation failed, not submitting");
-      return;
-    }
 
-    // If not authenticated, save draft and redirect to login
+    if (!validate()) return;
+
     if (!session?.user) {
       const draftKey = `coachRequestDraft:${coachSlug}`;
       localStorage.setItem(draftKey, JSON.stringify(formData));
@@ -229,27 +203,21 @@ export function RequestCoachForm({ coachId, coachSlug, className }: RequestCoach
 
       if (!response.ok) {
         const error = await response.json();
-        // Handle insufficient tokens error
         if (error.error === "Insufficient tokens") {
-          // Reload balance to show updated value
           const balanceRes = await fetch("/api/tokens/balance");
           if (balanceRes.ok) {
             const balanceData = await balanceRes.json();
             setBalance(typeof balanceData.balance === "number" ? balanceData.balance : 0);
           }
-          throw new Error(error.error || "Not enough tokens to submit request");
+          throw new Error(error.error || copy.notEnoughSubmitError);
         }
-        throw new Error(error.error || "Failed to submit request");
+        throw new Error(error.error || copy.submitError);
       }
 
-      // Clear draft
-      const draftKey = `coachRequestDraft:${coachSlug}`;
-      localStorage.removeItem(draftKey);
-
+      localStorage.removeItem(`coachRequestDraft:${coachSlug}`);
       setIsSuccess(true);
     } catch (error) {
       console.error("Error submitting request:", error);
-      // You could show an error toast here
     } finally {
       setIsSubmitting(false);
     }
@@ -259,12 +227,10 @@ export function RequestCoachForm({ coachId, coachSlug, className }: RequestCoach
     return (
       <Card id="request-form" className={cn("p-6", className)}>
         <div className="text-center">
-          <h2 className="text-xl font-semibold mb-2">Request received</h2>
-          <p className="text-text-muted mb-6">
-            Next: you can track it in your dashboard.
-          </p>
+          <h2 className="text-xl font-semibold mb-2">{copy.successTitle}</h2>
+          <p className="text-text-muted mb-6">{copy.successBody}</p>
           <Button variant="primary" size="lg" asChild>
-            <a href="/dashboard">Go to dashboard</a>
+            <a href="/dashboard">{copy.dashboard}</a>
           </Button>
         </div>
       </Card>
@@ -273,230 +239,169 @@ export function RequestCoachForm({ coachId, coachSlug, className }: RequestCoach
 
   return (
     <Card id="request-form" className={cn("p-6", className)}>
-      <h2 className="text-xl font-semibold mb-2">Tell your coach what you want</h2>
-      <p className="text-sm text-text-muted mb-6">
-        A few details help tailor your plan.
-      </p>
+      <h2 className="text-xl font-semibold mb-2">{copy.title}</h2>
+      <p className="text-sm text-text-muted mb-6">{copy.subtitle}</p>
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label htmlFor="goal" className="block text-sm font-medium mb-2">
-            Goal
+            {copy.labels.goal}
           </label>
           <Select
             id="goal"
-            options={GOAL_OPTIONS}
-            value={formData.goal || ""}
-            onChange={(e) => {
-              console.log("Goal changed to:", e.target.value);
-              setFormData({ ...formData, goal: e.target.value });
-              // Очищаем ошибку при изменении
-              if (errors.goal) {
-                setErrors({ ...errors, goal: undefined });
-              }
-            }}
+            options={goalOptions}
+            value={formData.goal}
+            onChange={(e) => updateField("goal", e.target.value)}
             className={errors.goal ? "border-danger" : ""}
           />
-          {errors.goal && (
-            <p className="text-sm text-danger mt-1">{errors.goal}</p>
-          )}
+          {errors.goal && <p className="text-sm text-danger mt-1">{errors.goal}</p>}
         </div>
 
         <div>
           <label htmlFor="level" className="block text-sm font-medium mb-2">
-            Level
+            {copy.labels.level}
           </label>
           <Select
             id="level"
-            options={LEVEL_OPTIONS}
-            value={formData.level || ""}
-            onChange={(e) => {
-              console.log("Level changed to:", e.target.value);
-              setFormData({ ...formData, level: e.target.value });
-              // Очищаем ошибку при изменении
-              if (errors.level) {
-                setErrors({ ...errors, level: undefined });
-              }
-            }}
+            options={levelOptions}
+            value={formData.level}
+            onChange={(e) => updateField("level", e.target.value)}
             className={errors.level ? "border-danger" : ""}
           />
-          {errors.level && (
-            <p className="text-sm text-danger mt-1">{errors.level}</p>
-          )}
+          {errors.level && <p className="text-sm text-danger mt-1">{errors.level}</p>}
         </div>
 
         <div>
           <label htmlFor="trainingType" className="block text-sm font-medium mb-2">
-            Training type
+            {copy.labels.trainingType}
           </label>
           <Select
             id="trainingType"
-            options={TRAINING_TYPE_OPTIONS}
-            value={formData.trainingType || ""}
-            onChange={(e) => {
-              console.log("Training type changed to:", e.target.value);
-              setFormData({ ...formData, trainingType: e.target.value });
-              // Очищаем ошибку при изменении
-              if (errors.trainingType) {
-                setErrors({ ...errors, trainingType: undefined });
-              }
-            }}
+            options={trainingTypeOptions}
+            value={formData.trainingType}
+            onChange={(e) => updateField("trainingType", e.target.value)}
             className={errors.trainingType ? "border-danger" : ""}
           />
-          {errors.trainingType && (
-            <p className="text-sm text-danger mt-1">{errors.trainingType}</p>
-          )}
+          {errors.trainingType && <p className="text-sm text-danger mt-1">{errors.trainingType}</p>}
         </div>
 
         <div>
           <label htmlFor="equipment" className="block text-sm font-medium mb-2">
-            Equipment
+            {copy.labels.equipment}
           </label>
           <Select
             id="equipment"
-            options={EQUIPMENT_OPTIONS}
-            value={formData.equipment || ""}
-            onChange={(e) => {
-              console.log("Equipment changed to:", e.target.value);
-              setFormData({ ...formData, equipment: e.target.value });
-              // Очищаем ошибку при изменении
-              if (errors.equipment) {
-                setErrors({ ...errors, equipment: undefined });
-              }
-            }}
+            options={equipmentOptions}
+            value={formData.equipment}
+            onChange={(e) => updateField("equipment", e.target.value)}
             className={errors.equipment ? "border-danger" : ""}
           />
-          {errors.equipment && (
-            <p className="text-sm text-danger mt-1">{errors.equipment}</p>
-          )}
+          {errors.equipment && <p className="text-sm text-danger mt-1">{errors.equipment}</p>}
         </div>
 
         <div>
           <label htmlFor="daysPerWeek" className="block text-sm font-medium mb-2">
-            Days per week
+            {copy.labels.daysPerWeek}
           </label>
           <Select
             id="daysPerWeek"
-            options={DAYS_PER_WEEK_OPTIONS}
-            value={formData.daysPerWeek || ""}
-            onChange={(e) => {
-              console.log("Days per week changed to:", e.target.value);
-              setFormData({ ...formData, daysPerWeek: e.target.value });
-              // Очищаем ошибку при изменении
-              if (errors.daysPerWeek) {
-                setErrors({ ...errors, daysPerWeek: undefined });
-              }
-            }}
+            options={daysPerWeekOptions}
+            value={formData.daysPerWeek}
+            onChange={(e) => updateField("daysPerWeek", e.target.value)}
             className={errors.daysPerWeek ? "border-danger" : ""}
           />
-          {errors.daysPerWeek && (
-            <p className="text-sm text-danger mt-1">{errors.daysPerWeek}</p>
-          )}
+          {errors.daysPerWeek && <p className="text-sm text-danger mt-1">{errors.daysPerWeek}</p>}
         </div>
 
         <div>
           <label htmlFor="notes" className="block text-sm font-medium mb-2">
-            Notes (optional)
+            {copy.labels.notes}
           </label>
           <textarea
             id="notes"
             rows={4}
             value={formData.notes}
-            onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+            onChange={(e) => updateField("notes", e.target.value)}
             className="w-full rounded-xl border border-border bg-surface px-4 py-2.5 text-sm text-text placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-focus focus:ring-offset-2 focus:ring-offset-bg resize-none"
-            placeholder="Any specific preferences, injuries, or goals you'd like to mention..."
+            placeholder={copy.placeholders.notes}
           />
         </div>
 
-        {/* Cost breakdown panel */}
         {session?.user && (
           <div className="pt-4 border-t" style={{ borderColor: THEME.cardBorder }}>
-            <div className="text-sm font-medium opacity-80 mb-3">Coach request cost</div>
-            
+            <div className="text-sm font-medium opacity-80 mb-3">{copy.costTitle}</div>
+
             {costBreakdown ? (
               <div className="space-y-2">
                 <div className="flex justify-between items-center text-sm">
-                  <span className="opacity-80">Base</span>
-                  <span className="font-mono">◎ {formatNumber(costBreakdown.base)}</span>
+                  <span className="opacity-80">{copy.base}</span>
+                  <span className="font-mono">{formatTokens(costBreakdown.base)}</span>
                 </div>
-                
+
                 {costBreakdown.levelAdd > 0 && (
                   <div className="flex justify-between items-center text-sm">
-                    <span className="opacity-80">Level ({formData.level})</span>
-                    <span className="font-mono">+◎ {formatNumber(costBreakdown.levelAdd)}</span>
+                    <span className="opacity-80">{copy.labels.level} ({displayValue(formData.level)})</span>
+                    <span className="font-mono">+{formatTokens(costBreakdown.levelAdd)}</span>
                   </div>
                 )}
-                
+
                 {costBreakdown.trainingTypeAdd > 0 && (
                   <div className="flex justify-between items-center text-sm">
-                    <span className="opacity-80">Training type ({formData.trainingType})</span>
-                    <span className="font-mono">+◎ {formatNumber(costBreakdown.trainingTypeAdd)}</span>
+                    <span className="opacity-80">{copy.labels.trainingType} ({displayValue(formData.trainingType)})</span>
+                    <span className="font-mono">+{formatTokens(costBreakdown.trainingTypeAdd)}</span>
                   </div>
                 )}
-                
+
                 {costBreakdown.equipmentAdd > 0 && (
                   <div className="flex justify-between items-center text-sm">
-                    <span className="opacity-80">Equipment ({formData.equipment})</span>
-                    <span className="font-mono">+◎ {formatNumber(costBreakdown.equipmentAdd)}</span>
+                    <span className="opacity-80">{copy.labels.equipment} ({displayValue(formData.equipment)})</span>
+                    <span className="font-mono">+{formatTokens(costBreakdown.equipmentAdd)}</span>
                   </div>
                 )}
-                
+
                 {costBreakdown.daysAdd > 0 && (
                   <div className="flex justify-between items-center text-sm">
-                    <span className="opacity-80">Days per week ({formData.daysPerWeek} days)</span>
-                    <span className="font-mono">+◎ {formatNumber(costBreakdown.daysAdd)}</span>
+                    <span className="opacity-80">{copy.labels.daysPerWeek} ({copy.options.days(formData.daysPerWeek)})</span>
+                    <span className="font-mono">+{formatTokens(costBreakdown.daysAdd)}</span>
                   </div>
                 )}
-                
+
                 <div className="pt-2 border-t" style={{ borderColor: THEME.cardBorder }}>
                   <div className="flex justify-between items-center">
-                    <span className="font-semibold">Total cost</span>
-                    <span className="font-mono font-semibold text-lg">◎ {formatNumber(costBreakdown.total)}</span>
+                    <span className="font-semibold">{copy.totalCost}</span>
+                    <span className="font-mono font-semibold text-lg">{formatTokens(costBreakdown.total)}</span>
                   </div>
                 </div>
 
-                {session?.user && (
-                  <div className="mt-2 text-xs opacity-70">
-                    {balanceLoading ? "Loading balance..." : `Balance: ?-? ${formatNumber(balance)}`}
-                  </div>
-                )}
+                <div className="mt-2 text-xs opacity-70">
+                  {balanceLoading ? copy.loadingBalance : `${copy.balance} ${formatTokens(balance)}`}
+                </div>
 
-                {/* Insufficient balance error */}
                 {hasInsufficientBalance && (
                   <div className="mt-3 p-3 rounded-lg border" style={{ borderColor: THEME.cardBorder, background: "#19191f" }}>
-                    <div className="text-sm text-text-muted mb-2">Not enough tokens</div>
+                    <div className="text-sm text-text-muted mb-2">{copy.notEnoughTokens}</div>
                     <div className="text-xs opacity-70 mb-2">
-                      You have ◎ {formatNumber(balance)}, need ◎ {formatNumber(costBreakdown.total)}
+                      {copy.haveNeed(formatTokens(balance), formatTokens(costBreakdown.total))}
                     </div>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      asChild
-                      className="text-xs"
-                    >
-                      <Link href="/pricing">Top up tokens</Link>
+                    <Button variant="outline" size="sm" asChild className="text-xs">
+                      <Link href="/pricing">{copy.topUp}</Link>
                     </Button>
                   </div>
                 )}
 
-                <p className="text-xs opacity-70 mt-2">
-                  Tokens are charged when you submit the request.
-                </p>
+                <p className="text-xs opacity-70 mt-2">{copy.chargedWhenSubmit}</p>
               </div>
             ) : (
-              <div className="text-sm opacity-70">
-                Complete required fields to see total
-              </div>
+              <div className="text-sm opacity-70">{copy.completeRequired}</div>
             )}
           </div>
         )}
 
-        {/* Inline error for insufficient balance */}
-        {hasInsufficientBalance && (
+        {hasInsufficientBalance && costBreakdown && (
           <div className="p-3 rounded-lg border" style={{ borderColor: "#ef4444", background: "#19191f" }}>
-            <div className="text-sm text-danger mb-2">Insufficient tokens</div>
+            <div className="text-sm text-danger mb-2">{copy.insufficientTokens}</div>
             <div className="text-xs opacity-70">
-              You need ◎ {formatNumber(costBreakdown!.total)} but only have ◎ {formatNumber(balance)}
+              {copy.needButHave(formatTokens(costBreakdown.total), formatTokens(balance))}
             </div>
           </div>
         )}
@@ -509,10 +414,9 @@ export function RequestCoachForm({ coachId, coachSlug, className }: RequestCoach
           isLoading={isSubmitting}
           disabled={isSubmitting || hasInsufficientBalance}
         >
-          {session?.user ? "Send request" : "Sign in to send your request"}
+          {session?.user ? copy.sendRequest : copy.signInToSend}
         </Button>
       </form>
     </Card>
   );
 }
-

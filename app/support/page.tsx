@@ -29,13 +29,13 @@ import { useDebounce } from "@/lib/hooks";
 import { cardHoverLift, fadeIn } from "@/lib/animations";
 import { THEME } from "@/lib/theme";
 import {
-  SUPPORT_ARTICLES,
+  getSupportArticles,
   getArticleBySlug,
   getArticlesByCategory,
   searchArticles,
   getCategoryCount,
   getPopularArticles,
-  CATEGORY_LABELS,
+  getCategoryLabels,
   type SupportCategory,
   type SupportArticle,
 } from "@/lib/support-articles";
@@ -43,6 +43,7 @@ import type { Route } from "next";
 import { SupportSearch } from "@/components/support/support-search";
 import { ArticleList } from "@/components/support/article-list";
 import { ArticleViewer } from "@/components/support/article-viewer";
+import { useLocale, useTranslations } from "@/lib/i18n/client";
 
 type Region = "EU" | "UK" | "US";
 
@@ -50,6 +51,8 @@ function SupportPageContent() {
   const { data: session } = useSession();
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { locale } = useLocale();
+  const tSupport = useTranslations("support");
   const { currency } = useCurrencyStore();
   const [balance, setBalance] = useState(0);
   const [balanceLoading, setBalanceLoading] = useState(false);
@@ -68,6 +71,8 @@ function SupportPageContent() {
   // Local state
   const [searchQuery, setSearchQuery] = useState(queryParam);
   const debouncedSearch = useDebounce(searchQuery, 150);
+  const allArticles = useMemo(() => getSupportArticles(locale), [locale]);
+  const categoryLabels = useMemo(() => getCategoryLabels(locale), [locale]);
 
   // Check for reduced motion preference
   useEffect(() => {
@@ -120,7 +125,7 @@ function SupportPageContent() {
   // Load article from URL on mount
   useEffect(() => {
     if (articleSlug) {
-      const article = getArticleBySlug(articleSlug);
+      const article = getArticleBySlug(articleSlug, locale);
       if (!article) {
         // Slug not found - reset parameter
         const params = new URLSearchParams(searchParams.toString());
@@ -137,7 +142,7 @@ function SupportPageContent() {
         }
       }
     }
-  }, [articleSlug, searchParams, router]);
+  }, [articleSlug, locale, searchParams, router]);
 
   // Auth handler
   const openAuth = (mode: "signin" | "signup" = "signin") => {
@@ -180,11 +185,11 @@ function SupportPageContent() {
   const filteredArticles = useMemo(() => {
     let articles =
       activeCategory === "all"
-        ? SUPPORT_ARTICLES
-        : getArticlesByCategory(activeCategory);
+        ? allArticles
+        : getArticlesByCategory(activeCategory, locale);
 
     if (debouncedSearch) {
-      articles = searchArticles(debouncedSearch).filter((article) =>
+      articles = searchArticles(debouncedSearch, locale).filter((article) =>
         activeCategory === "all"
           ? true
           : article.category === activeCategory
@@ -192,10 +197,12 @@ function SupportPageContent() {
     }
 
     return articles;
-  }, [debouncedSearch, activeCategory]);
+  }, [activeCategory, allArticles, debouncedSearch, locale]);
 
   // Selected article
-  const selectedArticle: SupportArticle | null = articleSlug ? getArticleBySlug(articleSlug) ?? null : null;
+  const selectedArticle: SupportArticle | null = articleSlug
+    ? getArticleBySlug(articleSlug, locale) ?? null
+    : null;
 
   // Handle article selection
   const handleSelectArticle = (slug: string) => {
@@ -253,59 +260,78 @@ function SupportPageContent() {
     {
       category: "tokens_billing" as SupportCategory,
       icon: Coins,
-      label: CATEGORY_LABELS.tokens_billing,
-      description: "Rates, top-ups, receipts, and pricing",
+      label: categoryLabels.tokens_billing,
+      description: tSupport("categoryDescriptionTokens"),
     },
     {
       category: "coach_requests" as SupportCategory,
       icon: UserRound,
-      label: CATEGORY_LABELS.coach_requests,
-      description: "How to request a coach-built plan",
+      label: categoryLabels.coach_requests,
+      description: tSupport("categoryDescriptionCoach"),
     },
     {
       category: "instant_ai" as SupportCategory,
       icon: Zap,
-      label: CATEGORY_LABELS.instant_ai,
-      description: "Preview, publish, and common issues",
+      label: categoryLabels.instant_ai,
+      description: tSupport("categoryDescriptionInstantAi"),
     },
     {
       category: "account_dashboard" as SupportCategory,
       icon: LayoutDashboard,
-      label: CATEGORY_LABELS.account_dashboard,
-      description: "Sign-in, balance, and where to find plans",
+      label: categoryLabels.account_dashboard,
+      description: tSupport("categoryDescriptionAccount"),
     },
     {
       category: "troubleshooting" as SupportCategory,
       icon: Wrench,
-      label: CATEGORY_LABELS.troubleshooting,
-      description: "Fix common errors and loading issues",
+      label: categoryLabels.troubleshooting,
+      description: tSupport("categoryDescriptionTroubleshooting"),
     },
     {
       category: "trust_safety" as SupportCategory,
       icon: Shield,
-      label: CATEGORY_LABELS.trust_safety,
-      description: "Safe training guidance and disclaimers",
+      label: categoryLabels.trust_safety,
+      description: tSupport("categoryDescriptionSafety"),
     },
   ];
 
   // Popular articles
-  const popularArticles = getPopularArticles();
+  const popularArticles = getPopularArticles(locale);
 
   // Common fixes data
-  const commonFixes = {
-    coach: [
-      { slug: "coach-request-overview", text: "How coach requests work" },
-      { slug: "coach-request-pricing", text: "Understanding pricing" },
-      { slug: "coach-request-tips", text: "Tips for better requests" },
-      { slug: "coach-profile-request", text: "Requesting from a profile" },
-    ],
-    instantAi: [
-      { slug: "instant-ai-preview", text: "How previews work" },
-      { slug: "instant-ai-publish", text: "Publishing your plan" },
-      { slug: "instant-ai-costs", text: "What affects cost" },
-      { slug: "generation-stuck", text: "Generation is stuck" },
-    ],
-  };
+  const commonFixes = useMemo(
+    () => ({
+      coach:
+        locale === "tr"
+          ? [
+              { slug: "coach-request-overview", text: "Koç talepleri nasıl çalışır" },
+              { slug: "coach-request-pricing", text: "Fiyatlandırmayı anlamak" },
+              { slug: "coach-request-tips", text: "Daha iyi talepler için ipuçları" },
+              { slug: "coach-profile-request", text: "Profilden talep oluşturmak" },
+            ]
+          : [
+              { slug: "coach-request-overview", text: "How coach requests work" },
+              { slug: "coach-request-pricing", text: "Understanding pricing" },
+              { slug: "coach-request-tips", text: "Tips for better requests" },
+              { slug: "coach-profile-request", text: "Requesting from a profile" },
+            ],
+      instantAi:
+        locale === "tr"
+          ? [
+              { slug: "instant-ai-preview", text: "Önizlemeler nasıl çalışır" },
+              { slug: "instant-ai-publish", text: "Planınızı yayınlamak" },
+              { slug: "instant-ai-costs", text: "Maliyeti ne etkiler" },
+              { slug: "generation-stuck", text: "Oluşturma takıldı" },
+            ]
+          : [
+              { slug: "instant-ai-preview", text: "How previews work" },
+              { slug: "instant-ai-publish", text: "Publishing your plan" },
+              { slug: "instant-ai-costs", text: "What affects cost" },
+              { slug: "generation-stuck", text: "Generation is stuck" },
+            ],
+    }),
+    [locale]
+  );
 
   return (
     <div className="min-h-screen flex flex-col bg-bg text-text">
@@ -330,9 +356,9 @@ function SupportPageContent() {
               className="space-y-6"
             >
               <div className="text-center space-y-4 max-w-3xl mx-auto">
-                <H1>Support and help center</H1>
+                <H1>{tSupport("heroTitle")}</H1>
                 <Paragraph className="text-lg">
-                  Find quick answers about tokens, payments, coach requests, and Instant AI plans.
+                  {tSupport("heroSubtitle")}
                 </Paragraph>
               </div>
 
@@ -349,19 +375,19 @@ function SupportPageContent() {
                   href="/payments-tokens"
                   className="opacity-70 hover:opacity-100 transition-opacity underline"
                 >
-                  Payments & tokens
+                  {tSupport("heroLinkPaymentsTokens")}
                 </Link>
                 <Link
                   href="/how-it-works"
                   className="opacity-70 hover:opacity-100 transition-opacity underline"
                 >
-                  How it works
+                  {tSupport("heroLinkHowItWorks")}
                 </Link>
                 <Link
                   href="/contact?topic=Tokens%20and%20billing"
                   className="opacity-70 hover:opacity-100 transition-opacity underline"
                 >
-                  Contact us
+                  {tSupport("heroLinkContact")}
                 </Link>
               </div>
             </motion.div>
@@ -376,7 +402,7 @@ function SupportPageContent() {
               animate="visible"
               variants={sectionVariants}
             >
-              <H2 className="mb-8 text-center">Browse by topic</H2>
+              <H2 className="mb-8 text-center">{tSupport("categoryTitle")}</H2>
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {categoryCards.map((card) => {
                   const Icon = card.icon;
@@ -422,7 +448,7 @@ function SupportPageContent() {
               animate="visible"
               variants={sectionVariants}
             >
-              <H2 className="mb-6">Articles</H2>
+              <H2 className="mb-6">{tSupport("articlesTitle")}</H2>
 
               {/* Filter chips */}
               <div className="flex flex-wrap gap-2 mb-6">
@@ -439,7 +465,7 @@ function SupportPageContent() {
                       : {}
                   }
                 >
-                  All ({getCategoryCount("all")})
+                  {tSupport("all")} ({getCategoryCount("all", locale)})
                 </button>
                 {categoryCards.map((card) => (
                   <button
@@ -456,7 +482,7 @@ function SupportPageContent() {
                         : {}
                     }
                   >
-                    {card.label} ({getCategoryCount(card.category)})
+                    {card.label} ({getCategoryCount(card.category, locale)})
                   </button>
                 ))}
               </div>
@@ -464,12 +490,14 @@ function SupportPageContent() {
               {/* Articles grid */}
               {filteredArticles.length === 0 ? (
                 <Card className="text-center py-12">
-                  <H3 className="mb-2">No results</H3>
+                  <H3 className="mb-2">{tSupport("noResultsTitle")}</H3>
                   <Paragraph className="opacity-70 mb-4">
-                    Try different keywords or browse by topic.
+                    {tSupport("noResultsDescription")}
                   </Paragraph>
                   <Button variant="primary" asChild>
-                    <Link href="/contact?topic=Other%20%2F%20Support">Contact support</Link>
+                    <Link href="/contact?topic=Other%20%2F%20Support">
+                      {tSupport("noArticlesButton")}
+                    </Link>
                   </Button>
                 </Card>
               ) : (
@@ -512,7 +540,7 @@ function SupportPageContent() {
               animate="visible"
               variants={sectionVariants}
             >
-              <H2 className="mb-6 text-center">Popular articles</H2>
+              <H2 className="mb-6 text-center">{tSupport("popularArticles")}</H2>
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 max-w-4xl mx-auto">
                 {popularArticles.map((article) => (
                   <button
@@ -541,11 +569,11 @@ function SupportPageContent() {
               animate="visible"
               variants={sectionVariants}
             >
-              <H2 className="mb-6 text-center">Common fixes</H2>
+              <H2 className="mb-6 text-center">{tSupport("commonFixes")}</H2>
               <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
                 {/* Coach requests */}
                 <Card>
-                  <H3 className="mb-4">Coach requests</H3>
+                  <H3 className="mb-4">{tSupport("commonFixesCoach")}</H3>
                   <ul className="space-y-2">
                     {commonFixes.coach.map((fix) => (
                       <li key={fix.slug}>
@@ -562,7 +590,7 @@ function SupportPageContent() {
 
                 {/* Instant AI */}
                 <Card>
-                  <H3 className="mb-4">Instant AI</H3>
+                  <H3 className="mb-4">{tSupport("commonFixesAi")}</H3>
                   <ul className="space-y-2">
                     {commonFixes.instantAi.map((fix) => (
                       <li key={fix.slug}>
@@ -590,46 +618,46 @@ function SupportPageContent() {
               variants={sectionVariants}
               className="max-w-3xl mx-auto text-center"
             >
-              <H2 className="mb-4">Still need help?</H2>
+              <H2 className="mb-4">{tSupport("stillNeedHelpTitle")}</H2>
               <Paragraph className="mb-6">
-                If you can&apos;t find an answer, contact us and include as much detail as possible.
+                {tSupport("stillNeedHelpDescription")}
               </Paragraph>
 
               <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8">
                 <Button variant="primary" asChild>
-                  <Link href="/contact">Contact support</Link>
+                  <Link href="/contact">{tSupport("contactSupport")}</Link>
                 </Button>
                 <Button variant="outline" asChild>
-                  <Link href="/contact?topic=Other%20%2F%20Support">Report an issue</Link>
+                  <Link href="/contact?topic=Other%20%2F%20Support">{tSupport("reportIssue")}</Link>
                 </Button>
               </div>
 
               <Card className="text-left">
-                <H3 className="mb-4">Checklist</H3>
+                <H3 className="mb-4">{tSupport("checklistTitle")}</H3>
                 <ul className="space-y-2">
                   <li className="flex gap-3">
                     <div className="flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center mt-0.5" style={{ backgroundColor: THEME.accent + "20" }}>
                       <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: THEME.accent }} />
                     </div>
-                    <Paragraph className="opacity-85 mb-0">What you were trying to do</Paragraph>
+                    <Paragraph className="opacity-85 mb-0">{tSupport("checklistIntent")}</Paragraph>
                   </li>
                   <li className="flex gap-3">
                     <div className="flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center mt-0.5" style={{ backgroundColor: THEME.accent + "20" }}>
                       <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: THEME.accent }} />
                     </div>
-                    <Paragraph className="opacity-85 mb-0">Any error message</Paragraph>
+                    <Paragraph className="opacity-85 mb-0">{tSupport("checklistError")}</Paragraph>
                   </li>
                   <li className="flex gap-3">
                     <div className="flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center mt-0.5" style={{ backgroundColor: THEME.accent + "20" }}>
                       <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: THEME.accent }} />
                     </div>
-                    <Paragraph className="opacity-85 mb-0">Screenshots if possible</Paragraph>
+                    <Paragraph className="opacity-85 mb-0">{tSupport("checklistScreenshots")}</Paragraph>
                   </li>
                   <li className="flex gap-3">
                     <div className="flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center mt-0.5" style={{ backgroundColor: THEME.accent + "20" }}>
                       <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: THEME.accent }} />
                     </div>
-                    <Paragraph className="opacity-85 mb-0">Your account email (if signed in)</Paragraph>
+                    <Paragraph className="opacity-85 mb-0">{tSupport("checklistEmail")}</Paragraph>
                   </li>
                 </ul>
               </Card>

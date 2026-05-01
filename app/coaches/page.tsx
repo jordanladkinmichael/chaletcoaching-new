@@ -12,27 +12,15 @@ import Link from "next/link";
 import { cn } from "@/lib/utils";
 import SiteHeader from "@/components/site-header";
 import SiteFooter from "@/components/site-footer";
+import { useLocale } from "@/lib/i18n/client";
+import { getCoachesCopy } from "@/lib/coaches-copy";
 import type { Route } from "next";
-
-const SORT_OPTIONS = [
-  { value: "recommended", label: "Recommended" },
-  { value: "top-rated", label: "Top rated" },
-  { value: "newest", label: "Newest" },
-];
-
-const QUICK_FILTERS = [
-  { label: "Strength", type: "goal", value: "Strength" },
-  { label: "Fat loss", type: "goal", value: "Fat loss" },
-  { label: "Mobility", type: "goal", value: "Mobility" },
-  { label: "Endurance", type: "goal", value: "Endurance" },
-  { label: "Posture", type: "goal", value: "Posture" },
-  { label: "Home", type: "trainingType", value: "Home" },
-  { label: "Gym", type: "trainingType", value: "Gym" },
-];
 
 function CoachesPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { locale } = useLocale();
+  const copy = getCoachesCopy(locale);
   const [coaches, setCoaches] = React.useState<CoachCardData[]>([]);
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
@@ -105,6 +93,8 @@ function CoachesPageContent() {
       params.set("sort", sort);
     }
 
+    params.set("locale", locale);
+
     fetch(`/api/coaches?${params.toString()}`)
       .then((res) => res.json())
       .then((data) => {
@@ -117,10 +107,10 @@ function CoachesPageContent() {
       })
       .catch((err) => {
         console.error("Error fetching coaches:", err);
-        setError("Failed to load coaches");
+        setError(copy.coachesList.errorFallback);
         setLoading(false);
       });
-  }, [filters, debouncedSearch, sort]);
+  }, [filters, debouncedSearch, sort, locale, copy.coachesList.errorFallback]);
 
   const handleQuickFilterToggle = (type: string, value: string) => {
     if (type === "goal") {
@@ -190,9 +180,9 @@ function CoachesPageContent() {
       <Container>
         {/* Page Header */}
         <div className="mb-8">
-          <H1 className="mb-3">Find your coach</H1>
+          <H1 className="mb-3">{copy.coachesList.title}</H1>
           <Paragraph className="text-lg">
-            Browse coaches by goal, style, and training type.
+            {copy.coachesList.subtitle}
           </Paragraph>
         </div>
 
@@ -200,14 +190,14 @@ function CoachesPageContent() {
         <div className="flex flex-col sm:flex-row gap-4 mb-6">
           <div className="flex-1">
             <SearchInput
-              placeholder="Search coaches or specialties"
+              placeholder={copy.coachesList.searchPlaceholder}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
           </div>
           <div className="sm:w-48">
             <Select
-              options={SORT_OPTIONS}
+              options={[...copy.coachesList.sort]}
               value={sort}
               onChange={(e) => setSort(e.target.value)}
             />
@@ -219,13 +209,13 @@ function CoachesPageContent() {
             onClick={() => setFiltersDrawerOpen(true)}
           >
             <Filter size={18} />
-            Filters
+            {copy.coachesList.filtersButton}
           </Button>
         </div>
 
         {/* Quick Filter Chips */}
         <div className="flex gap-2 overflow-x-auto pb-2 mb-6 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-          {QUICK_FILTERS.map((filter) => {
+          {copy.coachesList.quickFilters.map((filter) => {
             const isActive =
               (filter.type === "goal" && filters.goals.includes(filter.value)) ||
               (filter.type === "trainingType" && filters.trainingType.includes(filter.value));
@@ -253,7 +243,7 @@ function CoachesPageContent() {
           {/* Filters Sidebar (Desktop) */}
           <aside className="hidden lg:block lg:col-span-1">
             <div className="sticky top-8">
-              <FiltersSidebar filters={filters} onFiltersChange={setFilters} />
+              <FiltersSidebar filters={filters} onFiltersChange={setFilters} copy={copy.coachFilters} locale={locale} />
             </div>
           </aside>
 
@@ -267,32 +257,32 @@ function CoachesPageContent() {
               </div>
             ) : error ? (
               <div className="text-center py-12">
-                <h2 className="text-2xl font-semibold mb-2">Something went wrong</h2>
+                <h2 className="text-2xl font-semibold mb-2">{copy.coachesList.errorTitle}</h2>
                 <p className="text-text-muted mb-6">{error}</p>
                 <Button variant="primary" onClick={() => window.location.reload()}>
-                  Retry
+                  {copy.coachesList.retry}
                 </Button>
               </div>
             ) : coaches.length === 0 ? (
               <div className="text-center py-12">
                 {hasActiveFilters ? (
                   <>
-                    <h2 className="text-2xl font-semibold mb-2">No matches</h2>
+                    <h2 className="text-2xl font-semibold mb-2">{copy.coachesList.noMatchesTitle}</h2>
                     <p className="text-text-muted mb-6">
-                      Try clearing filters or searching by a different term.
+                      {copy.coachesList.noMatchesBody}
                     </p>
                     <Button variant="primary" onClick={clearFilters}>
-                      Clear filters
+                      {copy.coachesList.clearFilters}
                     </Button>
                   </>
                 ) : (
                   <>
-                    <h2 className="text-2xl font-semibold mb-2">No coaches yet</h2>
+                    <h2 className="text-2xl font-semibold mb-2">{copy.coachesList.emptyTitle}</h2>
                     <p className="text-text-muted mb-6">
-                      Want to be the first coach on the platform?
+                      {copy.coachesList.emptyBody}
                     </p>
                     <Button variant="primary" asChild>
-                      <Link href="/become-a-coach">Become a Coach</Link>
+                      <Link href="/become-a-coach">{copy.coachesList.becomeCoach}</Link>
                     </Button>
                   </>
                 )}
@@ -308,12 +298,12 @@ function CoachesPageContent() {
                 {/* Bottom CTA Strip */}
                 <div className="border-t border-border pt-8 mt-8">
                   <div className="bg-surface border border-border rounded-2xl p-6 md:p-8 text-center">
-                    <h2 className="text-xl font-semibold mb-2">Are you a coach?</h2>
+                    <h2 className="text-xl font-semibold mb-2">{copy.coachesList.ctaTitle}</h2>
                     <p className="text-text-muted mb-6">
-                      Apply to join and deliver your coaching through our platform.
+                      {copy.coachesList.ctaBody}
                     </p>
                     <Button variant="primary" size="lg" asChild>
-                      <Link href="/become-a-coach">Become a Coach</Link>
+                      <Link href="/become-a-coach">{copy.coachesList.becomeCoach}</Link>
                     </Button>
                   </div>
                 </div>
@@ -330,6 +320,8 @@ function CoachesPageContent() {
         filters={filters}
         onFiltersChange={setFilters}
         onApply={() => setFiltersDrawerOpen(false)}
+        copy={copy.coachFilters}
+        locale={locale}
       />
       </div>
       <SiteFooter onNavigate={handleNavigate} />

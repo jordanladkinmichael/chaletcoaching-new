@@ -1,12 +1,10 @@
 "use client";
 
 import React from "react";
-import { Card } from "@/components/ui";
-import { Paragraph } from "@/components/ui";
-import { Badge } from "@/components/ui";
+import { Badge, Card, Paragraph } from "@/components/ui";
+import { useLocale, useTranslations } from "@/lib/i18n/client";
 import { THEME } from "@/lib/theme";
-import type { SupportArticle } from "@/lib/support-articles";
-import { CATEGORY_LABELS } from "@/lib/support-articles";
+import { getCategoryLabels, type SupportArticle } from "@/lib/support-articles";
 
 interface ArticleListProps {
   articles: SupportArticle[];
@@ -14,9 +12,9 @@ interface ArticleListProps {
   onSelect: (slug: string) => void;
 }
 
-function formatDate(dateString: string): string {
+function formatDate(dateString: string, localeTag: string): string {
   const date = new Date(dateString);
-  return date.toLocaleDateString("en-US", {
+  return date.toLocaleDateString(localeTag, {
     year: "numeric",
     month: "short",
     day: "numeric",
@@ -24,6 +22,11 @@ function formatDate(dateString: string): string {
 }
 
 export function ArticleList({ articles, selectedSlug, onSelect }: ArticleListProps) {
+  const { locale } = useLocale();
+  const tSupport = useTranslations("support");
+  const categoryLabels = getCategoryLabels(locale);
+  const localeTag = locale === "tr" ? "tr-TR" : "en-GB";
+
   if (articles.length === 0) {
     return null;
   }
@@ -57,7 +60,7 @@ export function ArticleList({ articles, selectedSlug, onSelect }: ArticleListPro
                   <div className="flex items-start justify-between gap-3">
                     <h3 className="font-semibold text-base">{article.title}</h3>
                     <Badge variant="default" className="flex-shrink-0">
-                      {CATEGORY_LABELS[article.category]}
+                      {categoryLabels[article.category]}
                     </Badge>
                   </div>
                   
@@ -66,7 +69,7 @@ export function ArticleList({ articles, selectedSlug, onSelect }: ArticleListPro
                   </Paragraph>
                   
                   <div className="text-xs opacity-60">
-                    Updated {formatDate(article.updatedAt)}
+                    {tSupport("updated")} {formatDate(article.updatedAt, localeTag)}
                   </div>
                 </div>
               </Card>

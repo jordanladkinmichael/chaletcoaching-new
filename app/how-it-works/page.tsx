@@ -1,37 +1,37 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useSession, signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { motion, type Variants } from "framer-motion";
-import {
-  Check,
-  Shield,
-} from "lucide-react";
+import { Check, Shield } from "lucide-react";
 import SiteHeader from "@/components/site-header";
 import SiteFooter from "@/components/site-footer";
 import {
+  Accordion,
+  Button,
+  Card,
   Container,
   H1,
   H2,
   H3,
   Paragraph,
-  Button,
-  Card,
-  Accordion,
   type AccordionItem,
 } from "@/components/ui";
 import { useCurrencyStore } from "@/lib/stores/currency-store";
-import { COPY } from "@/lib/copy-variants";
 import { cardHoverLift, fadeIn } from "@/lib/animations";
 import { THEME } from "@/lib/theme";
+import { useLocale } from "@/lib/i18n/client";
+import { getPhaseTwoCopy } from "@/lib/phase-two-copy";
 import type { Route } from "next";
 
 type Region = "EU" | "UK" | "US";
 
 export default function HowItWorksPage() {
+  const { locale } = useLocale();
+  const copy = React.useMemo(() => getPhaseTwoCopy(locale).howItWorks, [locale]);
   const { data: session } = useSession();
   const router = useRouter();
   const { currency } = useCurrencyStore();
@@ -39,12 +39,11 @@ export default function HowItWorksPage() {
   const [balanceLoading, setBalanceLoading] = useState(false);
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
 
-  // Determine region from currency
-  const region: Region = currency === "USD" ? "US" : currency === "GBP" ? "UK" : "EU";
+  const region: Region =
+    currency === "USD" ? "US" : currency === "GBP" ? "UK" : "EU";
 
   const isAuthed = !!session?.user;
 
-  // Check for reduced motion preference
   useEffect(() => {
     const mediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
     setPrefersReducedMotion(mediaQuery.matches);
@@ -53,13 +52,13 @@ export default function HowItWorksPage() {
     return () => mediaQuery.removeEventListener("change", handleChange);
   }, []);
 
-  // Load balance
   useEffect(() => {
     async function load() {
       if (!isAuthed) {
         setBalance(0);
         return;
       }
+
       setBalanceLoading(true);
       try {
         const res = await fetch("/api/tokens/balance");
@@ -75,29 +74,22 @@ export default function HowItWorksPage() {
         setBalanceLoading(false);
       }
     }
+
     void load();
   }, [isAuthed]);
 
-  // Auth handler
   const openAuth = () => {
     void signIn("credentials", { callbackUrl: "/how-it-works" });
   };
 
-  // Navigation handler
   const handleNavigate = (page: string) => {
     const target =
-      page === "home"
-        ? "/"
-        : page.startsWith("/")
-          ? page
-          : `/${page}`;
+      page === "home" ? "/" : page.startsWith("/") ? page : `/${page}`;
     router.push(target as Route);
   };
 
-  // Format number helper
   const formatNumber = (n: number) => n.toLocaleString();
 
-  // Region setter (simplified - just update currency store)
   const setRegion = (newRegion: Region) => {
     const currencyMap: Record<Region, "EUR" | "GBP" | "USD"> = {
       EU: "EUR",
@@ -107,7 +99,6 @@ export default function HowItWorksPage() {
     useCurrencyStore.getState().setCurrency(currencyMap[newRegion]);
   };
 
-  // Animation variants
   const sectionVariants: Variants = prefersReducedMotion
     ? fadeIn
     : {
@@ -119,71 +110,20 @@ export default function HowItWorksPage() {
         },
       };
 
-  // FAQ items
-  const faqItems: AccordionItem[] = [
-    {
-      id: "coach-vs-ai",
-      title: "What is the difference between Coach requests and Instant AI?",
-      content: (
+  const faqItems: AccordionItem[] = copy.faq.items.map((item) => ({
+    id: item.id,
+    title: item.title,
+    content:
+      item.paragraphs.length === 1 ? (
+        <p>{item.paragraphs[0]}</p>
+      ) : (
         <div className="space-y-2">
-          <p>
-            Coach requests are personalized plans created by certified coaches based on your specific goals and preferences. 
-            Instant AI plans are generated automatically in minutes using AI technology.
-          </p>
-          <p>
-            Both options use tokens from your balance, but coach requests offer human expertise and personalized guidance, 
-            while Instant AI provides immediate results.
-          </p>
+          {item.paragraphs.map((paragraph) => (
+            <p key={paragraph}>{paragraph}</p>
+          ))}
         </div>
       ),
-    },
-    {
-      id: "how-tokens-work",
-      title: "How do tokens work?",
-      content: <p>{COPY.howItWorks.tokenFaqAnswer}</p>,
-    },
-    {
-      id: "tokens-expire",
-      title: "Do tokens expire?",
-      content: (
-        <p>
-          They never expire. Use them whenever you are ready.
-        </p>
-      ),
-    },
-    {
-      id: "both-flows",
-      title: "Can I use both flows with the same balance?",
-      content: (
-        <p>
-          Yes — a single token balance covers coach-built plans and AI-generated ones.
-        </p>
-      ),
-    },
-    {
-      id: "insufficient-tokens",
-      title: "What happens if I don't have enough tokens?",
-      content: (
-        <div className="space-y-2">
-          <p>
-            You will be asked to top up before continuing. Head to the Pricing page to add more tokens at any time.
-          </p>
-          <p>
-            With Instant AI, you can preview a plan for 50 tokens before deciding to publish the full version.
-          </p>
-        </div>
-      ),
-    },
-    {
-      id: "where-find-plans",
-      title: "Where do I find my plans?",
-      content: (
-        <p>
-          Everything is in your Dashboard — coach plans, AI plans, downloads, and progress tracking.
-        </p>
-      ),
-    },
-  ];
+  }));
 
   return (
     <div className="min-h-screen flex flex-col bg-bg text-text">
@@ -198,7 +138,6 @@ export default function HowItWorksPage() {
       />
 
       <main className="flex-1">
-        {/* Hero Section */}
         <section className="py-12 md:py-16">
           <Container>
             <motion.div
@@ -207,27 +146,26 @@ export default function HowItWorksPage() {
               variants={sectionVariants}
               className="grid md:grid-cols-2 gap-8 lg:gap-12 items-center"
             >
-              {/* Content */}
               <div className="space-y-6">
-                <H1>How it works</H1>
-                <Paragraph className="text-lg">
-                  {COPY.howItWorks.heroParagraph}
-                </Paragraph>
+                <H1>{copy.hero.title}</H1>
+                <Paragraph className="text-lg">{copy.hero.subtitle}</Paragraph>
                 <div className="flex flex-col sm:flex-row gap-4">
                   <Button variant="primary" asChild>
-                    <Link href="/coaches">{COPY.howItWorks.ctaCoach}</Link>
+                    <Link href="/coaches">{copy.hero.coachCta}</Link>
                   </Button>
                   <Button variant="outline" asChild>
-                    <Link href="/generator">{COPY.howItWorks.ctaGenerator}</Link>
+                    <Link href="/generator">{copy.hero.generatorCta}</Link>
                   </Button>
                 </div>
               </div>
 
-              {/* Hero Image */}
-              <div className="relative aspect-video rounded-2xl overflow-hidden border" style={{ borderColor: THEME.cardBorder }}>
+              <div
+                className="relative aspect-video rounded-2xl overflow-hidden border"
+                style={{ borderColor: THEME.cardBorder }}
+              >
                 <Image
                   src="/how_it_works_hero.webp"
-                  alt="Coach-led and Instant AI training flows"
+                  alt={copy.hero.heroAlt}
                   fill
                   className="object-cover"
                   sizes="(max-width: 768px) 100vw, 50vw"
@@ -238,11 +176,9 @@ export default function HowItWorksPage() {
           </Container>
         </section>
 
-        {/* Choose your path (2 cards) */}
         <section className="py-12 md:py-16">
           <Container>
             <div className="grid md:grid-cols-2 gap-6 lg:gap-8">
-              {/* Card A: Coach request */}
               <motion.div
                 initial="hidden"
                 whileInView="visible"
@@ -253,27 +189,27 @@ export default function HowItWorksPage() {
                 <Card className="h-full flex flex-col">
                   <div className="flex items-center gap-3 mb-4">
                     <span className="text-3xl">🧑‍🏫</span>
-                    <H3>Coach-built request</H3>
+                    <H3>{copy.paths.coach.title}</H3>
                   </div>
-                  <Paragraph className="mb-6 flex-1">
-                    Tell your coach your goal and preferences. Your plan is tailored to your request.
-                  </Paragraph>
-                  <div className="relative aspect-video rounded-xl overflow-hidden border mb-6" style={{ borderColor: THEME.cardBorder }}>
+                  <Paragraph className="mb-6 flex-1">{copy.paths.coach.body}</Paragraph>
+                  <div
+                    className="relative aspect-video rounded-xl overflow-hidden border mb-6"
+                    style={{ borderColor: THEME.cardBorder }}
+                  >
                     <Image
                       src="/how_it_works_path_coach.webp"
-                      alt="Coach-built request"
+                      alt={copy.paths.coach.imageAlt}
                       fill
                       className="object-cover"
                       sizes="(max-width: 768px) 100vw, 50vw"
                     />
                   </div>
                   <Button variant="primary" asChild>
-                    <Link href="/coaches">{COPY.howItWorks.ctaCoach}</Link>
+                    <Link href="/coaches">{copy.paths.coach.cta}</Link>
                   </Button>
                 </Card>
               </motion.div>
 
-              {/* Card B: Instant AI */}
               <motion.div
                 initial="hidden"
                 whileInView="visible"
@@ -284,22 +220,23 @@ export default function HowItWorksPage() {
                 <Card className="h-full flex flex-col">
                   <div className="flex items-center gap-3 mb-4">
                     <span className="text-3xl">⚡</span>
-                    <H3>Instant AI plan</H3>
+                    <H3>{copy.paths.ai.title}</H3>
                   </div>
-                  <Paragraph className="mb-6 flex-1">
-                    Generate a plan in minutes. Preview first, then publish when ready.
-                  </Paragraph>
-                  <div className="relative aspect-video rounded-xl overflow-hidden border mb-6" style={{ borderColor: THEME.cardBorder }}>
+                  <Paragraph className="mb-6 flex-1">{copy.paths.ai.body}</Paragraph>
+                  <div
+                    className="relative aspect-video rounded-xl overflow-hidden border mb-6"
+                    style={{ borderColor: THEME.cardBorder }}
+                  >
                     <Image
                       src="/how_it_works_path_ai.webp"
-                      alt="Instant AI plan generation"
+                      alt={copy.paths.ai.imageAlt}
                       fill
                       className="object-cover"
                       sizes="(max-width: 768px) 100vw, 50vw"
                     />
                   </div>
                   <Button variant="ai" asChild>
-                    <Link href="/generator">Generate now</Link>
+                    <Link href="/generator">{copy.paths.ai.cta}</Link>
                   </Button>
                 </Card>
               </motion.div>
@@ -307,13 +244,12 @@ export default function HowItWorksPage() {
           </Container>
         </section>
 
-        {/* How Coach requests work (steps) */}
         <section className="py-12 md:py-16">
           <Container>
             <div className="max-w-4xl mx-auto">
-              <H2 className="mb-8 text-center">How Coach requests work</H2>
+              <H2 className="mb-8 text-center">{copy.coachFlow.title}</H2>
               <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-                {(["🔎", "📝", "🧩", "📊"] as const).map((emoji, idx) => (
+                {copy.coachFlow.emojis.map((emoji, idx) => (
                   <motion.div
                     key={idx}
                     initial="hidden"
@@ -324,7 +260,7 @@ export default function HowItWorksPage() {
                     className="text-center"
                   >
                     <div className="text-4xl mb-3">{emoji}</div>
-                    <H3 className="text-lg mb-2">{COPY.howItWorks.coachSteps[idx]}</H3>
+                    <H3 className="text-lg mb-2">{copy.coachFlow.steps[idx]}</H3>
                   </motion.div>
                 ))}
               </div>
@@ -332,13 +268,12 @@ export default function HowItWorksPage() {
           </Container>
         </section>
 
-        {/* How Instant AI works (steps) */}
         <section className="py-12 md:py-16">
           <Container>
             <div className="max-w-4xl mx-auto">
-              <H2 className="mb-8 text-center">How Instant AI works</H2>
+              <H2 className="mb-8 text-center">{copy.aiFlow.title}</H2>
               <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-                {(["🎛️", "👀", "✅", "⬇️"] as const).map((emoji, idx) => (
+                {copy.aiFlow.emojis.map((emoji, idx) => (
                   <motion.div
                     key={idx}
                     initial="hidden"
@@ -349,7 +284,7 @@ export default function HowItWorksPage() {
                     className="text-center"
                   >
                     <div className="text-4xl mb-3">{emoji}</div>
-                    <H3 className="text-lg mb-2">{COPY.howItWorks.instantAiSteps[idx]}</H3>
+                    <H3 className="text-lg mb-2">{copy.aiFlow.steps[idx]}</H3>
                   </motion.div>
                 ))}
               </div>
@@ -357,25 +292,27 @@ export default function HowItWorksPage() {
           </Container>
         </section>
 
-        {/* What you receive */}
         <section className="py-12 md:py-16">
           <Container>
             <div className="grid md:grid-cols-2 gap-8 lg:gap-12 items-center">
-              <div className="relative aspect-video rounded-2xl overflow-hidden border" style={{ borderColor: THEME.cardBorder }}>
+              <div
+                className="relative aspect-video rounded-2xl overflow-hidden border"
+                style={{ borderColor: THEME.cardBorder }}
+              >
                 <Image
                   src="/how_it_works_receive.webp"
-                  alt="Example training plan output"
+                  alt={copy.receive.imageAlt}
                   fill
                   className="object-cover"
                   sizes="(max-width: 768px) 100vw, 50vw"
                 />
               </div>
               <div>
-                <H2 className="mb-6">What you receive</H2>
+                <H2 className="mb-6">{copy.receive.title}</H2>
                 <ul className="space-y-4">
-                  {COPY.howItWorksReceiveList.map((item, idx) => (
+                  {copy.receive.items.map((item, idx) => (
                     <motion.li
-                      key={idx}
+                      key={item}
                       initial="hidden"
                       whileInView="visible"
                       viewport={{ once: true }}
@@ -393,23 +330,23 @@ export default function HowItWorksPage() {
           </Container>
         </section>
 
-        {/* Tokens & payments */}
         <section className="py-12 md:py-16">
           <Container>
             <div className="grid md:grid-cols-2 gap-8 lg:gap-12 items-center">
               <div>
-                <H2 className="mb-4">Tokens and payments</H2>
-                <Paragraph className="mb-6">
-                  {COPY.howItWorks.tokensSectionRate}
-                </Paragraph>
+                <H2 className="mb-4">{copy.tokens.title}</H2>
+                <Paragraph className="mb-6">{copy.tokens.body}</Paragraph>
                 <Button variant="outline" asChild>
-                  <Link href="/pricing">See pricing</Link>
+                  <Link href="/pricing">{copy.tokens.cta}</Link>
                 </Button>
               </div>
-              <div className="relative aspect-video rounded-2xl overflow-hidden border" style={{ borderColor: THEME.cardBorder }}>
+              <div
+                className="relative aspect-video rounded-2xl overflow-hidden border"
+                style={{ borderColor: THEME.cardBorder }}
+              >
                 <Image
                   src="/how_it_works_tokens.webp"
-                  alt="Tokens and secure payments"
+                  alt={copy.tokens.imageAlt}
                   fill
                   className="object-cover"
                   sizes="(max-width: 768px) 100vw, 50vw"
@@ -419,29 +356,27 @@ export default function HowItWorksPage() {
           </Container>
         </section>
 
-        {/* Trust & Safety */}
         <section className="py-12 md:py-16">
           <Container>
             <div className="grid md:grid-cols-2 gap-8 lg:gap-12 items-center">
-              <div className="relative aspect-video rounded-2xl overflow-hidden border" style={{ borderColor: THEME.cardBorder }}>
+              <div
+                className="relative aspect-video rounded-2xl overflow-hidden border"
+                style={{ borderColor: THEME.cardBorder }}
+              >
                 <Image
                   src="/how_it_works_trust.webp"
-                  alt="Trust and safety"
+                  alt={copy.safety.imageAlt}
                   fill
                   className="object-cover"
                   sizes="(max-width: 768px) 100vw, 50vw"
                 />
               </div>
               <div>
-                <H2 className="mb-6">Trust and safety</H2>
+                <H2 className="mb-6">{copy.safety.title}</H2>
                 <ul className="space-y-4">
-                  {[
-                    "Training guidance is informational and not medical advice.",
-                    "Stop if you feel pain and consult a professional if needed.",
-                    "Beginner-friendly options are available.",
-                  ].map((item, idx) => (
+                  {copy.safety.items.map((item, idx) => (
                     <motion.li
-                      key={idx}
+                      key={item}
                       initial="hidden"
                       whileInView="visible"
                       viewport={{ once: true }}
@@ -459,27 +394,25 @@ export default function HowItWorksPage() {
           </Container>
         </section>
 
-        {/* FAQ */}
         <section className="py-12 md:py-16">
           <Container>
             <div className="max-w-3xl mx-auto">
-              <H2 className="mb-8 text-center">FAQ</H2>
+              <H2 className="mb-8 text-center">{copy.faq.title}</H2>
               <Accordion items={faqItems} allowMultiple={false} />
             </div>
           </Container>
         </section>
 
-        {/* CTA Strip */}
         <section className="py-12 md:py-16">
           <Container>
             <div className="max-w-2xl mx-auto text-center space-y-6">
-              <H2>Start your plan</H2>
+              <H2>{copy.cta.title}</H2>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Button variant="primary" asChild>
-                  <Link href="/coaches">{COPY.howItWorks.ctaCoach}</Link>
+                  <Link href="/coaches">{copy.cta.coach}</Link>
                 </Button>
                 <Button variant="outline" asChild>
-                  <Link href="/generator">{COPY.howItWorks.ctaGenerator}</Link>
+                  <Link href="/generator">{copy.cta.generator}</Link>
                 </Button>
               </div>
             </div>

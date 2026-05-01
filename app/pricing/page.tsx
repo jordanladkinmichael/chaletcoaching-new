@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import SiteHeader from "@/components/site-header";
@@ -15,12 +15,15 @@ import {
 } from "@/lib/token-packages";
 import { EXCHANGE_RATES, convertToEUR } from "@/lib/exchange-rates";
 import { Pricing } from "@/components/pricing/Pricing";
-import { COPY } from "@/lib/copy-variants";
+import { useLocale } from "@/lib/i18n/client";
+import { getPhaseTwoCopy } from "@/lib/phase-two-copy";
 import type { Route } from "next";
 
 type Region = "EU" | "UK" | "US";
 
 export default function PricingPage() {
+  const { locale } = useLocale();
+  const copy = React.useMemo(() => getPhaseTwoCopy(locale).pricing, [locale]);
   const { data: session } = useSession();
   const router = useRouter();
   const { currency } = useCurrencyStore();
@@ -28,13 +31,11 @@ export default function PricingPage() {
   const [balance, setBalance] = useState(0);
   const [balanceLoading, setBalanceLoading] = useState(false);
 
-  // Determine region from currency
   const region: Region =
     currency === "USD" ? "US" : currency === "GBP" ? "UK" : "EU";
 
   const isAuthed = !!session?.user;
 
-  // Load balance
   useEffect(() => {
     async function load() {
       if (!isAuthed) {
@@ -59,22 +60,18 @@ export default function PricingPage() {
     void load();
   }, [isAuthed]);
 
-  // Auth handler
   const openAuth = (mode?: "signup" | "signin") => {
     router.push(`/?auth=${mode || "signup"}`);
   };
 
-  // Navigation handler
   const handleNavigate = (page: string) => {
     const target =
       page === "home" ? "/" : page.startsWith("/") ? page : `/${page}`;
     router.push(target as Route);
   };
 
-  // Format number helper
   const formatNumber = (n: number) => n.toLocaleString();
 
-  // Region setter
   const setRegion = (newRegion: Region) => {
     const currencyMap: Record<Region, "EUR" | "GBP" | "USD"> = {
       EU: "EUR",
@@ -84,7 +81,6 @@ export default function PricingPage() {
     useCurrencyStore.getState().setCurrency(currencyMap[newRegion]);
   };
 
-  // Top up handler
   const onTopUp = async (pack: UiPackId | "custom", customAmount?: number) => {
     if (!isAuthed) {
       openAuth("signup");
@@ -101,18 +97,18 @@ export default function PricingPage() {
 
       if (pack === "custom") {
         if (!customAmount || Number(customAmount) <= 0) {
-          alert("Please enter a valid amount.");
+          alert(copy.invalidAmount);
           setTopUpLoading(false);
           return;
         }
         packageId = "ENTERPRISE";
         netAmount = convertToEUR(Number(customAmount), currency);
         tokens = calculateTokensFromAmount(netAmount, currencyForApi);
-        description = "Custom top-up";
+        description = copy.customTopUpDescription;
       } else {
         const packInfo = TOKEN_PACKS.find((p) => p.uiId === pack);
         if (!packInfo) {
-          throw new Error("Invalid pack");
+          throw new Error(copy.invalidPack);
         }
         packageId = packInfo.apiId;
         tokens = packInfo.tokens;
@@ -137,13 +133,12 @@ export default function PricingPage() {
       }
     } catch (error) {
       console.error("Top-up failed:", error);
-      alert(error instanceof Error ? error.message : "Failed to start checkout");
+      alert(error instanceof Error ? error.message : copy.checkoutFailed);
     } finally {
       setTopUpLoading(false);
     }
   };
 
-  // Exchange rate display — round to 2dp for user-friendly display
   const gbpRate = EXCHANGE_RATES.GBP.toFixed(2);
   const usdRate = EXCHANGE_RATES.USD.toFixed(2);
 
@@ -161,14 +156,14 @@ export default function PricingPage() {
       <main className="flex-1">
         <Container className="py-12 md:py-16">
           <div className="space-y-6 mb-8">
-            <H1>{COPY.pricingPage.h1}</H1>
+            <H1>{copy.h1}</H1>
             <div className="space-y-2">
               <Paragraph className="text-lg">
-                100 tokens = €1.00 | £{gbpRate} | ${usdRate}
+                {copy.rateLine
+                  .replace("{gbpRate}", gbpRate)
+                  .replace("{usdRate}", usdRate)}
               </Paragraph>
-              <Paragraph className="text-sm text-text-muted">
-                {COPY.pricingPage.introSecond}
-              </Paragraph>
+              <Paragraph className="text-sm text-text-muted">{copy.intro}</Paragraph>
             </div>
           </div>
 

@@ -5,6 +5,8 @@ import Link from "next/link";
 import { ArrowLeft, Share2, Bookmark, BookmarkCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { useLocale } from "@/lib/i18n/client";
+import { getCoachesCopy } from "@/lib/coaches-copy";
 
 interface CoachProfileHeaderProps {
   coachSlug: string;
@@ -13,6 +15,8 @@ interface CoachProfileHeaderProps {
 }
 
 export function CoachProfileHeader({ coachSlug, coachName, className }: CoachProfileHeaderProps) {
+  const { locale } = useLocale();
+  const copy = getCoachesCopy(locale).coachProfile;
   const [isSaved, setIsSaved] = React.useState(false);
 
   React.useEffect(() => {
@@ -43,7 +47,7 @@ export function CoachProfileHeader({ coachSlug, coachName, className }: CoachPro
       try {
         await navigator.share({
           title: `${coachName} - Chaletcoaching`,
-          text: `Check out ${coachName} on Chaletcoaching`,
+          text: copy.shareText(coachName),
           url,
         });
         return;
@@ -66,7 +70,7 @@ export function CoachProfileHeader({ coachSlug, coachName, className }: CoachPro
       <Button variant="ghost" size="sm" asChild>
         <Link href="/coaches" className="flex items-center gap-2">
           <ArrowLeft size={18} />
-          Back to coaches
+          {copy.backToCoaches}
         </Link>
       </Button>
 
@@ -78,7 +82,7 @@ export function CoachProfileHeader({ coachSlug, coachName, className }: CoachPro
           className="flex items-center gap-2"
         >
           <Share2 size={18} />
-          Share
+          {copy.share}
         </Button>
         <Button
           variant="outline"
@@ -89,12 +93,12 @@ export function CoachProfileHeader({ coachSlug, coachName, className }: CoachPro
           {isSaved ? (
             <>
               <BookmarkCheck size={18} />
-              Saved
+              {copy.saved}
             </>
           ) : (
             <>
               <Bookmark size={18} />
-              Save coach
+              {copy.saveCoach}
             </>
           )}
         </Button>

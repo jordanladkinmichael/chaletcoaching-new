@@ -1,54 +1,49 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useSession, signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { motion, type Variants } from "framer-motion";
-import {
-  Check,
-  Calendar,
-  Dumbbell,
-  HelpCircle,
-  Activity,
-  Wrench,
-  Download,
-} from "lucide-react";
+import { Activity, Calendar, Check, Download, Dumbbell, HelpCircle, Wrench } from "lucide-react";
 import SiteHeader from "@/components/site-header";
 import SiteFooter from "@/components/site-footer";
 import {
+  Accordion,
+  Button,
+  Card,
   Container,
   H1,
   H2,
   H3,
   Paragraph,
-  Button,
-  Card,
-  Accordion,
   type AccordionItem,
 } from "@/components/ui";
-import { useCurrencyStore } from "@/lib/stores/currency-store";
 import { cardHoverLift, fadeIn } from "@/lib/animations";
+import { useLocale } from "@/lib/i18n/client";
+import { getPublicPagesCopy } from "@/lib/public-pages-copy";
+import { useCurrencyStore } from "@/lib/stores/currency-store";
 import { THEME } from "@/lib/theme";
 import type { Route } from "next";
 
 type Region = "EU" | "UK" | "US";
 
+const glanceIcons = [Calendar, Dumbbell, HelpCircle, Activity, Wrench, Download] as const;
+
 export default function WhatYouReceivePage() {
   const { data: session } = useSession();
   const router = useRouter();
   const { currency } = useCurrencyStore();
+  const { locale } = useLocale();
+  const copy = getPublicPagesCopy(locale).whatYouReceive;
   const [balance, setBalance] = useState(0);
   const [balanceLoading, setBalanceLoading] = useState(false);
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
 
-  // Determine region from currency
   const region: Region = currency === "USD" ? "US" : currency === "GBP" ? "UK" : "EU";
-
   const isAuthed = !!session?.user;
 
-  // Check for reduced motion preference
   useEffect(() => {
     const mediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
     setPrefersReducedMotion(mediaQuery.matches);
@@ -57,7 +52,6 @@ export default function WhatYouReceivePage() {
     return () => mediaQuery.removeEventListener("change", handleChange);
   }, []);
 
-  // Load balance
   useEffect(() => {
     async function load() {
       if (!isAuthed) {
@@ -82,26 +76,17 @@ export default function WhatYouReceivePage() {
     void load();
   }, [isAuthed]);
 
-  // Auth handler
   const openAuth = () => {
     void signIn("credentials", { callbackUrl: "/what-you-receive" });
   };
 
-  // Navigation handler
   const handleNavigate = (page: string) => {
-    const target =
-      page === "home"
-        ? "/"
-        : page.startsWith("/")
-          ? page
-          : `/${page}`;
+    const target = page === "home" ? "/" : page.startsWith("/") ? page : `/${page}`;
     router.push(target as Route);
   };
 
-  // Format number helper
   const formatNumber = (n: number) => n.toLocaleString();
 
-  // Region setter (simplified - just update currency store)
   const setRegion = (newRegion: Region) => {
     const currencyMap: Record<Region, "EUR" | "GBP" | "USD"> = {
       EU: "EUR",
@@ -111,7 +96,6 @@ export default function WhatYouReceivePage() {
     useCurrencyStore.getState().setCurrency(currencyMap[newRegion]);
   };
 
-  // Animation variants
   const sectionVariants: Variants = prefersReducedMotion
     ? fadeIn
     : {
@@ -123,79 +107,22 @@ export default function WhatYouReceivePage() {
         },
       };
 
-  // "At a glance" items with icons
-  const atAGlanceItems = [
-    { icon: Calendar, label: "Weekly structure and progression" },
-    { icon: Dumbbell, label: "Session-by-session workouts" },
-    { icon: HelpCircle, label: "Exercise guidance and alternatives" },
-    { icon: Activity, label: "Intensity and recovery recommendations" },
-    { icon: Wrench, label: "Equipment-aware options" },
-    { icon: Download, label: "Printable and downloadable format" },
-  ];
+  const faqItems = useMemo<AccordionItem[]>(
+    () =>
+      copy.faq.items.map(([id, title, text]) => ({
+        id,
+        title,
+        content: <p>{text}</p>,
+      })),
+    [copy.faq.items]
+  );
 
-  // FAQ items
-  const faqItems: AccordionItem[] = [
-    {
-      id: "what-included",
-      title: "What's included in a plan?",
-      content: (
-        <div className="space-y-2">
-          <p>
-            Each plan includes a weekly structure with clear progression, session-by-session workouts, 
-            exercise guidance with alternatives, intensity and recovery recommendations, equipment-aware options, 
-            and a printable format you can download.
-          </p>
-        </div>
-      ),
-    },
-    {
-      id: "suitable-beginners",
-      title: "Is this suitable for beginners?",
-      content: (
-        <p>
-          Yes. Plans include beginner-friendly defaults and you can choose your level when requesting a coach course 
-          or generating an Instant AI plan. The structure adapts to your experience level.
-        </p>
-      ),
-    },
-    {
-      id: "choose-equipment",
-      title: "Can I choose equipment and training type?",
-      content: (
-        <p>
-          Yes. You can select your equipment setup (none, basic, or full gym) and training type (home, gym, or mixed) 
-          when creating your request or generating your plan.
-        </p>
-      ),
-    },
-    {
-      id: "instant-ai-previews",
-      title: "How do Instant AI previews work?",
-      content: (
-        <p>
-          Pay 50 tokens to preview the plan layout. Happy with it? Publish the complete version and download it straight away.
-        </p>
-      ),
-    },
-    {
-      id: "same-tokens",
-      title: "Can I use the same tokens for both flows?",
-      content: (
-        <p>
-          Yes — your balance is shared. Spend tokens on a coach plan today, an AI plan tomorrow, or both at once.
-        </p>
-      ),
-    },
-    {
-      id: "access-plans",
-      title: "Where can I access my plans?",
-      content: (
-        <p>
-          Open your Dashboard to see every plan, download files, and track your training.
-        </p>
-      ),
-    },
-  ];
+  const checkItem = (item: string) => (
+    <li key={item} className="flex items-start gap-3">
+      <Check className="w-5 h-5 text-accent flex-shrink-0 mt-0.5" />
+      <span className="text-text-muted">{item}</span>
+    </li>
+  );
 
   return (
     <div className="min-h-screen flex flex-col bg-bg text-text">
@@ -210,7 +137,6 @@ export default function WhatYouReceivePage() {
       />
 
       <main className="flex-1">
-        {/* Hero Section */}
         <section className="py-12 md:py-16">
           <Container>
             <motion.div
@@ -219,35 +145,26 @@ export default function WhatYouReceivePage() {
               variants={sectionVariants}
               className="grid md:grid-cols-2 gap-8 lg:gap-12 items-center"
             >
-              {/* Content */}
               <div className="space-y-6">
-                <H1>What you receive</H1>
-                <Paragraph className="text-lg">
-                  A clear training plan you can follow. Built by a coach or generated instantly with AI.
-                </Paragraph>
+                <H1>{copy.hero.title}</H1>
+                <Paragraph className="text-lg">{copy.hero.subtitle}</Paragraph>
                 <div className="flex flex-col sm:flex-row gap-4">
                   <Button variant="primary" asChild>
-                    <Link href="/coaches">Find your coach</Link>
+                    <Link href="/coaches">{copy.hero.coaches}</Link>
                   </Button>
                   <Button variant="outline" asChild>
-                    <Link href="/generator">Generate a plan</Link>
+                    <Link href="/generator">{copy.hero.generator}</Link>
                   </Button>
                 </div>
-                <div>
-                  <Link
-                    href="/pricing"
-                    className="text-sm text-text-muted hover:text-accent transition-colors underline"
-                  >
-                    See pricing
-                  </Link>
-                </div>
+                <Link href="/pricing" className="text-sm text-text-muted hover:text-accent transition-colors underline">
+                  {copy.hero.pricing}
+                </Link>
               </div>
 
-              {/* Hero Image */}
               <div className="relative aspect-video rounded-2xl overflow-hidden border" style={{ borderColor: THEME.cardBorder }}>
                 <Image
                   src="/what_you_receive_hero.webp"
-                  alt="Training plan outputs overview"
+                  alt={copy.hero.imageAlt}
                   fill
                   className="object-cover"
                   sizes="(max-width: 768px) 100vw, 50vw"
@@ -258,16 +175,15 @@ export default function WhatYouReceivePage() {
           </Container>
         </section>
 
-        {/* At a glance (6 items) */}
         <section className="py-12 md:py-16">
           <Container>
-            <H2 className="mb-8 text-center">At a glance</H2>
+            <H2 className="mb-8 text-center">{copy.atAGlance.title}</H2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {atAGlanceItems.map((item, idx) => {
-                const IconComponent = item.icon;
+              {copy.atAGlance.items.map((label, idx) => {
+                const Icon = glanceIcons[idx] ?? Calendar;
                 return (
                   <motion.div
-                    key={idx}
+                    key={label}
                     initial="hidden"
                     whileInView="visible"
                     viewport={{ once: true }}
@@ -276,11 +192,9 @@ export default function WhatYouReceivePage() {
                     className="flex items-start gap-4"
                   >
                     <div className="rounded-lg p-3 border" style={{ borderColor: THEME.cardBorder }}>
-                      <IconComponent className="w-6 h-6 text-accent" />
+                      <Icon className="w-6 h-6 text-accent" />
                     </div>
-                    <div className="flex-1">
-                      <Paragraph className="font-medium">{item.label}</Paragraph>
-                    </div>
+                    <Paragraph className="font-medium">{label}</Paragraph>
                   </motion.div>
                 );
               })}
@@ -288,27 +202,13 @@ export default function WhatYouReceivePage() {
           </Container>
         </section>
 
-        {/* What's inside the plan (3 cards) */}
         <section className="py-12 md:py-16">
           <Container>
-            <H2 className="mb-8 text-center">What&apos;s inside the plan</H2>
+            <H2 className="mb-8 text-center">{copy.inside.title}</H2>
             <div className="grid md:grid-cols-3 gap-6">
-              {[
-                {
-                  title: "Structure",
-                  text: "A weekly plan with progression that matches your goal and level.",
-                },
-                {
-                  title: "Sessions",
-                  text: "Warm-up, main work, accessories, and cooldown.",
-                },
-                {
-                  title: "Progression",
-                  text: "Clear progression rules so you always know what to increase next.",
-                },
-              ].map((card, idx) => (
+              {copy.inside.cards.map(([title, text]) => (
                 <motion.div
-                  key={idx}
+                  key={title}
                   initial="hidden"
                   whileInView="visible"
                   viewport={{ once: true }}
@@ -316,8 +216,8 @@ export default function WhatYouReceivePage() {
                   whileHover={prefersReducedMotion ? undefined : { y: -2 }}
                 >
                   <Card className="h-full">
-                    <H3 className="mb-3">{card.title}</H3>
-                    <Paragraph className="text-text-muted">{card.text}</Paragraph>
+                    <H3 className="mb-3">{title}</H3>
+                    <Paragraph className="text-text-muted">{text}</Paragraph>
                   </Card>
                 </motion.div>
               ))}
@@ -325,37 +225,23 @@ export default function WhatYouReceivePage() {
           </Container>
         </section>
 
-        {/* Examples of outputs */}
         <section className="py-12 md:py-16">
           <Container>
-            <H2 className="mb-8 text-center">Examples of outputs</H2>
+            <H2 className="mb-8 text-center">{copy.examples.title}</H2>
             <div className="grid md:grid-cols-2 gap-8 lg:gap-12 items-center mb-8">
               <div className="relative aspect-[3/2] rounded-2xl overflow-hidden border" style={{ borderColor: THEME.cardBorder }}>
                 <Image
                   src="/what_you_receive_examples.webp"
-                  alt="Examples of weekly and session views"
+                  alt={copy.examples.imageAlt}
                   fill
                   className="object-cover"
                   sizes="(max-width: 768px) 100vw, 50vw"
                 />
               </div>
               <div className="space-y-4">
-                {[
-                  {
-                    title: "Week view",
-                    description: "Overview of your weekly schedule with progression indicators and session distribution.",
-                  },
-                  {
-                    title: "Session view",
-                    description: "Detailed breakdown of each workout including warm-up, main exercises, and cooldown.",
-                  },
-                  {
-                    title: "Exercise alternatives",
-                    description: "Equipment-aware alternatives for each exercise to match your setup and preferences.",
-                  },
-                ].map((preview, idx) => (
+                {copy.examples.items.map(([title, description], idx) => (
                   <motion.div
-                    key={idx}
+                    key={title}
                     initial="hidden"
                     whileInView="visible"
                     viewport={{ once: true }}
@@ -363,8 +249,8 @@ export default function WhatYouReceivePage() {
                     transition={{ delay: idx * 0.1 }}
                   >
                     <Card>
-                      <H3 className="mb-2 text-lg">{preview.title}</H3>
-                      <Paragraph className="text-sm text-text-muted">{preview.description}</Paragraph>
+                      <H3 className="mb-2 text-lg">{title}</H3>
+                      <Paragraph className="text-sm text-text-muted">{description}</Paragraph>
                     </Card>
                   </motion.div>
                 ))}
@@ -373,48 +259,29 @@ export default function WhatYouReceivePage() {
           </Container>
         </section>
 
-        {/* Coach-built vs Instant AI */}
         <section className="py-12 md:py-16">
           <Container>
-            <H2 className="mb-8 text-center">Coach-built vs Instant AI</H2>
+            <H2 className="mb-8 text-center">{copy.compare.title}</H2>
             <div className="relative aspect-[3/2] rounded-2xl overflow-hidden border mb-8" style={{ borderColor: THEME.cardBorder }}>
               <Image
                 src="/what_you_receive_compare.webp"
-                alt="Coach-built and Instant AI comparison"
+                alt={copy.compare.imageAlt}
                 fill
                 className="object-cover"
                 sizes="100vw"
               />
             </div>
             <div className="grid md:grid-cols-2 gap-6 lg:gap-8">
-              {/* Coach-built */}
-              <motion.div
-                initial="hidden"
-                whileInView="visible"
-                viewport={{ once: true }}
-                variants={sectionVariants}
-              >
+              <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={sectionVariants}>
                 <Card className="h-full">
-                  <H3 className="mb-4">Coach-built request</H3>
-                  <ul className="space-y-3 mb-6">
-                    {[
-                      "Tailored to your preferences",
-                      "Structured progression based on your inputs",
-                      "Great when you want a coach-led approach",
-                    ].map((item, idx) => (
-                      <li key={idx} className="flex items-start gap-3">
-                        <Check className="w-5 h-5 text-accent flex-shrink-0 mt-0.5" />
-                        <span className="text-text-muted">{item}</span>
-                      </li>
-                    ))}
-                  </ul>
+                  <H3 className="mb-4">{copy.compare.coach.title}</H3>
+                  <ul className="space-y-3 mb-6">{copy.compare.coach.items.map(checkItem)}</ul>
                   <Button variant="primary" asChild>
-                    <Link href="/coaches">Find a coach</Link>
+                    <Link href="/coaches">{copy.compare.coach.cta}</Link>
                   </Button>
                 </Card>
               </motion.div>
 
-              {/* Instant AI */}
               <motion.div
                 initial="hidden"
                 whileInView="visible"
@@ -423,21 +290,10 @@ export default function WhatYouReceivePage() {
                 transition={{ delay: 0.1 }}
               >
                 <Card className="h-full">
-                  <H3 className="mb-4">Instant AI</H3>
-                  <ul className="space-y-3 mb-6">
-                    {[
-                      "Generate in minutes",
-                      "Preview first, then publish",
-                      "Perfect for quick iteration",
-                    ].map((item, idx) => (
-                      <li key={idx} className="flex items-start gap-3">
-                        <Check className="w-5 h-5 text-accent flex-shrink-0 mt-0.5" />
-                        <span className="text-text-muted">{item}</span>
-                      </li>
-                    ))}
-                  </ul>
+                  <H3 className="mb-4">{copy.compare.ai.title}</H3>
+                  <ul className="space-y-3 mb-6">{copy.compare.ai.items.map(checkItem)}</ul>
                   <Button variant="ai" asChild>
-                    <Link href="/generator">Generate now</Link>
+                    <Link href="/generator">{copy.compare.ai.cta}</Link>
                   </Button>
                 </Card>
               </motion.div>
@@ -445,20 +301,15 @@ export default function WhatYouReceivePage() {
           </Container>
         </section>
 
-        {/* Formats and access */}
         <section className="py-12 md:py-16">
           <Container>
-            <H2 className="mb-8 text-center">Formats and access</H2>
+            <H2 className="mb-8 text-center">{copy.formats.title}</H2>
             <div className="max-w-2xl mx-auto">
               <Card>
                 <ul className="space-y-4">
-                  {[
-                    "Available in your dashboard",
-                    "Downloadable and printable",
-                    "Easy to revisit and regenerate",
-                  ].map((item, idx) => (
+                  {copy.formats.items.map((item, idx) => (
                     <motion.li
-                      key={idx}
+                      key={item}
                       initial="hidden"
                       whileInView="visible"
                       viewport={{ once: true }}
@@ -476,19 +327,13 @@ export default function WhatYouReceivePage() {
           </Container>
         </section>
 
-        {/* Quality promise */}
         <section className="py-12 md:py-16">
           <Container>
-            <H2 className="mb-8 text-center">Quality promise</H2>
+            <H2 className="mb-8 text-center">{copy.quality.title}</H2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
-              {[
-                "Clear structure",
-                "Progressive overload guidance",
-                "Equipment-aware options",
-                "Beginner-friendly defaults",
-              ].map((item, idx) => (
+              {copy.quality.items.map((item, idx) => (
                 <motion.div
-                  key={idx}
+                  key={item}
                   initial="hidden"
                   whileInView="visible"
                   viewport={{ once: true }}
@@ -504,27 +349,25 @@ export default function WhatYouReceivePage() {
           </Container>
         </section>
 
-        {/* FAQ */}
         <section className="py-12 md:py-16">
           <Container>
             <div className="max-w-3xl mx-auto">
-              <H2 className="mb-8 text-center">FAQ</H2>
+              <H2 className="mb-8 text-center">{copy.faq.title}</H2>
               <Accordion items={faqItems} allowMultiple={false} />
             </div>
           </Container>
         </section>
 
-        {/* CTA Strip */}
         <section className="py-12 md:py-16">
           <Container>
             <div className="max-w-2xl mx-auto text-center space-y-6">
-              <H2>Create your plan now</H2>
+              <H2>{copy.cta.title}</H2>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Button variant="primary" asChild>
-                  <Link href="/coaches">Find your coach</Link>
+                  <Link href="/coaches">{copy.cta.coaches}</Link>
                 </Button>
                 <Button variant="outline" asChild>
-                  <Link href="/generator">Generate a plan</Link>
+                  <Link href="/generator">{copy.cta.generator}</Link>
                 </Button>
               </div>
             </div>

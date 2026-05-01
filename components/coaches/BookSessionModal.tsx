@@ -13,6 +13,8 @@ import {
   isToday,
 } from "@/lib/coach-pricing";
 import { cn } from "@/lib/utils";
+import { getCoachesCopy } from "@/lib/coaches-copy";
+import { useLocale } from "@/lib/i18n/client";
 
 interface BookSessionModalProps {
   isOpen: boolean;
@@ -31,12 +33,6 @@ interface BookSessionModalProps {
   }) => Promise<void>;
 }
 
-const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-const MONTHS = [
-  "January", "February", "March", "April", "May", "June",
-  "July", "August", "September", "October", "November", "December",
-];
-
 export function BookSessionModal({
   isOpen,
   onClose,
@@ -46,6 +42,9 @@ export function BookSessionModal({
   balance,
   onBook,
 }: BookSessionModalProps) {
+  const { locale } = useLocale();
+  const copy = getCoachesCopy(locale).bookSessionModal;
+  const dateLocale = locale === "tr" ? "tr-TR" : "en-GB";
   const [step, setStep] = useState<"date" | "time" | "confirm">("date");
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
@@ -133,11 +132,11 @@ export function BookSessionModal({
       });
       onClose();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Booking failed. Please try again.");
+      setError(err instanceof Error ? err.message : copy.bookingFailed);
     } finally {
       setSubmitting(false);
     }
-  }, [selectedDate, selectedTime, selectedDuration, notes, coachId, coachSlug, coachName, onBook, onClose]);
+  }, [selectedDate, selectedTime, selectedDuration, notes, coachId, coachSlug, coachName, onBook, onClose, copy.bookingFailed]);
 
   const resetAndClose = useCallback(() => {
     setStep("date");
@@ -169,12 +168,12 @@ export function BookSessionModal({
         {/* Header */}
         <div className="sticky top-0 z-10 flex items-center justify-between border-b bg-surface p-5 rounded-t-2xl" style={{ borderColor: THEME.border }}>
           <div>
-            <h2 className="text-xl font-bold">Book a Training Session</h2>
+            <h2 className="text-xl font-bold">{copy.title}</h2>
             <p className="text-sm text-text-muted mt-0.5">
-              with {coachName} &middot; {HOURLY_RATE.toLocaleString()} tokens/hour
+              {copy.withCoach(coachName, HOURLY_RATE.toLocaleString())}
             </p>
           </div>
-          <button onClick={resetAndClose} className="p-2 rounded-lg hover:bg-surface-hover transition-colors">
+          <button onClick={resetAndClose} className="p-2 rounded-lg hover:bg-surface-hover transition-colors" aria-label={copy.close}>
             <X size={20} />
           </button>
         </div>
@@ -183,9 +182,9 @@ export function BookSessionModal({
           {/* Step indicators */}
           <div className="flex items-center gap-2 text-xs font-medium">
             {[
-              { key: "date", label: "Date" },
-              { key: "time", label: "Time" },
-              { key: "confirm", label: "Confirm" },
+              { key: "date", label: copy.steps.date },
+              { key: "time", label: copy.steps.time },
+              { key: "confirm", label: copy.steps.confirm },
             ].map(({ key, label }, i) => (
               <React.Fragment key={key}>
                 {i > 0 && <div className="h-px flex-1 bg-border" />}
@@ -210,7 +209,7 @@ export function BookSessionModal({
 
           {/* Duration selector (always visible) */}
           <div>
-            <label className="text-sm font-medium mb-2 block">Session Duration</label>
+            <label className="text-sm font-medium mb-2 block">{copy.duration}</label>
             <div className="flex gap-2">
               {SESSION_DURATIONS.map((d) => (
                 <button
@@ -223,12 +222,12 @@ export function BookSessionModal({
                       : "border-border hover:border-primary/40"
                   )}
                 >
-                  {d.label}
+                  {d.value} {d.value > 1 ? copy.hours : copy.hour}
                 </button>
               ))}
             </div>
             <div className="mt-1.5 text-xs text-text-muted">
-              Cost: <span className="font-semibold" style={{ color: THEME.primary }}>{getSessionCost(selectedDuration).toLocaleString()} tokens</span>
+              {copy.cost} <span className="font-semibold" style={{ color: THEME.primary }}>{getSessionCost(selectedDuration).toLocaleString()} tokens</span>
             </div>
           </div>
 
@@ -248,7 +247,7 @@ export function BookSessionModal({
                   <ChevronLeft size={18} />
                 </button>
                 <span className="font-semibold">
-                  {MONTHS[viewMonth.month]} {viewMonth.year}
+                  {copy.months[viewMonth.month]} {viewMonth.year}
                 </span>
                 <button
                   onClick={() =>
@@ -265,7 +264,7 @@ export function BookSessionModal({
 
               {/* Day headers */}
               <div className="grid grid-cols-7 gap-1 mb-1">
-                {DAYS.map((d) => (
+                {copy.days.map((d) => (
                   <div key={d} className="text-center text-xs font-medium text-text-muted py-1">
                     {d}
                   </div>
@@ -307,7 +306,7 @@ export function BookSessionModal({
               <div className="flex items-center gap-2 mb-3">
                 <Calendar size={16} className="text-text-muted" />
                 <span className="text-sm font-medium">
-                  {selectedDate.toLocaleDateString("en-GB", {
+                  {selectedDate.toLocaleDateString(dateLocale, {
                     weekday: "long",
                     day: "numeric",
                     month: "long",
@@ -319,9 +318,9 @@ export function BookSessionModal({
               {filteredSlots.length === 0 ? (
                 <div className="text-center py-8 text-text-muted">
                   <Clock size={32} className="mx-auto mb-2 opacity-40" />
-                  <p className="text-sm">No available slots for this date and duration.</p>
+                  <p className="text-sm">{copy.noSlots}</p>
                   <Button variant="outline" size="sm" className="mt-3" onClick={() => setStep("date")}>
-                    Pick another date
+                    {copy.pickAnotherDate}
                   </Button>
                 </div>
               ) : (
@@ -352,7 +351,7 @@ export function BookSessionModal({
 
               {filteredSlots.length > 0 && selectedDuration > 1 && (
                 <p className="text-xs text-text-muted mt-2">
-                  Selecting a start time books a {selectedDuration}-hour block ending at {selectedDuration} hours later.
+                  {copy.durationHint(selectedDuration)}
                 </p>
               )}
             </div>
@@ -364,13 +363,13 @@ export function BookSessionModal({
               {/* Summary */}
               <div className="rounded-xl border p-4 space-y-2 text-sm" style={{ borderColor: THEME.border }}>
                 <div className="flex justify-between">
-                  <span className="text-text-muted">Coach</span>
+                  <span className="text-text-muted">{copy.coach}</span>
                   <span className="font-medium">{coachName}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-text-muted">Date</span>
+                  <span className="text-text-muted">{copy.date}</span>
                   <span className="font-medium">
-                    {selectedDate.toLocaleDateString("en-GB", {
+                    {selectedDate.toLocaleDateString(dateLocale, {
                       weekday: "short",
                       day: "numeric",
                       month: "short",
@@ -379,7 +378,7 @@ export function BookSessionModal({
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-text-muted">Time</span>
+                  <span className="text-text-muted">{copy.time}</span>
                   <span className="font-medium">
                     {selectedTime} – {(() => {
                       const [h] = selectedTime.split(":").map(Number);
@@ -388,11 +387,11 @@ export function BookSessionModal({
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-text-muted">Duration</span>
-                  <span className="font-medium">{selectedDuration} hour{selectedDuration > 1 ? "s" : ""}</span>
+                  <span className="text-text-muted">{copy.confirmDuration}</span>
+                  <span className="font-medium">{selectedDuration} {selectedDuration > 1 ? copy.hours : copy.hour}</span>
                 </div>
                 <div className="border-t pt-2 flex justify-between font-semibold" style={{ borderColor: THEME.border }}>
-                  <span>Cost</span>
+                  <span>{copy.cost}</span>
                   <span style={{ color: THEME.primary }}>{cost.toLocaleString()} tokens</span>
                 </div>
               </div>
@@ -400,17 +399,17 @@ export function BookSessionModal({
               {/* Balance check */}
               {!hasEnough && (
                 <div className="rounded-xl border border-danger/40 bg-danger/5 p-3 text-sm text-danger">
-                  Insufficient balance. You have {balance.toLocaleString()} tokens but need {cost.toLocaleString()}.
+                  {copy.insufficient(balance.toLocaleString(), cost.toLocaleString())}
                 </div>
               )}
 
               {/* Notes */}
               <div>
-                <label className="text-sm font-medium mb-1.5 block">Notes (optional)</label>
+                <label className="text-sm font-medium mb-1.5 block">{copy.notes}</label>
                 <textarea
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
-                  placeholder="Anything the coach should know..."
+                  placeholder={copy.notesPlaceholder}
                   rows={2}
                   className="w-full rounded-xl border bg-transparent px-3 py-2 text-sm placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-primary/40"
                   style={{ borderColor: THEME.border }}
@@ -431,7 +430,7 @@ export function BookSessionModal({
                 isLoading={submitting}
                 onClick={handleSubmit}
               >
-                {submitting ? "Booking..." : `Confirm Booking — ${cost.toLocaleString()} tokens`}
+                {submitting ? copy.booking : copy.confirmBooking(cost.toLocaleString())}
               </Button>
             </div>
           )}

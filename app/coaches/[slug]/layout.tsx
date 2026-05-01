@@ -1,6 +1,8 @@
 import { Metadata } from "next";
-import { generateCoachMetadata } from "@/lib/metadata";
 import coachesSeedData from "@/coaches_seed_15.json";
+import { getCoachesCopy, localizeCoachDisplay } from "@/lib/coaches-copy";
+import { getServerLocale } from "@/lib/i18n/server";
+import { generateCoachMetadata } from "@/lib/metadata";
 
 interface CoachSeedData {
   id: string;
@@ -12,10 +14,9 @@ interface CoachSeedData {
   specialties?: string[];
 }
 
-// Find coach from seed data
 function findCoachBySlug(slug: string): CoachSeedData | null {
   const coaches = coachesSeedData as CoachSeedData[];
-  return coaches.find((c) => c.slug === slug) || null;
+  return coaches.find((coach) => coach.slug === slug) || null;
 }
 
 export async function generateMetadata({
@@ -24,28 +25,42 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
+  const locale = await getServerLocale();
+  const copy = getCoachesCopy(locale).coachProfile;
   const coach = findCoachBySlug(slug);
 
   if (!coach) {
     return {
-      title: "Coach not found — Chaletcoaching",
-      description: "The coach you're looking for doesn't exist.",
+      title: `${copy.notFoundTitle} - Chaletcoaching`,
+      description: copy.notFoundBody,
     };
   }
 
-  // Avatar path handling - seed data has filename, need to add /images/ prefix
-  const avatarPath = coach.avatar.startsWith("/") 
-    ? coach.avatar 
-    : `/images/${coach.avatar}`;
+  const avatarPath = coach.avatar.startsWith("/") ? coach.avatar : `/images/${coach.avatar}`;
 
-  return generateCoachMetadata({
-    name: coach.name,
-    bio: coach.bio,
-    avatar: avatarPath,
-    slug: coach.slug,
-    rating: coach.rating,
-    specialties: coach.specialties,
-  });
+  const displayCoach = localizeCoachDisplay(
+    {
+      ...coach,
+      goals: [],
+      level: "",
+      trainingType: "",
+      focusAreas: [],
+      specialties: coach.specialties ?? [],
+    },
+    locale
+  );
+
+  return generateCoachMetadata(
+    {
+      name: displayCoach.name,
+      bio: displayCoach.bio,
+      avatar: avatarPath,
+      slug: displayCoach.slug,
+      rating: displayCoach.rating,
+      specialties: displayCoach.specialties,
+    },
+    locale
+  );
 }
 
 export default function CoachLayout({

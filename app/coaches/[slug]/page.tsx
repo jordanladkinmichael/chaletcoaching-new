@@ -20,6 +20,8 @@ import { SkeletonCoachProfile } from "@/components/coaches/SkeletonCoachProfile"
 import { BookSessionModal } from "@/components/coaches/BookSessionModal";
 import { Button } from "@/components/ui/button";
 import { HOURLY_RATE } from "@/lib/coach-pricing";
+import { useLocale } from "@/lib/i18n/client";
+import { getCoachesCopy } from "@/lib/coaches-copy";
 import type { CoachCardData } from "@/components/coaches/CoachCard";
 import type { Route } from "next";
 
@@ -29,12 +31,16 @@ interface Coach extends CoachCardData {
   languages: string[];
   goals: string[];
   focusAreas: string[];
+  rawGoals?: string[];
+  rawTrainingType?: string;
 }
 
 export default function CoachProfilePage() {
   const params = useParams();
   const router = useRouter();
   const { data: session } = useSession();
+  const { locale } = useLocale();
+  const copy = getCoachesCopy(locale).coachProfile;
   const slug = params.slug as string;
 
   const [coach, setCoach] = React.useState<Coach | null>(null);
@@ -96,7 +102,7 @@ export default function CoachProfilePage() {
     setLoading(true);
     setError(null);
 
-    fetch(`/api/coaches?slug=${slug}`)
+    fetch(`/api/coaches?slug=${slug}&locale=${locale}`)
       .then((res) => {
         if (res.status === 404) {
           setError("not-found");
@@ -118,7 +124,7 @@ export default function CoachProfilePage() {
         setError("error");
         setLoading(false);
       });
-  }, [slug]);
+  }, [slug, locale]);
 
   const scrollToForm = () => {
     document.getElementById("request-form")?.scrollIntoView({ behavior: "smooth" });
@@ -155,12 +161,12 @@ export default function CoachProfilePage() {
         <div className="min-h-screen bg-bg text-text py-12 md:py-16">
           <Container>
             <div className="max-w-2xl mx-auto text-center">
-              <h1 className="text-3xl font-bold mb-4">Coach not found</h1>
+              <h1 className="text-3xl font-bold mb-4">{copy.notFoundTitle}</h1>
               <p className="text-text-muted mb-8">
-                The coach you&apos;re looking for doesn&apos;t exist or has been removed.
+                {copy.notFoundBody}
               </p>
               <Button variant="primary" size="lg" asChild>
-                <Link href="/coaches">Back to coaches</Link>
+                <Link href="/coaches">{copy.backToCoaches}</Link>
               </Button>
             </div>
           </Container>
@@ -182,12 +188,12 @@ export default function CoachProfilePage() {
         <div className="min-h-screen bg-bg text-text py-12 md:py-16">
           <Container>
             <div className="max-w-2xl mx-auto text-center">
-              <h1 className="text-3xl font-bold mb-4">Something went wrong</h1>
+              <h1 className="text-3xl font-bold mb-4">{copy.errorTitle}</h1>
               <p className="text-text-muted mb-8">
-                We couldn&apos;t load the coach profile. Please try again.
+                {copy.errorBody}
               </p>
               <Button variant="primary" size="lg" onClick={() => window.location.reload()}>
-                Retry
+                {copy.retry}
               </Button>
             </div>
           </Container>
@@ -226,9 +232,9 @@ export default function CoachProfilePage() {
           <div className="mb-12 rounded-2xl border border-border bg-surface p-6 md:p-8">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
               <div>
-                <h2 className="text-xl font-bold mb-1">Book a Training Session</h2>
+                <h2 className="text-xl font-bold mb-1">{copy.bookingTitle}</h2>
                 <p className="text-sm text-text-muted">
-                  {HOURLY_RATE.toLocaleString()} tokens/hour &middot; Select a date &amp; time that works for you
+                  {copy.bookingRate(HOURLY_RATE.toLocaleString())}
                 </p>
               </div>
               <Button
@@ -242,7 +248,7 @@ export default function CoachProfilePage() {
                   setBookModalOpen(true);
                 }}
               >
-                Book a session
+                {copy.bookingButton}
               </Button>
             </div>
           </div>
@@ -259,8 +265,8 @@ export default function CoachProfilePage() {
           {/* Related coaches */}
           <RelatedCoachesRow
             currentCoachSlug={coach.slug}
-            goal={coach.goals[0]}
-            trainingType={coach.trainingType}
+            goal={coach.rawGoals?.[0] ?? coach.goals[0]}
+            trainingType={coach.rawTrainingType ?? coach.trainingType}
           />
         </Container>
       </div>

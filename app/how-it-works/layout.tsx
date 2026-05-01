@@ -1,12 +1,18 @@
 import { generatePageMetadata } from "@/lib/metadata";
-import { COPY } from "@/lib/copy-variants";
+import { getServerLocale } from "@/lib/i18n/server";
+import { messages } from "@/lib/i18n/messages";
 
-export const metadata = generatePageMetadata({
-  title: "How it works",
-  description: COPY.howItWorks.metaDescription,
-  url: "/how-it-works",
-  image: "/logo.webp",
-});
+export async function generateMetadata() {
+  const locale = await getServerLocale();
+  const metadataCopy = messages[locale].metadata;
+
+  return generatePageMetadata({
+    title: metadataCopy.howItWorksTitle,
+    description: metadataCopy.howItWorksDescription,
+    url: "/how-it-works",
+    image: "/logo.webp",
+  });
+}
 
 export default function HowItWorksLayout({
   children,

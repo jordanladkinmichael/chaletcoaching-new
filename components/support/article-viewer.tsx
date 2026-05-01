@@ -1,17 +1,17 @@
 "use client";
 
 import React from "react";
-import { Card } from "@/components/ui";
-import { H2, H3, Paragraph } from "@/components/ui";
+import { Card, H2, H3, Paragraph } from "@/components/ui";
+import { useLocale, useTranslations } from "@/lib/i18n/client";
 import type { SupportArticle } from "@/lib/support-articles";
 
 interface ArticleViewerProps {
   article: SupportArticle | null;
 }
 
-function formatDate(dateString: string): string {
+function formatDate(dateString: string, localeTag: string): string {
   const date = new Date(dateString);
-  return date.toLocaleDateString("en-US", {
+  return date.toLocaleDateString(localeTag, {
     year: "numeric",
     month: "short",
     day: "numeric",
@@ -53,11 +53,15 @@ function parseMarkdownLinks(text: string): React.ReactNode {
 }
 
 export function ArticleViewer({ article }: ArticleViewerProps) {
+  const { locale } = useLocale();
+  const tSupport = useTranslations("support");
+  const localeTag = locale === "tr" ? "tr-TR" : "en-GB";
+
   if (!article) {
     return (
       <Card className="text-center py-12">
         <Paragraph className="opacity-70 mb-0">
-          Select an article to view its content.
+          {tSupport("selectArticle")}
         </Paragraph>
       </Card>
     );
@@ -72,7 +76,7 @@ export function ArticleViewer({ article }: ArticleViewerProps) {
       <div>
         <H2 id="article-title" className="mb-2">{article.title}</H2>
         <div className="text-sm opacity-60">
-          Updated {formatDate(article.updatedAt)}
+          {tSupport("updated")} {formatDate(article.updatedAt, localeTag)}
         </div>
       </div>
 

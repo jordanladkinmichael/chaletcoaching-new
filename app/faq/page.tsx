@@ -20,14 +20,15 @@ import {
 } from "@/components/ui";
 import { useCurrencyStore } from "@/lib/stores/currency-store";
 import { useDebounce } from "@/lib/hooks";
+import { useLocale, useTranslations } from "@/lib/i18n/client";
 import { fadeIn } from "@/lib/animations";
 import { THEME } from "@/lib/theme";
 import {
-  FAQ_ITEMS,
+  getFaqItems,
   getFaqItemsByCategory,
   searchFaqItems,
   getCategoryCount,
-  CATEGORY_LABELS,
+  getCategoryLabels,
   type FaqCategory,
 } from "@/lib/faq-data";
 import type { Route } from "next";
@@ -37,6 +38,9 @@ type Region = "EU" | "UK" | "US";
 export default function FAQPage() {
   const { data: session } = useSession();
   const router = useRouter();
+  const { locale } = useLocale();
+  const tFaq = useTranslations("faq");
+  const tCommon = useTranslations("common");
   const { currency } = useCurrencyStore();
   const [balance, setBalance] = useState(0);
   const [balanceLoading, setBalanceLoading] = useState(false);
@@ -116,19 +120,22 @@ export default function FAQPage() {
   };
 
   // Filter FAQ items
+  const allFaqItems = useMemo(() => getFaqItems(locale), [locale]);
+  const categoryLabels = useMemo(() => getCategoryLabels(locale), [locale]);
+
   const filteredItems = useMemo(() => {
     let items = activeCategory === "all"
-      ? FAQ_ITEMS
-      : getFaqItemsByCategory(activeCategory);
+      ? allFaqItems
+      : getFaqItemsByCategory(activeCategory, locale);
 
     if (debouncedSearch) {
-      items = searchFaqItems(debouncedSearch).filter((item) =>
+      items = searchFaqItems(debouncedSearch, locale).filter((item) =>
         activeCategory === "all" || item.category === activeCategory
       );
     }
 
     return items;
-  }, [debouncedSearch, activeCategory]);
+  }, [activeCategory, allFaqItems, debouncedSearch, locale]);
 
   // Convert to Accordion format
   const accordionItems: AccordionItem[] = useMemo(() => {
@@ -138,39 +145,56 @@ export default function FAQPage() {
       
       // Handle refund policy links
       if (item.id === "can-get-refund") {
-        // "Refund eligibility depends on the situation and service used. See our refund policy for details."
-        const match = item.answer.match(/^(.*?)(refund policy)(.*)$/i);
-        if (match) {
-          answerContent = (
+        answerContent =
+          locale === "tr" ? (
             <>
-              {match[1]}
+              Geri ödeme uygunluğu duruma ve kullanılan hizmete bağlıdır.
+              {" "}
               <Link
                 href="/legal/refunds"
                 className="underline opacity-80 hover:opacity-100 transition-opacity"
               >
-                {match[2]}
+                iade politikamıza
               </Link>
-              {match[3]}
+              {" "}ayrıntılar için bakın.
+            </>
+          ) : (
+            <>
+              Refund eligibility depends on the situation and service used. See our{" "}
+              <Link
+                href="/legal/refunds"
+                className="underline opacity-80 hover:opacity-100 transition-opacity"
+              >
+                refund policy
+              </Link>
+              {" "}for details.
             </>
           );
-        }
       } else if (item.id === "where-read-refund-policy") {
-        // "You can read it on our refunds page."
-        const match = item.answer.match(/^(.*?)(refunds page)(.*)$/i);
-        if (match) {
-          answerContent = (
+        answerContent =
+          locale === "tr" ? (
             <>
-              {match[1]}
+              Bunu{" "}
               <Link
                 href="/legal/refunds"
                 className="underline opacity-80 hover:opacity-100 transition-opacity"
               >
-                {match[2]}
+                iade sayfamızda
               </Link>
-              {match[3]}
+              {" "}okuyabilirsiniz.
+            </>
+          ) : (
+            <>
+              You can read it on our{" "}
+              <Link
+                href="/legal/refunds"
+                className="underline opacity-80 hover:opacity-100 transition-opacity"
+              >
+                refunds page
+              </Link>
+              .
             </>
           );
-        }
       }
 
       return {
@@ -183,7 +207,7 @@ export default function FAQPage() {
         ),
       };
     });
-  }, [filteredItems]);
+  }, [filteredItems, locale]);
 
   // Split into 2 columns
   const leftColumn = accordionItems.slice(0, Math.ceil(accordionItems.length / 2));
@@ -203,14 +227,14 @@ export default function FAQPage() {
 
   // Category options
   const categories: Array<{ value: FaqCategory | "all"; label: string }> = [
-    { value: "all", label: "All" },
-    { value: "getting_started", label: CATEGORY_LABELS.getting_started },
-    { value: "coaches", label: CATEGORY_LABELS.coaches },
-    { value: "instant_ai", label: CATEGORY_LABELS.instant_ai },
-    { value: "tokens_payments", label: CATEGORY_LABELS.tokens_payments },
-    { value: "account", label: CATEGORY_LABELS.account },
-    { value: "safety", label: CATEGORY_LABELS.safety },
-    { value: "refunds", label: CATEGORY_LABELS.refunds },
+    { value: "all", label: tCommon("all") },
+    { value: "getting_started", label: categoryLabels.getting_started },
+    { value: "coaches", label: categoryLabels.coaches },
+    { value: "instant_ai", label: categoryLabels.instant_ai },
+    { value: "tokens_payments", label: categoryLabels.tokens_payments },
+    { value: "account", label: categoryLabels.account },
+    { value: "safety", label: categoryLabels.safety },
+    { value: "refunds", label: categoryLabels.refunds },
   ];
 
   return (
@@ -236,9 +260,9 @@ export default function FAQPage() {
               className="space-y-6"
             >
               <div className="text-center space-y-4 max-w-3xl mx-auto">
-                <H1>Frequently asked questions</H1>
+                <H1>{tFaq("title")}</H1>
                 <Paragraph className="text-lg">
-                  Quick answers about coaches, Instant AI plans, tokens, and safety.
+                  {tFaq("subtitle")}
                 </Paragraph>
               </div>
 
@@ -246,11 +270,11 @@ export default function FAQPage() {
                 <div className="space-y-3">
                   <div className="relative">
                     <label htmlFor="faq-search" className="sr-only">
-                      Search
+                      {tCommon("search")}
                     </label>
                     <SearchInput
                       id="faq-search"
-                      placeholder="Search questions..."
+                      placeholder={tFaq("searchPlaceholder")}
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
                       className="w-full"
@@ -259,7 +283,7 @@ export default function FAQPage() {
                   
                   <div className="flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
                     <Paragraph className="text-sm opacity-70 mb-0">
-                      Popular: tokens, preview, refunds, dashboard
+                      {tFaq("popular")}
                     </Paragraph>
                     
                     {searchQuery && (
@@ -267,7 +291,10 @@ export default function FAQPage() {
                         aria-live="polite"
                         className="text-sm opacity-70"
                       >
-                        Showing {filteredItems.length} {filteredItems.length === 1 ? "question" : "questions"}
+                        {tFaq("showing")} {filteredItems.length}{" "}
+                        {filteredItems.length === 1
+                          ? tFaq("questionSingular")
+                          : tFaq("questionPlural")}
                       </div>
                     )}
                   </div>
@@ -279,19 +306,19 @@ export default function FAQPage() {
                   href="/support"
                   className="opacity-70 hover:opacity-100 transition-opacity underline"
                 >
-                  Support
+                  {tFaq("support")}
                 </Link>
                 <Link
                   href="/payments-tokens"
                   className="opacity-70 hover:opacity-100 transition-opacity underline"
                 >
-                  Payments & tokens
+                  {tFaq("paymentsTokens")}
                 </Link>
                 <Link
                   href="/trust-safety"
                   className="opacity-70 hover:opacity-100 transition-opacity underline"
                 >
-                  Trust & safety
+                  {tFaq("trustSafety")}
                 </Link>
               </div>
             </motion.div>
@@ -322,7 +349,7 @@ export default function FAQPage() {
                         : {}
                     }
                   >
-                    {cat.label} ({getCategoryCount(cat.value)})
+                    {cat.label} ({getCategoryCount(cat.value, locale)})
                   </button>
                 ))}
               </div>
@@ -340,16 +367,16 @@ export default function FAQPage() {
             >
               {filteredItems.length === 0 ? (
                 <Card className="text-center py-12">
-                  <H2 className="mb-2">No results</H2>
+                  <H2 className="mb-2">{tFaq("noResultsTitle")}</H2>
                   <Paragraph className="opacity-70 mb-4">
-                    Try different keywords or browse by category.
+                    {tFaq("noResultsDescription")}
                   </Paragraph>
                   <div className="flex flex-col sm:flex-row gap-4 justify-center">
                     <Button variant="primary" asChild>
-                      <Link href="/support">Open support</Link>
+                      <Link href="/support">{tFaq("openSupport")}</Link>
                     </Button>
                     <Button variant="outline" asChild>
-                      <Link href="/contact">Contact us</Link>
+                      <Link href="/contact">{tFaq("contactUs")}</Link>
                     </Button>
                   </div>
                 </Card>
@@ -377,16 +404,16 @@ export default function FAQPage() {
               className="max-w-3xl mx-auto"
             >
               <Card className="text-center">
-                <H2 className="mb-4">Still have questions?</H2>
+                <H2 className="mb-4">{tFaq("stillHaveQuestionsTitle")}</H2>
                 <Paragraph className="mb-6">
-                  Browse support articles or contact us for help.
+                  {tFaq("stillHaveQuestionsDescription")}
                 </Paragraph>
                 <div className="flex flex-col sm:flex-row gap-4 justify-center">
                   <Button variant="primary" asChild>
-                    <Link href="/support">Open support</Link>
+                    <Link href="/support">{tFaq("openSupport")}</Link>
                   </Button>
                   <Button variant="outline" asChild>
-                    <Link href="/contact">Contact us</Link>
+                    <Link href="/contact">{tFaq("contactUs")}</Link>
                   </Button>
                 </div>
               </Card>

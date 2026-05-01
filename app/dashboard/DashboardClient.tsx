@@ -5,6 +5,8 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import SiteHeader from "@/components/site-header";
 import SiteFooter from "@/components/site-footer";
+import { getAppFlowCopy } from "@/lib/app-flow-copy";
+import { useLocale } from "@/lib/i18n/client";
 import { useCurrencyStore } from "@/lib/stores/currency-store";
 import { calcFullCourseTokens, type GeneratorOpts } from "@/lib/tokens";
 import { Dashboard } from "@/components/dashboard/Dashboard";
@@ -17,6 +19,8 @@ export default function DashboardClient() {
   const { data: session } = useSession();
   const router = useRouter();
   const { currency } = useCurrencyStore();
+  const { locale } = useLocale();
+  const generatorCopy = getAppFlowCopy(locale).generator;
   const [balance, setBalance] = useState(0);
   const [balanceLoading, setBalanceLoading] = useState(false);
   const [currentPreview, setCurrentPreview] = useState<{
@@ -95,7 +99,7 @@ export default function DashboardClient() {
 
     const cost = calcFullCourseTokens(opts);
     if (balance < cost) {
-      alert(`Insufficient tokens. You need ${cost} tokens, but have ${balance}.`);
+      alert(generatorCopy.alerts.insufficient(cost, balance));
       return;
     }
 
@@ -106,17 +110,17 @@ export default function DashboardClient() {
         body: JSON.stringify({ options: opts }),
       });
       const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(data?.error ?? "Publish failed");
+      if (!res.ok) throw new Error(data?.error ?? generatorCopy.alerts.publishFailed);
       
       // Reload balance
       await loadBalance();
       
-      alert("Course published successfully!");
+      alert(generatorCopy.alerts.publishSuccess);
     } catch (error) {
       console.error("Course publication failed:", error);
-      alert(error instanceof Error ? error.message : "Failed to publish course");
+      alert(error instanceof Error ? error.message : generatorCopy.alerts.publishFallback);
     }
-  }, [isAuthed, balance, loadBalance, openAuth]);
+  }, [isAuthed, balance, loadBalance, openAuth, generatorCopy]);
 
   return (
     <div className="min-h-screen flex flex-col bg-bg text-text">

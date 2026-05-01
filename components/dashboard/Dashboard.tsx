@@ -18,6 +18,8 @@ import {
   X,
 } from "lucide-react";
 import { THEME } from "@/lib/theme";
+import { getAppFlowCopy, formatTokenAmount } from "@/lib/app-flow-copy";
+import { useLocale } from "@/lib/i18n/client";
 import { TOKENS_PER_UNIT, formatNumber, generateCourseTitle, type GeneratorOpts } from "@/lib/tokens";
 
 const cn = (...classes: Array<string | false | undefined>) =>
@@ -163,6 +165,9 @@ export function Dashboard({ requireAuth, openAuth, balance, currentPreview, onDi
   loadBalance: () => Promise<void>;
   balanceLoading: boolean;
 }) {
+  const { locale } = useLocale();
+  const copy = getAppFlowCopy(locale).dashboard;
+  const dateLocale = locale === "tr" ? "tr-TR" : "en-GB";
   // Типы должны быть определены вне компонента или в начале
   type CourseItem = {
     id: string;
@@ -422,7 +427,7 @@ export function Dashboard({ requireAuth, openAuth, balance, currentPreview, onDi
         window.removeEventListener('course:published', onCoursePublished as EventListener);
       }
     };
-  }, [onCoursePublished]);
+  }, [checkPdfStatus, onCoursePublished]);
 
   // Загрузка дополнительных транзакций
   const loadMoreTransactions = React.useCallback(async () => {
@@ -463,7 +468,7 @@ export function Dashboard({ requireAuth, openAuth, balance, currentPreview, onDi
       
       if (response.ok) {
         const data = await response.json();
-        alert(`Successfully regenerated Week ${weekNumber}, Day ${dayNumber}! Cost: ${formatNumber(data.tokensSpent)} tokens`);
+        alert(copy.alerts.regenerated(weekNumber, dayNumber, formatNumber(data.tokensSpent)));
         
         // Обновляем локальное состояние курса
         setCourses(prev => prev.map(course => 
@@ -493,18 +498,18 @@ export function Dashboard({ requireAuth, openAuth, balance, currentPreview, onDi
       } else {
         const error = await response.json();
         if (error.error === "Insufficient tokens") {
-          alert(`Insufficient tokens! Required: ${formatNumber(error.required)}, Balance: ${formatNumber(error.balance)}`);
+          alert(copy.alerts.insufficient(formatNumber(error.required), formatNumber(error.balance)));
         } else {
-          alert(`Failed to regenerate day: ${error.error}`);
+          alert(`${copy.alerts.failedRegenerate} ${error.error}`);
         }
       }
     } catch (error) {
       console.error("Day regeneration failed:", error);
-      alert("Failed to regenerate day. Please try again.");
+      alert(copy.alerts.failedRegenerate);
     } finally {
       setRegeneratingDay(false);
     }
-  }, [regeneratingDay, selectedCourse]);
+  }, [copy, regeneratingDay, selectedCourse]);
 
   // Условный возврат после всех хуков
   if (requireAuth) {
@@ -513,11 +518,11 @@ export function Dashboard({ requireAuth, openAuth, balance, currentPreview, onDi
         <div className="flex items-start gap-3">
           <Lock size={18} style={{ color: THEME.accent }} />
           <div>
-            <div className="text-sm font-semibold">Sign in required</div>
-            <p className="text-sm opacity-85">Log in to view your courses, history and PDFs.</p>
+            <div className="text-sm font-semibold">{copy.signInRequired}</div>
+            <p className="text-sm opacity-85">{copy.signInRequiredBody}</p>
             <div className="mt-3 flex gap-2">
-              <AccentButton onClick={openAuth}><UserPlus size={16}/> Create account</AccentButton>
-              <GhostButton onClick={openAuth}><LogIn size={16}/> Sign in</GhostButton>
+              <AccentButton onClick={openAuth}><UserPlus size={16}/> {copy.signIn}</AccentButton>
+              <GhostButton onClick={openAuth}><LogIn size={16}/> {copy.signIn}</GhostButton>
             </div>
           </div>
         </div>
@@ -542,7 +547,7 @@ export function Dashboard({ requireAuth, openAuth, balance, currentPreview, onDi
     const color = amount >= 0 ? "text-green-400" : "text-red-400";
     return (
       <span className={`font-mono ${color}`}>
-        {sign}{formatNumber(amount)} ◎
+        {sign}{formatTokenAmount(Math.abs(amount), locale)}
       </span>
     );
   };
@@ -581,7 +586,7 @@ export function Dashboard({ requireAuth, openAuth, balance, currentPreview, onDi
         <Card>
           <div className="flex items-center justify-between">
             <h3 className="text-xl font-semibold flex items-center gap-2">
-              <Wallet size={18} /> Token Balance
+              <Wallet size={18} /> {copy.wallet}
             </h3>
             <div className="flex gap-2">
               <button
@@ -589,7 +594,7 @@ export function Dashboard({ requireAuth, openAuth, balance, currentPreview, onDi
                 disabled={balanceLoading}
                 className="p-2 rounded-lg hover:bg-opacity-10 transition-colors"
                 style={{ backgroundColor: THEME.accent + '20' }}
-                title="Refresh balance"
+                title={copy.refreshBalance}
               >
                 <RefreshCw size={16} className={balanceLoading ? "animate-spin" : ""} />
               </button>
@@ -598,7 +603,7 @@ export function Dashboard({ requireAuth, openAuth, balance, currentPreview, onDi
           </div>
           <div className="mt-4">
             <div className="text-3xl font-bold" style={{ color: THEME.accent }}>
-              {formatNumber(balance)} ◎
+              {formatTokenAmount(balance, locale)}
             </div>
             <div className="text-sm opacity-70 mt-1">
               ≈ {(balance / TOKENS_PER_UNIT).toFixed(2)} EUR
@@ -608,28 +613,28 @@ export function Dashboard({ requireAuth, openAuth, balance, currentPreview, onDi
 
         <Card>
           <h3 className="text-xl font-semibold flex items-center gap-2">
-            <Dumbbell size={18} /> Courses Created
+              <Dumbbell size={18} /> {copy.coursesCreated}
           </h3>
           <div className="mt-4">
             <div className="text-3xl font-bold" style={{ color: THEME.accent }}>
               {courses.length}
             </div>
             <div className="text-sm opacity-70 mt-1">
-              Total courses in your account
+              {copy.totalCourses}
             </div>
           </div>
         </Card>
 
         <Card>
           <h3 className="text-xl font-semibold flex items-center gap-2">
-            <Timer size={18} /> Total Spent
+              <Timer size={18} /> {copy.totalSpent}
           </h3>
           <div className="mt-4">
             <div className="text-3xl font-bold" style={{ color: THEME.accent }}>
-              {formatNumber(transactions.filter(t => t.type === "spend").reduce((sum, t) => sum + Math.abs(t.amount), 0))} ◎
+              {formatTokenAmount(transactions.filter(t => t.type === "spend").reduce((sum, t) => sum + Math.abs(t.amount), 0), locale)}
             </div>
             <div className="text-sm opacity-70 mt-1">
-              Tokens spent on courses
+              {copy.tokensSpentOnCourses}
             </div>
           </div>
         </Card>
@@ -637,14 +642,14 @@ export function Dashboard({ requireAuth, openAuth, balance, currentPreview, onDi
         <Link href="/account" className="block">
           <Card interactive className="h-full flex flex-col justify-between cursor-pointer hover:ring-2 hover:ring-primary transition-all">
             <h3 className="text-xl font-semibold flex items-center gap-2">
-              <Settings size={18} /> Settings
+              <Settings size={18} /> {copy.accountSettings}
             </h3>
             <div className="mt-4">
               <div className="text-sm opacity-70">
-                Edit your profile, address, and password
+                {copy.accountSettingsBody}
               </div>
               <div className="mt-2 text-sm font-medium" style={{ color: THEME.accent }}>
-                Manage account →
+                {copy.manageAccount}
               </div>
             </div>
           </Card>
@@ -658,10 +663,10 @@ export function Dashboard({ requireAuth, openAuth, balance, currentPreview, onDi
         <Card className="border-2 border-yellow-400/30 bg-yellow-50/10">
           <div className="flex items-center justify-between">
             <h3 className="text-xl font-semibold flex items-center gap-2">
-              <Eye size={18} style={{ color: THEME.accent }} /> Latest Preview
+              <Eye size={18} style={{ color: THEME.accent }} /> {copy.latestPreview}
             </h3>
             <div className="text-xs px-2 py-1 bg-yellow-400/20 rounded-full text-yellow-700">
-              Preview
+              {copy.preview}
             </div>
           </div>
           
@@ -671,7 +676,7 @@ export function Dashboard({ requireAuth, openAuth, balance, currentPreview, onDi
             
             {currentPreview.images && currentPreview.images.length > 0 && (
               <div className="mt-3">
-                <div className="text-sm font-medium mb-2">Generated Images:</div>
+                <div className="text-sm font-medium mb-2">{copy.generatedImages}</div>
                 <div className="grid grid-cols-2 gap-2">
                   {currentPreview.images.map((imageUrl: string, index: number) => (
                     <Image 
@@ -720,11 +725,11 @@ export function Dashboard({ requireAuth, openAuth, balance, currentPreview, onDi
                 {publishingCourse ? (
                   <>
                     <Spinner size={16} />
-                    Publishing...
+                    {copy.publishing}
                   </>
                 ) : (
                   <>
-                    <Dumbbell size={16} /> Publish Full Course
+                    <Dumbbell size={16} /> {copy.publishFullCourse}
                   </>
                 )}
               </GhostButton>
@@ -732,7 +737,7 @@ export function Dashboard({ requireAuth, openAuth, balance, currentPreview, onDi
                 onClick={onDismissPreview}
                 className="text-sm"
               >
-                <X size={16} /> Dismiss
+                <X size={16} /> {copy.dismiss}
               </GhostButton>
             </div>
           </div>
@@ -744,14 +749,14 @@ export function Dashboard({ requireAuth, openAuth, balance, currentPreview, onDi
         <Card>
           <div className="flex items-center justify-between">
             <h3 className="text-xl font-semibold flex items-center gap-2">
-              <Calendar size={18} /> My Bookings
+              <Calendar size={18} /> {copy.myBookings}
             </h3>
             <Link
               href="/coaches"
               className="text-sm font-medium hover:underline"
               style={{ color: THEME.accent }}
             >
-              Book new session →
+              {copy.bookNewSession}
             </Link>
           </div>
 
@@ -779,13 +784,13 @@ export function Dashboard({ requireAuth, openAuth, balance, currentPreview, onDi
               const statusLabel =
                 b.status === "confirmed"
                   ? isPast
-                    ? "Completed"
+                    ? copy.statuses.completed
                     : isToday
-                      ? "Today"
-                      : "Upcoming"
+                      ? copy.today
+                      : copy.upcoming
                   : b.status === "cancelled"
-                    ? "Cancelled"
-                    : "Completed";
+                    ? copy.statuses.cancelled
+                    : copy.statuses.completed;
 
               return (
                 <div
@@ -799,7 +804,7 @@ export function Dashboard({ requireAuth, openAuth, balance, currentPreview, onDi
                     style={{ backgroundColor: statusColor + "15" }}
                   >
                     <span className="text-xs font-medium" style={{ color: statusColor }}>
-                      {bookingDate.toLocaleDateString("en-GB", { month: "short" })}
+                      {bookingDate.toLocaleDateString(dateLocale, { month: "short" })}
                     </span>
                     <span className="text-lg font-bold" style={{ color: statusColor }}>
                       {bookingDate.getDate()}
@@ -817,11 +822,11 @@ export function Dashboard({ requireAuth, openAuth, balance, currentPreview, onDi
                       </Link>
                     </div>
                     <div className="text-xs text-text-muted mt-0.5">
-                      {bookingDate.toLocaleTimeString("en-GB", {
+                      {bookingDate.toLocaleTimeString(dateLocale, {
                         hour: "2-digit",
                         minute: "2-digit",
                       })}{" "}
-                      · {b.durationHours}h · {b.tokensCharged.toLocaleString()} tokens
+                      · {b.durationHours}h · {formatTokenAmount(b.tokensCharged, locale)}
                     </div>
                   </div>
 
@@ -847,7 +852,7 @@ export function Dashboard({ requireAuth, openAuth, balance, currentPreview, onDi
         <Card>
           <div className="flex items-center justify-between">
             <h3 className="text-xl font-semibold flex items-center gap-2">
-              <UserPlus size={18} /> Coach Requests
+              <UserPlus size={18} /> {copy.coachRequests}
             </h3>
           </div>
           
@@ -867,17 +872,17 @@ export function Dashboard({ requireAuth, openAuth, balance, currentPreview, onDi
                       {new Date(req.createdAt).toLocaleDateString()}
                     </div>
                     <span className={`text-xs px-2 py-1 rounded border ${statusColors[req.status]}`}>
-                      {req.status}
+                      {copy.statuses[req.status]}
                     </span>
                   </div>
                   <div className="mt-1 text-lg font-semibold">
-                    Goal: {req.goal}
+                    {copy.goal} {req.goal}
                   </div>
                   <div className="mt-1 text-sm opacity-80">
-                    {req.level} • {req.trainingType} • {req.daysPerWeek} days/week
+                    {req.level} • {req.trainingType} • {req.daysPerWeek} {copy.daysPerWeek}
                   </div>
                   <div className="mt-1 text-sm opacity-70">
-                    Spent: {formatNumber(req.tokensCharged)} tokens
+                    {copy.spent} {formatTokenAmount(req.tokensCharged, locale)}
                   </div>
                   {req.status === "done" && req.courseId && (!req.availableAt || new Date(req.availableAt) <= new Date()) && (
                     <div className="mt-3 flex gap-2 flex-wrap">
@@ -888,7 +893,7 @@ export function Dashboard({ requireAuth, openAuth, balance, currentPreview, onDi
                           setShowCourseModal(true);
                         }
                       }}>
-                        <Eye size={16} /> Open Course
+                        <Eye size={16} /> {copy.openCourse}
                       </AccentButton>
                       {req.courseId && (
                         <GhostButton
@@ -944,8 +949,8 @@ export function Dashboard({ requireAuth, openAuth, balance, currentPreview, onDi
                               });
                               
                               if (!response.ok) {
-                                const error = await response.json().catch(() => ({ error: "Unknown error" }));
-                                throw new Error(error.error || "Failed to start PDF generation");
+                                const error = await response.json().catch(() => ({ error: copy.unknownError }));
+                                throw new Error(error.error || copy.alerts.failedPdfStart);
                               }
                               
                               const data = await response.json();
@@ -968,7 +973,7 @@ export function Dashboard({ requireAuth, openAuth, balance, currentPreview, onDi
                               console.error("PDF generation failed for coach request:", error);
                               setPdfStatus(prev => ({ ...prev, [courseId]: 'error' }));
                               setGeneratingPDF(null);
-                              alert(`Failed to start PDF generation: ${error instanceof Error ? error.message : 'Unknown error'}`);
+                              alert(`${copy.alerts.failedPdfStart}: ${error instanceof Error ? error.message : copy.unknownError}`);
                             }
                           }}
                           disabled={pdfStatus[req.courseId] === 'generating' || generatingPDF === req.courseId}
@@ -981,17 +986,17 @@ export function Dashboard({ requireAuth, openAuth, balance, currentPreview, onDi
                           {pdfStatus[req.courseId] === 'generating' || generatingPDF === req.courseId ? (
                             <>
                               <Spinner size={16} className="text-current" />
-                              <span>Generating...</span>
+                              <span>{copy.generating}</span>
                             </>
                           ) : req.pdfUrl ? (
                             <>
                               <FileDown size={16} />
-                              <span>Download PDF</span>
+                              <span>{copy.downloadPdf}</span>
                             </>
                           ) : (
                             <>
                               <FileDown size={16} />
-                              <span>Generate PDF</span>
+                              <span>{copy.generatePdf}</span>
                             </>
                           )}
                         </GhostButton>
@@ -1000,13 +1005,13 @@ export function Dashboard({ requireAuth, openAuth, balance, currentPreview, onDi
                   )}
                   {req.status === "failed" && req.error && (
                     <div className="mt-2 text-xs text-red-600">
-                      Error: {req.error}
+                      {copy.errorPrefix} {req.error}
                     </div>
                   )}
                   {(req.status === "pending" || req.status === "processing") && (
                     <div className="mt-2 text-xs opacity-70">
                       <Timer size={12} className="inline mr-1" />
-                      Your coach has received your request. Your personalized course is being prepared.
+                      {copy.coachRequestPending}
                     </div>
                   )}
                   {/* Removed: premature "ready" message. Status now stays "processing" 
@@ -1022,7 +1027,7 @@ export function Dashboard({ requireAuth, openAuth, balance, currentPreview, onDi
       <Card>
         <div className="flex items-center justify-between">
           <h3 className="text-xl font-semibold flex items-center gap-2">
-            <Dumbbell size={18} /> Your Courses
+            <Dumbbell size={18} /> {copy.yourCourses}
           </h3>
           {courses.length > 0 && (
             <GhostButton onClick={() => {
@@ -1035,19 +1040,19 @@ export function Dashboard({ requireAuth, openAuth, balance, currentPreview, onDi
               }));
               downloadCSV("courses.csv", rows);
             }} className="text-sm">
-              <FileDown size={16} /> Export CSV
+              <FileDown size={16} /> {copy.exportCsv}
             </GhostButton>
           )}
         </div>
         
         {loading ? (
-          <div className="mt-4 text-sm opacity-80">Loading courses...</div>
+          <div className="mt-4 text-sm opacity-80">{copy.loadingCourses}</div>
         ) : courses.length === 0 ? (
           <div className="mt-8 text-center py-8">
             <Dumbbell size={48} className="mx-auto opacity-40 mb-4" />
-            <div className="text-lg font-medium">No courses yet</div>
+            <div className="text-lg font-medium">{copy.noCourses}</div>
             <p className="text-sm opacity-70 mt-2">
-              Publish a full course from the Generator to see it here.
+              {copy.noCoursesBody}
             </p>
           </div>
         ) : (
@@ -1066,25 +1071,25 @@ export function Dashboard({ requireAuth, openAuth, balance, currentPreview, onDi
                       return generatedTitle;
                     } catch (error) {
                       console.error('Failed to generate title for course:', c.id, error);
-                      return 'Untitled Course';
+                      return copy.untitledCourse;
                     }
                   })()}
                 </div>
                 <div className="mt-1 text-sm opacity-80">
-                  Spent: {formatNumber(c.tokensSpent)} tokens
+                  {copy.spent} {formatTokenAmount(c.tokensSpent, locale)}
                 </div>
                 <div className="mt-3 flex gap-2">
                   <AccentButton onClick={() => {
                     setSelectedCourse(c);
                     setShowCourseModal(true);
                   }}>
-                    Open
+                    {copy.open}
                   </AccentButton>
                   <GhostButton onClick={() => {
                     setSelectedCourse(c);
                     setShowCourseModal(true);
                   }}>
-                    Regenerate day
+                    {copy.regenerateDay}
                   </GhostButton>
                   <GhostButton
                     onClick={async () => {
@@ -1140,8 +1145,8 @@ export function Dashboard({ requireAuth, openAuth, balance, currentPreview, onDi
                         });
                         
                         if (!response.ok) {
-                          const error = await response.json().catch(() => ({ error: "Unknown error" }));
-                          throw new Error(error.error || "Failed to start PDF generation");
+                          const error = await response.json().catch(() => ({ error: copy.unknownError }));
+                          throw new Error(error.error || copy.alerts.failedPdfStart);
                         }
                         
                         const data = await response.json();
@@ -1165,16 +1170,16 @@ export function Dashboard({ requireAuth, openAuth, balance, currentPreview, onDi
                         // Показываем понятное сообщение пользователю
                         const errorMessage = error instanceof Error 
                           ? error.message 
-                          : "Unknown error occurred";
+                          : copy.unknownError;
                         
                         if (errorMessage.includes("Unauthorized")) {
-                          alert("You need to be logged in to generate PDF. Please sign in.");
+                          alert(copy.alerts.pdfSignIn);
                         } else if (errorMessage.includes("not found")) {
-                          alert("Course not found. Please refresh the page and try again.");
+                          alert(copy.alerts.courseNotFound);
                         } else {
                           alert(
-                            `Failed to start PDF generation: ${errorMessage}\n\n` +
-                            "You can try again by clicking the 'Generate PDF' button."
+                            `${copy.alerts.failedPdfStart}: ${errorMessage}\n\n` +
+                            copy.alerts.tryPdfAgain
                           );
                         }
                       }
@@ -1189,22 +1194,22 @@ export function Dashboard({ requireAuth, openAuth, balance, currentPreview, onDi
                     {pdfStatus[c.id] === 'generating' || generatingPDF === c.id ? (
                       <>
                         <Spinner size={16} className="text-current" />
-                        <span>Generating...</span>
+                        <span>{copy.generating}</span>
                       </>
                     ) : c.pdfUrl ? (
                       <>
                         <FileDown size={16} />
-                        <span>Download PDF</span>
+                        <span>{copy.downloadPdf}</span>
                       </>
                     ) : pdfStatus[c.id] === 'error' ? (
                       <>
                         <FileDown size={16} />
-                        <span>Generate PDF</span>
+                        <span>{copy.generatePdf}</span>
                       </>
                     ) : (
                       <>
                         <FileDown size={16} />
-                        <span>Generate PDF</span>
+                        <span>{copy.generatePdf}</span>
                       </>
                     )}
                   </GhostButton>
@@ -1219,23 +1224,23 @@ export function Dashboard({ requireAuth, openAuth, balance, currentPreview, onDi
       <Card>
         <div className="flex items-center justify-between">
           <h3 className="text-xl font-semibold flex items-center gap-2">
-            <Timer size={18} /> Transaction History
+            <Timer size={18} /> {copy.transactionHistory}
           </h3>
           {transactions.length > 0 && (
             <GhostButton onClick={exportTransactionsCSV} className="text-sm">
-              <FileDown size={16} /> Export CSV
+              <FileDown size={16} /> {copy.exportCsv}
             </GhostButton>
           )}
         </div>
         
         {loading ? (
-          <div className="mt-4 text-sm opacity-80">Loading transactions...</div>
+          <div className="mt-4 text-sm opacity-80">{copy.loadingTransactions}</div>
         ) : transactions.length === 0 ? (
           <div className="mt-8 text-center py-8">
             <Timer size={48} className="mx-auto opacity-40 mb-4" />
-            <div className="text-lg font-medium">No transactions yet</div>
+            <div className="text-lg font-medium">{copy.noTransactions}</div>
             <p className="text-sm opacity-70 mt-2">
-              Your token transactions will appear here.
+              {copy.noTransactionsBody}
             </p>
           </div>
         ) : (
@@ -1270,9 +1275,9 @@ export function Dashboard({ requireAuth, openAuth, balance, currentPreview, onDi
                   className="w-full"
                 >
                   {loadingMore ? (
-                    <>Loading more transactions...</>
+                    <>{copy.loadingMore}</>
                   ) : (
-                    <>Load More Transactions</>
+                    <>{copy.loadMore}</>
                   )}
                 </GhostButton>
               </div>
@@ -1286,7 +1291,7 @@ export function Dashboard({ requireAuth, openAuth, balance, currentPreview, onDi
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto border" style={{ backgroundColor: THEME.card, color: THEME.text, borderColor: THEME.cardBorder }}>
             <div className="sticky top-0 border-b p-4 flex items-center justify-between" style={{ backgroundColor: THEME.card, color: THEME.text, borderColor: THEME.cardBorder }}>
-              <h2 className="text-xl font-semibold" style={{ color: THEME.text }}>Course Details</h2>
+              <h2 className="text-xl font-semibold" style={{ color: THEME.text }}>{copy.courseDetails}</h2>
               <button
                 onClick={() => setShowCourseModal(false)}
                 className="text-2xl"
@@ -1299,47 +1304,47 @@ export function Dashboard({ requireAuth, openAuth, balance, currentPreview, onDi
             <div className="p-6">
               <div className="mb-6">
                 <h3 className="text-2xl font-bold mb-2" style={{ color: THEME.text }}>
-                   {selectedCourse.title || 'Untitled Course'}
+                   {selectedCourse.title || copy.untitledCourse}
                  </h3>
                 <div className="flex items-center gap-4 text-sm" style={{ color: THEME.secondary }}>
-                  <span>Created: {new Date(selectedCourse.createdAt).toLocaleDateString()}</span>
-                  <span>Tokens spent: {formatNumber(selectedCourse.tokensSpent)}</span>
-                  {selectedCourse.pdfUrl && <span style={{ color: '#22c55e' }}>✓ PDF available</span>}
+                  <span>{copy.created} {new Date(selectedCourse.createdAt).toLocaleDateString(dateLocale)}</span>
+                  <span>{copy.tokensSpent} {formatTokenAmount(selectedCourse.tokensSpent, locale)}</span>
+                  {selectedCourse.pdfUrl && <span style={{ color: '#22c55e' }}>✓ {copy.pdfAvailable}</span>}
                 </div>
               </div>
                
                <div className="mb-6">
-                 <h4 className="text-lg font-semibold mb-3" style={{ color: THEME.text }}>Course Options</h4>
+                 <h4 className="text-lg font-semibold mb-3" style={{ color: THEME.text }}>{copy.courseOptions}</h4>
                  <div className="p-4 rounded-lg border" style={{ backgroundColor: THEME.card, borderColor: THEME.cardBorder }}>
                     {(() => {
                       try {
                         const options = JSON.parse(selectedCourse.options);
                         return (
                           <div className="grid grid-cols-2 md:grid-cols-3 gap-3 text-sm" style={{ color: THEME.text }}>
-                            <div><strong>Duration:</strong> {options.weeks || 'N/A'} weeks</div>
-                            <div><strong>Sessions:</strong> {options.sessionsPerWeek || 'N/A'}/week</div>
-                            <div><strong>Injury Safe:</strong> {options.injurySafe ? 'Yes' : 'No'}</div>
-                            <div><strong>Equipment:</strong> {options.specialEquipment ? 'Required' : 'No'}</div>
-                            <div><strong>Nutrition:</strong> {options.nutritionTips ? 'Included' : 'Not included'}</div>
-                            <div><strong>Images:</strong> {options.imageCount || 'N/A'}</div>
+                            <div><strong>{copy.duration}</strong> {options.weeks || 'N/A'}</div>
+                            <div><strong>{copy.sessions}</strong> {options.sessionsPerWeek || 'N/A'}{copy.perWeek}</div>
+                            <div><strong>{copy.injurySafe}</strong> {options.injurySafe ? copy.yes : copy.no}</div>
+                            <div><strong>{copy.equipment}</strong> {options.specialEquipment ? copy.required : copy.no}</div>
+                            <div><strong>{copy.nutrition}</strong> {options.nutritionTips ? copy.included : copy.notIncluded}</div>
+                            <div><strong>{copy.images}</strong> {options.imageCount || 'N/A'}</div>
                           </div>
                         );
                       } catch {
-                        return <div style={{ color: '#ef4444' }}>Failed to parse course options</div>;
+                        return <div style={{ color: '#ef4444' }}>{copy.failedParseOptions}</div>;
                       }
                     })()}
                   </div>
                 </div>
                 
                 <div className="mb-6">
-                  <h4 className="text-lg font-semibold mb-3" style={{ color: THEME.text }}>Actions</h4>
+                  <h4 className="text-lg font-semibold mb-3" style={{ color: THEME.text }}>{copy.actions}</h4>
                   
                   {/* Выбор недели и дня для регенерации */}
                   <div className="mb-4 p-4 rounded-lg border" style={{ backgroundColor: THEME.card, borderColor: THEME.cardBorder }}>
-                    <h5 className="font-medium mb-3" style={{ color: THEME.accent }}>Regenerate Specific Day</h5>
+                    <h5 className="font-medium mb-3" style={{ color: THEME.accent }}>{copy.regenerateSpecificDay}</h5>
                     <div className="flex gap-4 items-center">
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Week:</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">{copy.week}</label>
                         <select 
                           value={selectedWeek} 
                           onChange={(e) => setSelectedWeek(Number(e.target.value))}
@@ -1354,13 +1359,13 @@ export function Dashboard({ requireAuth, openAuth, balance, currentPreview, onDi
                               return 4;
                             }
                           })() }, (_, i) => i + 1).map(week => (
-                            <option key={week} value={week}>Week {week}</option>
+                            <option key={week} value={week}>{copy.week} {week}</option>
                           ))}
                         </select>
                       </div>
                       
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Day:</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">{copy.day}</label>
                         <select 
                           value={selectedDay} 
                           onChange={(e) => setSelectedDay(Number(e.target.value))}
@@ -1375,7 +1380,7 @@ export function Dashboard({ requireAuth, openAuth, balance, currentPreview, onDi
                               return 4;
                             }
                           })() }, (_, i) => i + 1).map(day => (
-                            <option key={day} value={day}>Day {day}</option>
+                            <option key={day} value={day}>{copy.day} {day}</option>
                           ))}
                         </select>
                       </div>
@@ -1389,19 +1394,19 @@ export function Dashboard({ requireAuth, openAuth, balance, currentPreview, onDi
                         {regeneratingDay ? (
                           <>
                             <Spinner size={16} />
-                            Regenerating...
+                            {copy.regenerating}
                           </>
                         ) : (
                           <>
                             <RefreshCw size={16} />
-                            Regenerate Day
+                            {copy.regenerateDay}
                           </>
                         )}
                       </GhostButton>
                     </div>
                      
                      <div className="mt-3 text-sm" style={{ color: THEME.accent }}>
-                       <strong>Cost:</strong> {formatNumber(selectedCourse.tokensSpent)} tokens (same as full course)
+                       <strong>{copy.cost}</strong> {formatTokenAmount(selectedCourse.tokensSpent, locale)} ({copy.sameAsFullCourse})
                      </div>
                    </div>
                    
@@ -1431,7 +1436,7 @@ export function Dashboard({ requireAuth, openAuth, balance, currentPreview, onDi
                           style={{ backgroundColor: THEME.accent, color: 'black' }}
                         >
                           <FileDown size={16} />
-                          Download PDF
+                          {copy.downloadPdf}
                         </AccentButton>
                       ) : (
                         <GhostButton
@@ -1444,7 +1449,7 @@ export function Dashboard({ requireAuth, openAuth, balance, currentPreview, onDi
                           style={{ backgroundColor: THEME.card, borderColor: THEME.cardBorder, color: THEME.text }}
                         >
                           <FileDown size={16} />
-                          Generate PDF
+                          {copy.generatePdf}
                         </GhostButton>
                       )}
                     </div>

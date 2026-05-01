@@ -3,24 +3,28 @@
 import React from "react";
 import { Shield, Coins, Heart } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useLocale } from "@/lib/i18n/client";
+import { getCoachesCopy } from "@/lib/coaches-copy";
 
 interface TrustStripProps {
   className?: string;
 }
 
 export function TrustStrip({ className }: TrustStripProps) {
+  const { locale } = useLocale();
+  const copy = getCoachesCopy(locale).coachProfile;
   const items = [
     {
       icon: Shield,
-      text: "Coach-led structure",
+      text: copy.trust[0],
     },
     {
       icon: Coins,
-      text: "Clear token pricing",
+      text: copy.trust[1],
     },
     {
       icon: Heart,
-      text: "Safety-first guidance",
+      text: copy.trust[2],
     },
   ];
 

@@ -7,6 +7,8 @@ import { motion } from "framer-motion";
 import SiteHeader from "@/components/site-header";
 import SiteFooter from "@/components/site-footer";
 import { Button } from "@/components/ui/button";
+import { getAppFlowCopy, formatTokenAmount } from "@/lib/app-flow-copy";
+import { useLocale } from "@/lib/i18n/client";
 import { THEME } from "@/lib/theme";
 import { formatNumber } from "@/lib/tokens";
 import type { Route } from "next";
@@ -45,6 +47,8 @@ interface FormErrors {
 export default function CheckoutPage() {
   const router = useRouter();
   const { data: session } = useSession();
+  const { locale } = useLocale();
+  const copy = getAppFlowCopy(locale).checkout;
   const [checkout, setCheckout] = useState<CheckoutData | null>(null);
   const [success] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -84,37 +88,37 @@ export default function CheckoutPage() {
     // Card number: 16 digits, formatted as XXXX XXXX XXXX XXXX
     const cardNumberClean = formData.cardNumber.replace(/\s/g, "");
     if (!cardNumberClean || cardNumberClean.length !== 16 || !/^\d+$/.test(cardNumberClean)) {
-      newErrors.cardNumber = "Card number must be 16 digits";
+      newErrors.cardNumber = copy.errors.cardNumber;
     }
 
     // Expiry: MM/YY format
     if (!formData.expiry || !/^(0[1-9]|1[0-2])\/\d{2}$/.test(formData.expiry)) {
-      newErrors.expiry = "Format must be MM/YY";
+      newErrors.expiry = copy.errors.expiry;
     }
 
     // CVV: 3 digits
     if (!formData.cvv || formData.cvv.length !== 3 || !/^\d+$/.test(formData.cvv)) {
-      newErrors.cvv = "CVV must be 3 digits";
+      newErrors.cvv = copy.errors.cvv;
     }
 
     // Name
     if (!formData.name.trim()) {
-      newErrors.name = "Cardholder name is required";
+      newErrors.name = copy.errors.name;
     }
 
     // Address
     if (!formData.address.trim()) {
-      newErrors.address = "Billing address is required";
+      newErrors.address = copy.errors.address;
     }
 
     // City
     if (!formData.city.trim()) {
-      newErrors.city = "City is required";
+      newErrors.city = copy.errors.city;
     }
 
     // Postal code
     if (!formData.postalCode.trim()) {
-      newErrors.postalCode = "Postal code is required";
+      newErrors.postalCode = copy.errors.postalCode;
     }
 
     setErrors(newErrors);
@@ -178,7 +182,7 @@ export default function CheckoutPage() {
 
       const data = await res.json().catch(() => ({}));
       if (!res.ok || !data?.ok) {
-        throw new Error(data?.error || "Payment initialization failed");
+        throw new Error(data?.error || copy.errors.initFailed);
       }
 
       const orderMerchantId = data.orderMerchantId as string;
@@ -197,7 +201,7 @@ export default function CheckoutPage() {
       return;
     } catch (err: unknown) {
       const message =
-        err instanceof Error ? err.message : "Payment failed. Please try again.";
+        err instanceof Error ? err.message : copy.errors.failed;
       alert(message);
     } finally {
       setLoading(false);
@@ -275,9 +279,9 @@ export default function CheckoutPage() {
               }}
             >
               <h1 className="text-2xl font-semibold">
-                {success ? "Thank You!" : "Checkout"}
+                {success ? copy.thankYou : copy.title}
               </h1>
-              {!success && <p className="text-sm opacity-90">Secure Payment</p>}
+              {!success && <p className="text-sm opacity-90">{copy.securePayment}</p>}
             </div>
 
             <div className="p-8">
@@ -293,13 +297,13 @@ export default function CheckoutPage() {
                     className="text-3xl font-bold mb-4"
                     style={{ color: THEME.primary }}
                   >
-                    Payment successful!
+                    {copy.paymentSuccessful}
                   </h2>
                   <p className="opacity-80 max-w-md mx-auto">
-                    Your tokens have been added to your account balance. You can now use them to generate courses and access premium features.
+                    {copy.successBody}
                   </p>
                   <p className="mt-4 text-sm opacity-60">
-                    Redirecting to dashboard...
+                    {copy.redirecting}
                   </p>
                 </motion.div>
               ) : (
@@ -307,7 +311,7 @@ export default function CheckoutPage() {
                 <div className="grid lg:grid-cols-2 gap-8">
                   {/* Summary */}
                   <div>
-                    <h2 className="text-xl font-semibold mb-4">Order Summary</h2>
+                    <h2 className="text-xl font-semibold mb-4">{copy.orderSummary}</h2>
 
                     <div
                       className="rounded-xl border p-5 space-y-4"
@@ -320,11 +324,11 @@ export default function CheckoutPage() {
                         <div>
                           <p className="font-medium">
                             {checkout.packageId === "ENTERPRISE"
-                              ? "Custom top-up"
+                              ? copy.customTopUp
                               : checkout.description}
                           </p>
                           <p className="text-sm opacity-70">
-                            {formatNumber(checkout.tokens)} tokens
+                            {formatTokenAmount(checkout.tokens, locale)}
                           </p>
                         </div>
                         <p className="font-semibold">
@@ -335,7 +339,7 @@ export default function CheckoutPage() {
                       <div className="h-px" style={{ background: THEME.border }} />
 
                       <div className="flex justify-between text-sm">
-                        <span className="opacity-70">Subtotal</span>
+                        <span className="opacity-70">{copy.subtotal}</span>
                         <span className="font-medium">
                           {subtotal.toFixed(2)} {checkout.currency}
                         </span>
@@ -344,7 +348,7 @@ export default function CheckoutPage() {
                         className="flex justify-between text-lg font-semibold border-t pt-3"
                         style={{ borderColor: THEME.border }}
                       >
-                        <span>Total</span>
+                        <span>{copy.total}</span>
                         <span>
                           {total.toFixed(2)} {checkout.currency}
                         </span>
@@ -353,13 +357,12 @@ export default function CheckoutPage() {
 
                     <div className="mt-6 text-sm opacity-70 leading-relaxed">
                       <p>
-                        You are purchasing <strong>{formatNumber(checkout.tokens)} tokens</strong>.
-                        Tokens will be credited to your account immediately after payment.
+                        <strong>{copy.purchaseTokens(formatNumber(checkout.tokens))}</strong>{" "}
+                        {copy.credited}
                       </p>
                       {checkout.email && (
                         <p className="mt-2">
-                          A confirmation email will be sent to{" "}
-                          <strong>{checkout.email}</strong>.
+                          {copy.confirmationEmail(checkout.email)}
                         </p>
                       )}
                     </div>
@@ -367,13 +370,13 @@ export default function CheckoutPage() {
 
                   {/* Payment Form */}
                   <div>
-                    <h2 className="text-xl font-semibold mb-4">Payment Details</h2>
+                    <h2 className="text-xl font-semibold mb-4">{copy.paymentDetails}</h2>
 
                     <form onSubmit={handleSubmit} className="space-y-4">
                       <div>
                         <input
                           type="text"
-                          placeholder="Card number"
+                          placeholder={copy.placeholders.cardNumber}
                           value={formData.cardNumber}
                           onChange={(e) => handleChange("cardNumber", e.target.value)}
                           className="w-full rounded-lg border px-3 py-2 bg-transparent"
@@ -390,7 +393,7 @@ export default function CheckoutPage() {
                         <div className="w-1/2">
                           <input
                             type="text"
-                            placeholder="MM/YY"
+                            placeholder={copy.placeholders.expiry}
                             value={formData.expiry}
                             onChange={(e) => handleChange("expiry", e.target.value)}
                             className="w-full rounded-lg border px-3 py-2 bg-transparent"
@@ -405,7 +408,7 @@ export default function CheckoutPage() {
                         <div className="w-1/2">
                           <input
                             type="text"
-                            placeholder="CVV"
+                            placeholder={copy.placeholders.cvv}
                             value={formData.cvv}
                             onChange={(e) => handleChange("cvv", e.target.value)}
                             className="w-full rounded-lg border px-3 py-2 bg-transparent"
@@ -422,7 +425,7 @@ export default function CheckoutPage() {
                       <div>
                         <input
                           type="text"
-                          placeholder="Cardholder name"
+                          placeholder={copy.placeholders.name}
                           value={formData.name}
                           onChange={(e) => handleChange("name", e.target.value)}
                           className="w-full rounded-lg border px-3 py-2 bg-transparent"
@@ -438,7 +441,7 @@ export default function CheckoutPage() {
                       <div>
                         <input
                           type="text"
-                          placeholder="Billing address"
+                          placeholder={copy.placeholders.address}
                           value={formData.address}
                           onChange={(e) => handleChange("address", e.target.value)}
                           className="w-full rounded-lg border px-3 py-2 bg-transparent"
@@ -455,7 +458,7 @@ export default function CheckoutPage() {
                         <div className="w-2/3">
                           <input
                             type="text"
-                            placeholder="City"
+                            placeholder={copy.placeholders.city}
                             value={formData.city}
                             onChange={(e) => handleChange("city", e.target.value)}
                             className="w-full rounded-lg border px-3 py-2 bg-transparent"
@@ -470,7 +473,7 @@ export default function CheckoutPage() {
                         <div className="w-1/3">
                           <input
                             type="text"
-                            placeholder="Postal code"
+                            placeholder={copy.placeholders.postalCode}
                             value={formData.postalCode}
                             onChange={(e) => handleChange("postalCode", e.target.value)}
                             className="w-full rounded-lg border px-3 py-2 bg-transparent"
@@ -492,10 +495,10 @@ export default function CheckoutPage() {
                         isLoading={loading}
                       >
                         {loading
-                          ? "Processing..."
+                          ? copy.processing
                           : !isAuthed
-                            ? "Please sign in to continue"
-                            : `Pay ${total.toFixed(2)} ${checkout.currency}`}
+                            ? copy.signInContinue
+                            : copy.pay(total.toFixed(2), checkout.currency)}
                       </Button>
                     </form>
                   </div>

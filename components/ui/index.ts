@@ -13,6 +13,7 @@ export { Drawer, type DrawerProps } from "./drawer";
 export { Input, SearchInput, type InputProps } from "./input";
 export { Select, type SelectProps } from "./select";
 export { CurrencyDropdown } from "./currency-dropdown";
+export { LanguageDropdown } from "./language-dropdown";
 
 // Legacy/Utility Components
 export { CurrencyToggle } from "./currency-toggle";

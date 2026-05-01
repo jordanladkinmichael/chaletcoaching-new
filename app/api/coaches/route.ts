@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getRequestLocale, localizeCoachDisplay } from "@/lib/coaches-copy";
 
 /**
  * Coaches catalog endpoint
@@ -73,6 +74,7 @@ function calculateRecommendedScore(coach: Coach): number {
 export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
+    const locale = getRequestLocale(request);
     
     // Check if requesting single coach by slug
     const slug = searchParams.get("slug");
@@ -84,7 +86,7 @@ export async function GET(request: NextRequest) {
           { status: 404 }
         );
       }
-      return NextResponse.json({ coach });
+      return NextResponse.json({ coach: localizeCoachDisplay(coach, locale) });
     }
     
     // Parse filters
@@ -142,13 +144,14 @@ export async function GET(request: NextRequest) {
 
       // Search filter (name + specialties + focusAreas)
       if (search) {
+        const displayCoach = localizeCoachDisplay(coach, locale);
         const searchInName = coach.name.toLowerCase().includes(search);
         const searchInSpecialties = coach.specialties.some((s) =>
           s.toLowerCase().includes(search)
-        );
+        ) || displayCoach.specialties.some((s) => s.toLowerCase().includes(search));
         const searchInFocusAreas = coach.focusAreas.some((f) =>
           f.toLowerCase().includes(search)
-        );
+        ) || displayCoach.focusAreas.some((f) => f.toLowerCase().includes(search));
         if (!searchInName && !searchInSpecialties && !searchInFocusAreas) {
           return false;
         }
@@ -184,7 +187,7 @@ export async function GET(request: NextRequest) {
       filtered = filtered.slice(0, limit);
     }
 
-    return NextResponse.json({ coaches: filtered });
+    return NextResponse.json({ coaches: filtered.map((coach) => localizeCoachDisplay(coach, locale)) });
   } catch (error) {
     console.error("Error fetching coaches:", error);
     return NextResponse.json(

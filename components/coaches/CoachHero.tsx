@@ -7,6 +7,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
+import { useLocale } from "@/lib/i18n/client";
+import { getCoachesCopy } from "@/lib/coaches-copy";
 import type { CoachCardData } from "./CoachCard";
 
 interface CoachHeroProps {
@@ -22,6 +24,8 @@ interface CoachHeroProps {
 }
 
 export function CoachHero({ coach, onRequestClick, className }: CoachHeroProps) {
+  const { locale } = useLocale();
+  const copy = getCoachesCopy(locale);
   // Show "Top coach" badge if featured=true OR (rating>=4.8 AND coursesCount>=50)
   const showTopCoachBadge = coach.featured === true || 
     ((coach.rating ?? 0) >= 4.8 && (coach.coursesCount ?? 0) >= 50);
@@ -49,12 +53,12 @@ export function CoachHero({ coach, onRequestClick, className }: CoachHeroProps) 
               <h1 className="text-3xl font-bold text-text">{coach.name}</h1>
               {showTopCoachBadge && (
                 <Badge variant="primary" className="shrink-0">
-                  Top coach
+                  {copy.coachCard.topCoach}
                 </Badge>
               )}
               {isNewCoach && (
                 <Badge variant="default" className="shrink-0">
-                  New coach
+                  {copy.coachCard.newCoach}
                 </Badge>
               )}
             </div>
@@ -68,7 +72,7 @@ export function CoachHero({ coach, onRequestClick, className }: CoachHeroProps) 
                 </div>
                 {coach.coursesCount && (
                   <span className="text-sm text-text-muted">
-                    ({coach.coursesCount} {coach.coursesCount === 1 ? "course" : "courses"})
+                    ({coach.coursesCount} {coach.coursesCount === 1 ? copy.coachCard.courseSingular : copy.coachCard.coursePlural})
                   </span>
                 )}
               </div>
@@ -86,13 +90,13 @@ export function CoachHero({ coach, onRequestClick, className }: CoachHeroProps) 
             {/* Meta row: Level, Training type, Languages */}
             <div className="flex flex-wrap gap-4 text-sm text-text-muted">
               <div>
-                <span className="font-medium">Level:</span> {coach.level}
+                <span className="font-medium">{copy.coachProfile.level}</span> {coach.level}
               </div>
               <div>
-                <span className="font-medium">Training:</span> {coach.trainingType}
+                <span className="font-medium">{copy.coachProfile.training}</span> {coach.trainingType}
               </div>
               <div>
-                <span className="font-medium">Languages:</span> {coach.languages.join(", ")}
+                <span className="font-medium">{copy.coachProfile.languages}</span> {coach.languages.join(", ")}
               </div>
             </div>
           </div>
@@ -109,10 +113,10 @@ export function CoachHero({ coach, onRequestClick, className }: CoachHeroProps) 
             onClick={onRequestClick}
             className="mb-4"
           >
-            Request a coach course
+            {copy.coachProfile.requestCourse}
           </Button>
           <div className="text-sm text-text-muted text-center">
-            Get a personalized training plan tailored to your goals
+            {copy.coachProfile.requestSubtitle}
           </div>
         </Card>
       </div>

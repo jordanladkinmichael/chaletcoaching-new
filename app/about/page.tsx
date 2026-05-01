@@ -35,11 +35,15 @@ import {
 import { useCurrencyStore } from "@/lib/stores/currency-store";
 import { cardHoverLift, fadeIn } from "@/lib/animations";
 import { THEME } from "@/lib/theme";
+import { useLocale } from "@/lib/i18n/client";
+import { getPhaseTwoCopy } from "@/lib/phase-two-copy";
 import type { Route } from "next";
 
 type Region = "EU" | "UK" | "US";
 
 export default function AboutPage() {
+  const { locale } = useLocale();
+  const copy = React.useMemo(() => getPhaseTwoCopy(locale).about, [locale]);
   const { data: session } = useSession();
   const router = useRouter();
   const { currency } = useCurrencyStore();
@@ -142,16 +146,16 @@ export default function AboutPage() {
   };
 
   // Copy to clipboard
-  const copyToClipboard = async (text: string, fieldId: string) => {
+  const copyToClipboard = React.useCallback(async (text: string, fieldId: string) => {
     try {
       await navigator.clipboard.writeText(text);
       setCopiedField(fieldId);
-      addToast("success", "Copied", undefined, 2000);
+      addToast("success", copy.copied, undefined, 2000);
       setTimeout(() => setCopiedField(null), 2000);
     } catch {
-      addToast("error", "Failed to copy", "Please try again", 3000);
+      addToast("error", copy.copyFailedTitle, copy.copyFailedMessage, 3000);
     }
-  };
+  }, [copy]);
 
   // Animation variants
   const sectionVariants: Variants = prefersReducedMotion
@@ -167,11 +171,11 @@ export default function AboutPage() {
 
   // Company details
   const companyDetails = [
-    { id: "name", label: "Company name", value: "CHALET AQUARIUS LTD" },
-    { id: "number", label: "Company number", value: "15587263" },
-    { id: "address", label: "Address", value: "20 Wenlock Road, London, England, N1 7GU" },
-    { id: "phone", label: "Phone", value: "+44 7782 358363" },
-    { id: "email", label: "Email", value: "info@chaletcoaching.co.uk" },
+    { id: "name", label: copy.company.labels.name, value: "CHALET AQUARIUS LTD" },
+    { id: "number", label: copy.company.labels.number, value: "15587263" },
+    { id: "address", label: copy.company.labels.address, value: "20 Wenlock Road, London, England, N1 7GU" },
+    { id: "phone", label: copy.company.labels.phone, value: "+44 7782 358363" },
+    { id: "email", label: copy.company.labels.email, value: "info@chaletcoaching.co.uk" },
   ];
 
   return (
@@ -198,16 +202,16 @@ export default function AboutPage() {
             >
               {/* Content */}
               <div className="space-y-6">
-                <H1>About Chalet Coaching</H1>
+                <H1>{copy.hero.title}</H1>
                 <Paragraph className="text-lg">
-                  Coach-led training plans with an optional Instant AI flow. Clear, structured, and built for real progress.
+                  {copy.hero.subtitle}
                 </Paragraph>
                 <div className="flex flex-col sm:flex-row gap-4">
                   <Button variant="primary" asChild>
-                    <Link href="/coaches">Meet our coaches</Link>
+                    <Link href="/coaches">{copy.hero.coachCta}</Link>
                   </Button>
                   <Button variant="outline" asChild>
-                    <Link href="/how-it-works">How it works</Link>
+                    <Link href="/how-it-works">{copy.hero.howItWorksCta}</Link>
                   </Button>
                 </div>
               </div>
@@ -217,7 +221,7 @@ export default function AboutPage() {
                 <div className="relative aspect-video rounded-2xl overflow-hidden border" style={{ borderColor: THEME.cardBorder }}>
                   <Image
                     src="/about_hero.webp"
-                    alt="Coach-led training, enhanced by smart tooling"
+                    alt={copy.hero.heroAlt}
                     fill
                     className="object-cover"
                     sizes="(max-width: 768px) 100vw, 50vw"
@@ -234,9 +238,9 @@ export default function AboutPage() {
                   >
                     <Shield className="w-8 h-8" style={{ color: THEME.accent }} />
                   </div>
-                  <H3 className="mb-2">Coach-first platform</H3>
+                  <H3 className="mb-2">{copy.hero.placeholderTitle}</H3>
                   <Paragraph className="text-sm opacity-70 mb-0">
-                    Add /public/about_hero.webp to replace this visual.
+                    {copy.hero.placeholderBody}
                   </Paragraph>
                 </Card>
               )}
@@ -252,7 +256,7 @@ export default function AboutPage() {
               animate="visible"
               variants={sectionVariants}
             >
-              <H2 className="mb-8 text-center">What we do</H2>
+              <H2 className="mb-8 text-center">{copy.whatWeDo.title}</H2>
               <div className="grid md:grid-cols-3 gap-6">
                 {/* Coach-first plans */}
                 <motion.div
@@ -270,10 +274,10 @@ export default function AboutPage() {
                       >
                         <Users className="w-6 h-6" style={{ color: THEME.accent }} />
                       </div>
-                      <H3>Coach-first plans</H3>
+                      <H3>{copy.whatWeDo.cards[0].title}</H3>
                     </div>
                     <Paragraph className="mb-0">
-                      Choose a coach and submit your training request.
+                      {copy.whatWeDo.cards[0].description}
                     </Paragraph>
                   </Card>
                 </motion.div>
@@ -294,10 +298,10 @@ export default function AboutPage() {
                       >
                         <Zap className="w-6 h-6" style={{ color: THEME.accent }} />
                       </div>
-                      <H3>Instant AI option</H3>
+                      <H3>{copy.whatWeDo.cards[1].title}</H3>
                     </div>
                     <Paragraph className="mb-0">
-                      Generate a plan in minutes when you need speed.
+                      {copy.whatWeDo.cards[1].description}
                     </Paragraph>
                   </Card>
                 </motion.div>
@@ -318,10 +322,10 @@ export default function AboutPage() {
                       >
                         <Coins className="w-6 h-6" style={{ color: THEME.accent }} />
                       </div>
-                      <H3>Tokens power everything</H3>
+                      <H3>{copy.whatWeDo.cards[2].title}</H3>
                     </div>
                     <Paragraph className="mb-0">
-                      One balance you can use across both flows.
+                      {copy.whatWeDo.cards[2].description}
                     </Paragraph>
                   </Card>
                 </motion.div>
@@ -338,30 +342,30 @@ export default function AboutPage() {
               animate="visible"
               variants={sectionVariants}
             >
-              <H2 className="mb-8 text-center">How the platform works</H2>
+              <H2 className="mb-8 text-center">{copy.platform.title}</H2>
               <div className="grid md:grid-cols-2 gap-8 lg:gap-12">
                 {/* Coach-built requests */}
                 <div>
                   <div className="flex items-center gap-3 mb-6">
                     <UserRound className="w-6 h-6" style={{ color: THEME.accent }} />
-                    <H3>Coach-built requests</H3>
+                    <H3>{copy.platform.coach.title}</H3>
                   </div>
                   <ol className="space-y-4 mb-6">
                     <li className="flex gap-3">
                       <span className="font-semibold text-accent flex-shrink-0">1.</span>
-                      <Paragraph className="mb-0">Pick a coach</Paragraph>
+                      <Paragraph className="mb-0">{copy.platform.coach.steps[0]}</Paragraph>
                     </li>
                     <li className="flex gap-3">
                       <span className="font-semibold text-accent flex-shrink-0">2.</span>
-                      <Paragraph className="mb-0">Send your request</Paragraph>
+                      <Paragraph className="mb-0">{copy.platform.coach.steps[1]}</Paragraph>
                     </li>
                     <li className="flex gap-3">
                       <span className="font-semibold text-accent flex-shrink-0">3.</span>
-                      <Paragraph className="mb-0">Receive and track your plan in your dashboard</Paragraph>
+                      <Paragraph className="mb-0">{copy.platform.coach.steps[2]}</Paragraph>
                     </li>
                   </ol>
                   <Button variant="outline" asChild>
-                    <Link href="/coaches">Explore coaches</Link>
+                    <Link href="/coaches">{copy.platform.coach.cta}</Link>
                   </Button>
                 </div>
 
@@ -369,24 +373,24 @@ export default function AboutPage() {
                 <div>
                   <div className="flex items-center gap-3 mb-6">
                     <Zap className="w-6 h-6" style={{ color: THEME.accent }} />
-                    <H3>Instant AI generator</H3>
+                    <H3>{copy.platform.ai.title}</H3>
                   </div>
                   <ol className="space-y-4 mb-6">
                     <li className="flex gap-3">
                       <span className="font-semibold text-accent flex-shrink-0">1.</span>
-                      <Paragraph className="mb-0">Choose inputs</Paragraph>
+                      <Paragraph className="mb-0">{copy.platform.ai.steps[0]}</Paragraph>
                     </li>
                     <li className="flex gap-3">
                       <span className="font-semibold text-accent flex-shrink-0">2.</span>
-                      <Paragraph className="mb-0">Preview</Paragraph>
+                      <Paragraph className="mb-0">{copy.platform.ai.steps[1]}</Paragraph>
                     </li>
                     <li className="flex gap-3">
                       <span className="font-semibold text-accent flex-shrink-0">3.</span>
-                      <Paragraph className="mb-0">Publish and download</Paragraph>
+                      <Paragraph className="mb-0">{copy.platform.ai.steps[2]}</Paragraph>
                     </li>
                   </ol>
                   <Button variant="outline" asChild>
-                    <Link href="/generator">Try the AI generator</Link>
+                    <Link href="/generator">{copy.platform.ai.cta}</Link>
                   </Button>
                 </div>
               </div>
@@ -402,7 +406,7 @@ export default function AboutPage() {
               animate="visible"
               variants={sectionVariants}
             >
-              <H2 className="mb-8 text-center">Our principles</H2>
+              <H2 className="mb-8 text-center">{copy.principles.title}</H2>
               <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
                 {/* Clarity over hype */}
                 <motion.div
@@ -415,10 +419,10 @@ export default function AboutPage() {
                   <Card className="h-full">
                     <div className="flex items-start gap-3 mb-3">
                       <AlignLeft className="w-5 h-5 flex-shrink-0 mt-0.5" style={{ color: THEME.accent }} />
-                      <H3 className="text-lg">Clarity over hype</H3>
+                      <H3 className="text-lg">{copy.principles.cards[0].title}</H3>
                     </div>
                     <Paragraph className="text-sm mb-0">
-                      We focus on clear, actionable guidance instead of marketing fluff.
+                      {copy.principles.cards[0].description}
                     </Paragraph>
                   </Card>
                 </motion.div>
@@ -434,10 +438,10 @@ export default function AboutPage() {
                   <Card className="h-full">
                     <div className="flex items-start gap-3 mb-3">
                       <Shield className="w-5 h-5 flex-shrink-0 mt-0.5" style={{ color: THEME.accent }} />
-                      <H3 className="text-lg">Safety first</H3>
+                      <H3 className="text-lg">{copy.principles.cards[1].title}</H3>
                     </div>
                     <Paragraph className="text-sm mb-0">
-                      Training guidance is informational and should be used responsibly.
+                      {copy.principles.cards[1].description}
                     </Paragraph>
                   </Card>
                 </motion.div>
@@ -453,10 +457,10 @@ export default function AboutPage() {
                   <Card className="h-full">
                     <div className="flex items-start gap-3 mb-3">
                       <BadgeCheck className="w-5 h-5 flex-shrink-0 mt-0.5" style={{ color: THEME.accent }} />
-                      <H3 className="text-lg">Coach-led accountability</H3>
+                      <H3 className="text-lg">{copy.principles.cards[2].title}</H3>
                     </div>
                     <Paragraph className="text-sm mb-0">
-                      Coaches provide personalized guidance and help you stay on track.
+                      {copy.principles.cards[2].description}
                     </Paragraph>
                   </Card>
                 </motion.div>
@@ -472,10 +476,10 @@ export default function AboutPage() {
                   <Card className="h-full">
                     <div className="flex items-start gap-3 mb-3">
                       <Clock className="w-5 h-5 flex-shrink-0 mt-0.5" style={{ color: THEME.accent }} />
-                      <H3 className="text-lg">Respect for your time</H3>
+                      <H3 className="text-lg">{copy.principles.cards[3].title}</H3>
                     </div>
                     <Paragraph className="text-sm mb-0">
-                      We value efficiency and deliver plans that fit your schedule.
+                      {copy.principles.cards[3].description}
                     </Paragraph>
                   </Card>
                 </motion.div>
@@ -494,12 +498,12 @@ export default function AboutPage() {
               className="max-w-3xl mx-auto"
             >
               <Card className="text-center">
-                <H2 className="mb-4">Trust and safety</H2>
+                <H2 className="mb-4">{copy.trust.title}</H2>
                 <Paragraph className="mb-6">
-                  Training guidance is informational and should be used responsibly. If you have a condition or injury, consult a qualified professional.
+                  {copy.trust.body}
                 </Paragraph>
                 <Button variant="outline" asChild>
-                  <Link href="/trust-safety">Read trust and safety</Link>
+                  <Link href="/trust-safety">{copy.trust.cta}</Link>
                 </Button>
               </Card>
             </motion.div>
@@ -515,7 +519,7 @@ export default function AboutPage() {
               variants={sectionVariants}
               className="max-w-2xl mx-auto"
             >
-              <H2 className="mb-6 text-center">Company details</H2>
+              <H2 className="mb-6 text-center">{copy.company.title}</H2>
               <Card>
                 <div className="space-y-4">
                   {companyDetails.map((detail) => (
@@ -542,7 +546,7 @@ export default function AboutPage() {
                       <button
                         onClick={() => copyToClipboard(detail.value, detail.id)}
                         className="flex-shrink-0 p-2 rounded-lg hover:bg-surface-hover transition-colors"
-                        aria-label={`Copy ${detail.label}`}
+                        aria-label={`${copy.company.copyAriaPrefix} ${detail.label}`}
                       >
                         {copiedField === detail.id ? (
                           <Check className="w-4 h-4 text-accent" />
@@ -567,13 +571,13 @@ export default function AboutPage() {
               variants={sectionVariants}
               className="max-w-3xl mx-auto text-center"
             >
-              <H2 className="mb-4">Get started today</H2>
+              <H2 className="mb-4">{copy.cta.title}</H2>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Button variant="primary" asChild>
-                  <Link href="/coaches">Meet our coaches</Link>
+                  <Link href="/coaches">{copy.cta.coach}</Link>
                 </Button>
                 <Button variant="outline" asChild>
-                  <Link href="/pricing">See pricing</Link>
+                  <Link href="/pricing">{copy.cta.pricing}</Link>
                 </Button>
               </div>
             </motion.div>

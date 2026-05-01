@@ -9,6 +9,8 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import { cardHoverLift } from "@/lib/animations";
+import { useLocale } from "@/lib/i18n/client";
+import { getCoachesCopy } from "@/lib/coaches-copy";
 
 export interface CoachCardData {
   id: string;
@@ -28,6 +30,8 @@ interface CoachCardProps {
 }
 
 export function CoachCard({ coach, className }: CoachCardProps) {
+  const { locale } = useLocale();
+  const copy = getCoachesCopy(locale).coachCard;
   const [prefersReducedMotion, setPrefersReducedMotion] = React.useState(false);
 
   React.useEffect(() => {
@@ -62,7 +66,7 @@ export function CoachCard({ coach, className }: CoachCardProps) {
         />
         {showTopCoachBadge && (
           <Badge variant="primary" className="shrink-0">
-            Top coach
+            {copy.topCoach}
           </Badge>
         )}
       </div>
@@ -85,14 +89,16 @@ export function CoachCard({ coach, className }: CoachCardProps) {
           <Star size={14} className="fill-primary text-primary" />
           <span>{coach.rating.toFixed(1)}</span>
           {coach.coursesCount && (
-            <span className="text-text-subtle">({coach.coursesCount} courses)</span>
+            <span className="text-text-subtle">
+              ({coach.coursesCount} {coach.coursesCount === 1 ? copy.courseSingular : copy.coursePlural})
+            </span>
           )}
         </div>
       )}
 
       {/* CTA Indicator */}
       <div className="mt-auto pt-4 flex items-center gap-2 text-sm font-medium text-primary">
-        <span>View profile</span>
+        <span>{copy.viewProfile}</span>
         <ArrowRight size={16} />
       </div>
     </div>
@@ -110,7 +116,7 @@ export function CoachCard({ coach, className }: CoachCardProps) {
           <Link 
             href={`/coaches/${coach.slug}`} 
             className="block h-full cursor-pointer"
-            aria-label={`View ${coach.name}'s profile`}
+            aria-label={copy.ariaViewProfile(coach.name)}
           >
             {cardContent}
           </Link>
@@ -125,7 +131,7 @@ export function CoachCard({ coach, className }: CoachCardProps) {
         <Link 
           href={`/coaches/${coach.slug}`} 
           className="block h-full cursor-pointer"
-          aria-label={`View ${coach.name}'s profile`}
+          aria-label={copy.ariaViewProfile(coach.name)}
         >
           {cardContent}
         </Link>

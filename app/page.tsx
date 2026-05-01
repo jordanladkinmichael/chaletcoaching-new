@@ -32,7 +32,9 @@ import { Dashboard } from "@/components/dashboard/Dashboard";
 import { ToastContainer, Toast, ToastType, Container, Button, H1, H2, H3, Paragraph, Accordion } from "@/components/ui";
 import { useCurrencyStore } from "@/lib/stores/currency-store";
 import { TOKEN_PACKS, TOKEN_RATES, type UiPackId } from "@/lib/token-packages";
-import { COPY } from "@/lib/copy-variants";
+import { useLocale } from "@/lib/i18n/client";
+import { getMiniFaqs } from "@/lib/faq-data";
+import { getHomeCopy } from "@/lib/home-copy";
 import type { Route } from "next";
 
 
@@ -52,6 +54,11 @@ const NAV: NavItem[] = [
   { id: "pricing", label: "Pricing" },
   { id: "consultations", label: "Consultations" },
 ] as const;
+
+function useHomePageCopy() {
+  const { locale } = useLocale();
+  return React.useMemo(() => getHomeCopy(locale), [locale]);
+}
 
 function Card({
   className = "",
@@ -110,14 +117,16 @@ import { Pricing } from "@/components/pricing/Pricing";
 /* ============================== Simple visuals ============================== */
 
 function Consultations() {
+  const copy = useHomePageCopy();
+
   return (
     <div className="space-y-3">
-      <h3 className="text-xl font-semibold">Consultations</h3>
+      <h3 className="text-xl font-semibold">{copy.consultations.title}</h3>
       <Card>
         <div className="text-center py-8">
-          <div className="text-lg font-medium">Coming Soon</div>
+          <div className="text-lg font-medium">{copy.consultations.comingSoon}</div>
           <p className="text-sm opacity-70 mt-2">
-            Personal fitness consultations will be available here.
+            {copy.consultations.description}
           </p>
         </div>
       </Card>
@@ -127,6 +136,7 @@ function Consultations() {
 
 
 function HeroSection() {
+  const copy = useHomePageCopy();
   const [shouldAutoplay, setShouldAutoplay] = React.useState(true);
 
   React.useEffect(() => {
@@ -148,18 +158,18 @@ function HeroSection() {
         <div className="grid md:grid-cols-2 gap-8 lg:gap-12 items-center">
           {/* Content */}
           <div className="space-y-6">
-            <H1>Find Your Coach. Powered by AI.</H1>
+            <H1>{copy.hero.title}</H1>
             <Paragraph className="text-lg sm:text-xl max-w-xl">
-              Choose a coach that matches your goal. Get a structured plan you can follow. Use AI anytime for instant options.
+              {copy.hero.subtitle}
             </Paragraph>
             
             {/* CTAs */}
             <div className="flex flex-col sm:flex-row gap-4">
               <Button variant="primary" size="lg" asChild>
-                <Link href="/coaches">Find a Coach</Link>
+                <Link href="/coaches">{copy.hero.coachCta}</Link>
               </Button>
               <Button variant="ai" size="lg" asChild>
-                <Link href="/generator">Generate Instantly (AI)</Link>
+                <Link href="/generator">{copy.hero.aiCta}</Link>
               </Button>
             </div>
 
@@ -167,15 +177,15 @@ function HeroSection() {
             <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 text-sm text-text-subtle">
               <div className="flex items-center gap-2">
                 <Calendar size={16} className="text-primary shrink-0" />
-                <span>Structured weekly plan</span>
+                <span>{copy.hero.bullets[0]}</span>
               </div>
               <div className="flex items-center gap-2">
                 <Target size={16} className="text-primary shrink-0" />
-                <span>Built around your goal and schedule</span>
+                <span>{copy.hero.bullets[1]}</span>
               </div>
               <div className="flex items-center gap-2">
                 <Sparkles size={16} className="text-primary shrink-0" />
-                <span>Instant AI when you need it</span>
+                <span>{copy.hero.bullets[2]}</span>
               </div>
             </div>
           </div>
@@ -222,13 +232,14 @@ function HeroSection() {
 
 // Marquee Advantages section (calm marquee, CSS keyframes)
 function MarqueeAdvantagesSection() {
+  const copy = useHomePageCopy();
   const items = [
-    { text: "Coach-led approach", icon: User },
-    { text: "Instant AI option", icon: Sparkles },
-    { text: "Clear token pricing", icon: Coins },
-    { text: "No subscriptions", icon: Ban },
-    { text: "Secure checkout", icon: Lock },
-    { text: "Built for consistency", icon: Repeat },
+    { text: copy.marquee[0], icon: User },
+    { text: copy.marquee[1], icon: Sparkles },
+    { text: copy.marquee[2], icon: Coins },
+    { text: copy.marquee[3], icon: Ban },
+    { text: copy.marquee[4], icon: Lock },
+    { text: copy.marquee[5], icon: Repeat },
   ];
 
   return (
@@ -260,6 +271,7 @@ function MarqueeAdvantagesSection() {
 
 // Live Activity section (split layout: video left, cards right)
 function LiveFeedSection() {
+  const copy = useHomePageCopy();
   const sectionRef = React.useRef<HTMLElement>(null);
   const videoRef = React.useRef<HTMLVideoElement>(null);
   const [isInView, setIsInView] = React.useState(false);
@@ -279,33 +291,14 @@ function LiveFeedSection() {
     B2: "e04",
   });
 
-  // Dataset from polish_home.md
-  const events = React.useMemo(() => ([
-    { id: "e01", flag: "🇩🇪", name: "Emma", action: "requested a coach course", goal: "Strength goal", badge: "Coach" },
-    { id: "e02", flag: "🇫🇷", name: "Lukas", action: "generated an AI course", goal: "Home workout setup", badge: "AI" },
-    { id: "e03", flag: "🇮🇹", name: "Sofia", action: "found a coach", goal: "Mobility focus", badge: "Coach" },
-    { id: "e04", flag: "🇪🇸", name: "Noah", action: "generated an AI course", goal: "Cardio endurance", badge: "AI" },
-    { id: "e05", flag: "🇳🇱", name: "Mia", action: "requested a coach course", goal: "Fat loss program", badge: "Coach" },
-    { id: "e06", flag: "🇸🇪", name: "Leon", action: "topped up tokens", goal: "Ready for a new program", badge: "Coach" },
-    { id: "e07", flag: "🇫🇮", name: "Hanna", action: "generated an AI course", goal: "Core stability", badge: "AI" },
-    { id: "e08", flag: "🇵🇱", name: "Elias", action: "requested a coach course", goal: "Beginner strength", badge: "Coach" },
-    { id: "e09", flag: "🇨🇿", name: "Lina", action: "found a coach", goal: "Posture improvement", badge: "Coach" },
-    { id: "e10", flag: "🇦🇹", name: "Jonas", action: "generated an AI course", goal: "HIIT routine", badge: "AI" },
-    { id: "e11", flag: "🇧🇪", name: "Clara", action: "requested a coach course", goal: "Glutes & legs", badge: "Coach" },
-    { id: "e12", flag: "🇮🇪", name: "Mateo", action: "generated an AI course", goal: "Flexibility reset", badge: "AI" },
-    { id: "e13", flag: "🇵🇹", name: "Anna", action: "requested a coach course", goal: "Upper body focus", badge: "Coach" },
-    { id: "e14", flag: "🇬🇷", name: "David", action: "generated an AI course", goal: "Running plan", badge: "AI" },
-    { id: "e15", flag: "🇭🇺", name: "Julia", action: "found a coach", goal: "Mobility + strength", badge: "Coach" },
-    { id: "e16", flag: "🇸🇰", name: "Oskar", action: "generated an AI course", goal: "Kettlebell basics", badge: "AI" },
-    { id: "e17", flag: "🇷🇴", name: "Laura", action: "requested a coach course", goal: "Back-friendly training", badge: "Coach" },
-    { id: "e18", flag: "🇧🇬", name: "Felix", action: "generated an AI course", goal: "Pull-up progression", badge: "AI" },
-    { id: "e19", flag: "🇱🇻", name: "Elena", action: "requested a coach course", goal: "Desk worker routine", badge: "Coach" },
-    { id: "e20", flag: "🇱🇹", name: "Tomas", action: "generated an AI course", goal: "Cycling support", badge: "AI" },
-    { id: "e21", flag: "🇪🇪", name: "Nina", action: "found a coach", goal: "Beginner mobility", badge: "Coach" },
-    { id: "e22", flag: "🇩🇪", name: "Adrian", action: "generated an AI course", goal: "Muscle gain plan", badge: "AI" },
-    { id: "e23", flag: "🇫🇷", name: "Paula", action: "requested a coach course", goal: "Pilates-inspired strength", badge: "Coach" },
-    { id: "e24", flag: "🇳🇱", name: "Viktor", action: "generated an AI course", goal: "Calisthenics start", badge: "AI" },
-  ]), []);
+  const events = React.useMemo(
+    () =>
+      copy.liveActivity.events.map((event) => ({
+        ...event,
+        flag: event.country,
+      })),
+    [copy]
+  );
 
   // Store events in ref to avoid dependency issues (must be at top level, not inside useEffect)
   const eventsRef = React.useRef(events);
@@ -413,7 +406,7 @@ function LiveFeedSection() {
       onBlur={() => setIsHovered(false)}
     >
       <Container>
-        <H3 className="mb-6">Live Activity</H3>
+        <H3 className="mb-6">{copy.liveActivity.heading}</H3>
         <div className="grid md:grid-cols-2 gap-6 lg:gap-8">
           {/* Left: Video */}
           <div className="relative aspect-video rounded-xl overflow-hidden border border-border bg-surface">
@@ -603,15 +596,15 @@ function LiveFeedSection() {
 
 // The Hybrid Protocol section
 function HybridProtocolSection() {
+  const copy = useHomePageCopy();
+
   return (
     <section>
       <Container>
         <div className="max-w-3xl mx-auto text-center space-y-6">
           <div>
-            <H2 className="mb-3">The Hybrid Protocol</H2>
-            <Paragraph className="text-lg">
-              A coach-led process with smart support — built for consistency.
-            </Paragraph>
+            <H2 className="mb-3">{copy.hybrid.title}</H2>
+            <Paragraph className="text-lg">{copy.hybrid.subtitle}</Paragraph>
           </div>
 
           {/* Animated SVG Characters */}
@@ -648,7 +641,7 @@ function HybridProtocolSection() {
                   </svg>
                 </div>
               </motion.div>
-              <span className="text-sm text-text-muted">Coach</span>
+              <span className="text-sm text-text-muted">{copy.hybrid.coachLabel}</span>
             </div>
             {/* Connection line Coach → You with energy flow */}
             <div className="flex-1 h-0.5 bg-border relative flex items-center">
@@ -752,7 +745,7 @@ function HybridProtocolSection() {
                   </motion.g>
                 </svg>
               </div>
-              <span className="text-sm text-text-muted">You</span>
+              <span className="text-sm text-text-muted">{copy.hybrid.youLabel}</span>
             </div>
             {/* Connection line AI → You with energy flow */}
             <div className="flex-1 h-0.5 bg-border relative flex items-center">
@@ -839,21 +832,14 @@ function HybridProtocolSection() {
                   <path d="M12 20h8" stroke="currentColor" strokeWidth="2" className="text-ai" />
                 </svg>
               </motion.div>
-              <span className="text-sm text-text-muted">AI</span>
+              <span className="text-sm text-text-muted">{copy.hybrid.aiLabel}</span>
             </div>
           </div>
 
           {/* Bullets - 6 items in 2 columns, centered */}
           <div className="flex justify-center">
             <ul className="grid md:grid-cols-2 gap-4 text-center max-w-3xl w-full">
-              {[
-                "Clear training structure",
-                "Progression that makes sense",
-                "Routine you can stick to",
-                "Simple weekly checkpoints",
-                "Instant explanations on demand",
-                "Smart summaries and guidance",
-              ].map((bullet, idx) => (
+              {copy.hybrid.bullets.map((bullet, idx) => (
                 <motion.li
                   key={idx}
                   className="flex items-center gap-3"
@@ -891,6 +877,8 @@ function HybridProtocolSection() {
 
 // Become a Coach section (mini CTA block, position #5)
 function BecomeACoachSection() {
+  const copy = useHomePageCopy();
+
   return (
     <section>
       <Container>
@@ -902,12 +890,10 @@ function BecomeACoachSection() {
             transition={{ duration: 0.3 }}
             className="bg-surface border border-border rounded-2xl p-8 md:p-12"
           >
-            <H3 className="mb-3">Are you a coach?</H3>
-            <Paragraph className="mb-6">
-              Apply to join and build coach-led courses with AI support.
-            </Paragraph>
+            <H3 className="mb-3">{copy.becomeCoach.title}</H3>
+            <Paragraph className="mb-6">{copy.becomeCoach.subtitle}</Paragraph>
             <Button variant="primary" size="lg" asChild>
-              <Link href="/become-a-coach">Become a Coach</Link>
+              <Link href="/become-a-coach">{copy.becomeCoach.cta}</Link>
             </Button>
           </motion.div>
         </div>
@@ -918,19 +904,16 @@ function BecomeACoachSection() {
 
 // How it Works section (mini block + CTA)
 function HowItWorksSection() {
-  const steps = [
-    { number: "1", title: "Choose your path", desc: "Find a coach or generate instantly with AI" },
-    { number: "2", title: "Get your course", desc: "Receive a structured plan tailored to your goals" },
-    { number: "3", title: "Start training", desc: "Follow your program with clear guidance" },
-  ];
+  const copy = useHomePageCopy();
+  const steps = copy.howItWorks.steps;
 
   return (
     <section>
       <Container>
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-8">
-            <H2 className="mb-3">How it Works</H2>
-            <Paragraph>Simple steps to get started</Paragraph>
+            <H2 className="mb-3">{copy.howItWorks.title}</H2>
+            <Paragraph>{copy.howItWorks.subtitle}</Paragraph>
           </div>
           <div className="grid md:grid-cols-3 gap-6 mb-8">
             {steps.map((step, idx) => (
@@ -946,13 +929,13 @@ function HowItWorksSection() {
                   {step.number}
                 </div>
                 <h3 className="font-semibold mb-2">{step.title}</h3>
-                <p className="text-sm text-text-muted">{step.desc}</p>
+                <p className="text-sm text-text-muted">{step.description}</p>
               </motion.div>
             ))}
           </div>
           <div className="text-center">
             <Button variant="outline" asChild>
-              <Link href="/how-it-works">Learn how it works</Link>
+              <Link href="/how-it-works">{copy.howItWorks.cta}</Link>
             </Button>
           </div>
         </div>
@@ -974,25 +957,28 @@ interface SpotlightCoach {
 }
 
 function CoachSpotlightSection() {
+  const { locale } = useLocale();
+  const copy = useHomePageCopy();
   const [coaches, setCoaches] = React.useState<SpotlightCoach[]>([]);
   const [loading, setLoading] = React.useState(true);
 
   React.useEffect(() => {
-    fetch("/api/spotlight/top-coaches")
+    setLoading(true);
+    fetch(`/api/spotlight/top-coaches?locale=${locale}`, { cache: "no-store" })
       .then((res) => res.json())
       .then((data) => {
         setCoaches(data.coaches || []);
         setLoading(false);
       })
       .catch(() => setLoading(false));
-  }, []);
+  }, [locale]);
 
   if (loading) {
     return (
       <section>
         <Container>
           <div className="text-center">
-            <p className="text-text-muted">Loading coaches...</p>
+            <p className="text-text-muted">{copy.coachSpotlight.loading}</p>
           </div>
         </Container>
       </section>
@@ -1004,10 +990,10 @@ function CoachSpotlightSection() {
       <section>
         <Container>
           <div className="text-center space-y-4">
-            <H2>Coach Spotlight</H2>
-            <Paragraph>Coaches coming soon</Paragraph>
+            <H2>{copy.coachSpotlight.title}</H2>
+            <Paragraph>{copy.coachSpotlight.empty}</Paragraph>
             <Button variant="outline" asChild>
-              <Link href="/contact">Contact Us</Link>
+              <Link href="/contact">{copy.coachSpotlight.contactCta}</Link>
             </Button>
           </div>
         </Container>
@@ -1020,14 +1006,14 @@ function CoachSpotlightSection() {
       <Container>
         <div className="flex items-center justify-between mb-8">
           <div>
-            <H2 className="mb-2">Coach Spotlight</H2>
-            <Paragraph>Pick a coach that matches your style.</Paragraph>
+            <H2 className="mb-2">{copy.coachSpotlight.title}</H2>
+            <Paragraph>{copy.coachSpotlight.subtitle}</Paragraph>
           </div>
           <Link
             href="/coaches"
             className="text-sm text-primary hover:text-primary-hover transition-colors duration-fast"
           >
-            See all coaches →
+            {copy.coachSpotlight.seeAll}
           </Link>
         </div>
 
@@ -1085,12 +1071,15 @@ function CoachSpotlightSection() {
                 <div className="flex items-center justify-between mt-auto">
                   {coach.coursesCount && (
                     <span className="text-xs text-text-subtle">
-                      {coach.coursesCount} {coach.coursesCount === 1 ? "course" : "courses"}
+                      {coach.coursesCount}{" "}
+                      {coach.coursesCount === 1
+                        ? copy.coachSpotlight.courseSingular
+                        : copy.coachSpotlight.coursePlural}
                     </span>
                   )}
                   {!coach.coursesCount && <span></span>}
                   <span className="text-sm font-medium text-primary hover:text-primary-hover transition-colors duration-fast">
-                    View Profile →
+                    {copy.coachSpotlight.viewProfile}
                   </span>
                 </div>
               </motion.div>
@@ -1104,42 +1093,24 @@ function CoachSpotlightSection() {
 
 // Quality Promise section (F3 - no modals, no adjustments window)
 function QualityPromiseSection() {
+  const copy = useHomePageCopy();
+
   return (
     <section>
       <Container>
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-12">
-            <H2 className="mb-3">Quality Promise</H2>
-            <Paragraph className="text-lg">
-              Clear outcomes, clear terms — so you always know what to expect.
-            </Paragraph>
+            <H2 className="mb-3">{copy.qualityPromise.title}</H2>
+            <Paragraph className="text-lg">{copy.qualityPromise.subtitle}</Paragraph>
           </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <div className="bg-surface border border-border rounded-2xl p-6">
-              <h3 className="font-semibold mb-2">Structured Delivery</h3>
-              <p className="text-sm text-text-muted">
-                A complete course plan with modules, sessions, and clear weekly progression.
-              </p>
-            </div>
-            <div className="bg-surface border border-border rounded-2xl p-6">
-              <h3 className="font-semibold mb-2">Coach-led Standards</h3>
-              <p className="text-sm text-text-muted">
-                Consistent quality checklist across coach deliveries.
-              </p>
-            </div>
-            <div className="bg-surface border border-border rounded-2xl p-6">
-              <h3 className="font-semibold mb-2">Token Clarity</h3>
-              <p className="text-sm text-text-muted">
-                Transparent token pricing with predictable top-ups.
-              </p>
-            </div>
-            <div className="bg-surface border border-border rounded-2xl p-6">
-              <h3 className="font-semibold mb-2">Safety First</h3>
-              <p className="text-sm text-text-muted">
-                Clear training safety guidance and responsible use.
-              </p>
-            </div>
+            {copy.qualityPromise.cards.map((card) => (
+              <div key={card.title} className="bg-surface border border-border rounded-2xl p-6">
+                <h3 className="font-semibold mb-2">{card.title}</h3>
+                <p className="text-sm text-text-muted">{card.description}</p>
+              </div>
+            ))}
           </div>
         </div>
       </Container>
@@ -1149,14 +1120,9 @@ function QualityPromiseSection() {
 
 // Mini FAQ section (2 columns, animated accordion)
 function MiniFAQSection() {
-  const [faqs, setFaqs] = React.useState<import("@/lib/faq-data").FAQItem[]>([]);
-
-  React.useEffect(() => {
-    // Import MINI_FAQS from lib/faq-data
-    import("@/lib/faq-data").then((module) => {
-      setFaqs(module.MINI_FAQS);
-    });
-  }, []);
+  const { locale } = useLocale();
+  const copy = useHomePageCopy();
+  const faqs = React.useMemo(() => getMiniFaqs(locale), [locale]);
 
   if (faqs.length === 0) return null;
 
@@ -1170,7 +1136,7 @@ function MiniFAQSection() {
         {faq.id === "refund-policy" && (
           <>{" "}
             <Link href="/legal/refunds" className="text-primary hover:underline">
-              Read our Refund Policy
+              {copy.faq.refundLink}
             </Link>
             .
           </>
@@ -1187,7 +1153,7 @@ function MiniFAQSection() {
     <section>
       <Container>
         <div className="max-w-6xl mx-auto">
-          <H2 className="mb-8 text-center">FAQ</H2>
+          <H2 className="mb-8 text-center">{copy.faq.title}</H2>
           <div className="grid md:grid-cols-2 gap-6">
             <div>
               <Accordion items={leftColumn} allowMultiple />
@@ -1215,7 +1181,8 @@ function Home({
   isAuthed: boolean;
   openAuth: (mode?: "signin" | "signup") => void;
 }) {
-  // New Home page structure according to homepage_improvements.md
+  const copy = useHomePageCopy();
+
   return (
     <div className="space-y-16 md:space-y-24">
       {/* 1. Hero (video) */}
@@ -1247,10 +1214,8 @@ function Home({
         <Container>
           <div className="space-y-6">
             <div>
-              <H2 className="mb-2">{COPY.home.pricingHeading}</H2>
-              <Paragraph className="text-lg">
-                {COPY.home.pricingIntro}
-              </Paragraph>
+              <H2 className="mb-2">{copy.pricing.heading}</H2>
+              <Paragraph className="text-lg">{copy.pricing.intro}</Paragraph>
             </div>
             <Pricing
               context="home"

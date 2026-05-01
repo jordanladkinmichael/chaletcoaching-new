@@ -3,7 +3,8 @@
 import React from "react";
 import { Accordion } from "@/components/ui/accordion";
 import { Card } from "@/components/ui/card";
-import { coachProfileFAQ } from "@/lib/faq-data";
+import { useLocale } from "@/lib/i18n/client";
+import { getCoachesCopy } from "@/lib/coaches-copy";
 import { cn } from "@/lib/utils";
 
 interface MiniFAQAccordionProps {
@@ -11,7 +12,9 @@ interface MiniFAQAccordionProps {
 }
 
 export function MiniFAQAccordion({ className }: MiniFAQAccordionProps) {
-  const items = coachProfileFAQ.map((faq) => ({
+  const { locale } = useLocale();
+  const copy = getCoachesCopy(locale).coachProfile;
+  const items = copy.faqItems.map((faq) => ({
     id: faq.id,
     title: faq.question,
     content: <p className="text-text-muted">{faq.answer}</p>,
@@ -19,7 +22,7 @@ export function MiniFAQAccordion({ className }: MiniFAQAccordionProps) {
 
   return (
     <Card className={cn("p-6", className)}>
-      <h2 className="text-xl font-semibold mb-4">FAQ</h2>
+      <h2 className="text-xl font-semibold mb-4">{copy.faqTitle}</h2>
       <Accordion items={items} allowMultiple />
     </Card>
   );

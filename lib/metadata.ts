@@ -1,8 +1,10 @@
 import { Metadata } from "next";
+import type { Locale } from "@/lib/i18n/config";
+import { messages } from "@/lib/i18n/messages";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://chaletcoaching.co.uk";
 const SITE_NAME = "Chaletcoaching";
-const DEFAULT_DESCRIPTION = "AI-powered personalized fitness training plans. Get custom workout programs tailored to your goals, level, and preferences.";
+const DEFAULT_DESCRIPTION = messages.en.metadata.defaultDescription;
 
 export interface MetadataOptions {
   title?: string;
@@ -22,13 +24,13 @@ export function generatePageMetadata(options: MetadataOptions = {}): Metadata {
     title,
     description = DEFAULT_DESCRIPTION,
     image = "/logo.webp",
-    imageAlt = "Chaletcoaching - AI-powered fitness training",
+    imageAlt = messages.en.metadata.defaultImageAlt,
     url = "",
     type = "website",
     noIndex = false,
   } = options;
 
-  const fullTitle = title ? `${title} — ${SITE_NAME}` : SITE_NAME;
+  const fullTitle = title ? `${title} - ${SITE_NAME}` : SITE_NAME;
   const fullUrl = url ? `${SITE_URL}${url}` : SITE_URL;
   const imageUrl = image.startsWith("http") ? image : `${SITE_URL}${image}`;
 
@@ -76,8 +78,8 @@ export function generateCoachMetadata(coach: {
   slug: string;
   rating?: number;
   specialties?: string[];
-}): Metadata {
-  const title = `${coach.name} — Fitness Coach`;
+}, locale: Locale = "en"): Metadata {
+  const title = locale === "tr" ? `${coach.name} - Fitness Koçu` : `${coach.name} - Fitness Coach`;
   const description = coach.bio.length > 160 
     ? coach.bio.substring(0, 157) + "..." 
     : coach.bio;
@@ -101,7 +103,7 @@ export function generateCoachMetadata(coach: {
           url: imageUrl,
           width: 1200,
           height: 630,
-          alt: `${coach.name} - Fitness Coach`,
+          alt: title,
         },
       ],
     },

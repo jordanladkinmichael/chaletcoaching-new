@@ -1,18 +1,20 @@
 "use client";
 
 import React, { useState } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
-import type { Route } from "next";
-import { signIn } from "next-auth/react";
 import Link from "next/link";
-import { AuthShell } from "@/components/auth/AuthShell";
-import { Card, CardContent, H1, Paragraph, Button, Input } from "@/components/ui";
+import { useRouter, useSearchParams } from "next/navigation";
+import { signIn } from "next-auth/react";
+import type { Route } from "next";
 import { AlertCircle } from "lucide-react";
+import { AuthShell } from "@/components/auth/AuthShell";
+import { Button, Card, CardContent, H1, Input, Paragraph } from "@/components/ui";
+import { useTranslations } from "@/lib/i18n/client";
 import { THEME } from "@/lib/theme";
 
 export default function SignInClient() {
   const searchParams = useSearchParams();
   const router = useRouter();
+  const tAuth = useTranslations("auth");
   const returnTo = searchParams.get("returnTo") || "/dashboard";
 
   const [email, setEmail] = useState("");
@@ -20,8 +22,8 @@ export default function SignInClient() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
     setError(null);
     setLoading(true);
 
@@ -33,7 +35,7 @@ export default function SignInClient() {
       });
 
       if (result?.error) {
-        setError("Invalid email or password. Please try again.");
+        setError(tAuth("invalidCredentials"));
         return;
       }
 
@@ -42,30 +44,31 @@ export default function SignInClient() {
         return;
       }
 
-      setError("Something went wrong. Please try again.");
+      setError(tAuth("somethingWentWrong"));
     } catch {
-      setError("An unexpected error occurred. Please try again.");
+      setError(tAuth("unexpectedError"));
     } finally {
       setLoading(false);
     }
   };
 
-  // Build links with returnTo preserved
-  const signUpLink = returnTo !== "/dashboard"
-    ? `/auth/sign-up?returnTo=${encodeURIComponent(returnTo)}`
-    : "/auth/sign-up";
+  const signUpLink =
+    returnTo !== "/dashboard"
+      ? `/auth/sign-up?returnTo=${encodeURIComponent(returnTo)}`
+      : "/auth/sign-up";
 
-  const resetLink = returnTo !== "/dashboard"
-    ? `/auth/reset-password?returnTo=${encodeURIComponent(returnTo)}`
-    : "/auth/reset-password";
+  const resetLink =
+    returnTo !== "/dashboard"
+      ? `/auth/reset-password?returnTo=${encodeURIComponent(returnTo)}`
+      : "/auth/reset-password";
 
   return (
-    <AuthShell title="Sign in">
-      <div className="max-w-md mx-auto">
+    <AuthShell title={tAuth("signInTitle")}>
+      <div className="mx-auto max-w-md">
         <div className="mb-8 text-center">
-          <H1>Sign in</H1>
+          <H1>{tAuth("signInTitle")}</H1>
           <Paragraph className="mt-2 text-text-muted">
-            Use your email to sign in to your account.
+            {tAuth("signInSubtitle")}
           </Paragraph>
         </div>
 
@@ -73,51 +76,61 @@ export default function SignInClient() {
           <CardContent className="p-6">
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label htmlFor="email" className="block text-sm font-medium mb-1.5">
-                  Email
+                <label
+                  htmlFor="email"
+                  className="mb-1.5 block text-sm font-medium"
+                >
+                  {tAuth("email")}
                 </label>
                 <Input
                   id="email"
                   type="email"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={(event) => setEmail(event.target.value)}
                   required
                   disabled={loading}
-                  placeholder="you@example.com"
+                  placeholder={tAuth("placeholderEmail")}
                   autoComplete="email"
                 />
               </div>
 
               <div>
-                <label htmlFor="password" className="block text-sm font-medium mb-1.5">
-                  Password
+                <label
+                  htmlFor="password"
+                  className="mb-1.5 block text-sm font-medium"
+                >
+                  {tAuth("password")}
                 </label>
                 <Input
                   id="password"
                   type="password"
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={(event) => setPassword(event.target.value)}
                   required
                   disabled={loading}
-                  placeholder="Enter your password"
+                  placeholder={tAuth("placeholderPassword")}
                   autoComplete="current-password"
                 />
               </div>
 
-              {error && (
+              {error ? (
                 <div
-                  className="flex items-start gap-2 p-3 rounded-lg border"
+                  className="flex items-start gap-2 rounded-lg border p-3"
                   style={{
                     backgroundColor: `${THEME.danger}10`,
                     borderColor: THEME.danger,
                   }}
                 >
-                  <AlertCircle size={18} style={{ color: THEME.danger }} className="flex-shrink-0 mt-0.5" />
+                  <AlertCircle
+                    size={18}
+                    style={{ color: THEME.danger }}
+                    className="mt-0.5 flex-shrink-0"
+                  />
                   <p className="text-sm" style={{ color: THEME.danger }}>
                     {error}
                   </p>
                 </div>
-              )}
+              ) : null}
 
               <Button
                 type="submit"
@@ -126,7 +139,7 @@ export default function SignInClient() {
                 isLoading={loading}
                 disabled={loading}
               >
-                Sign in
+                {tAuth("signInAction")}
               </Button>
             </form>
 
@@ -134,17 +147,17 @@ export default function SignInClient() {
               <div>
                 <Link
                   href={signUpLink as Route}
-                  className="text-primary hover:opacity-80 transition-opacity underline"
+                  className="text-primary underline transition-opacity hover:opacity-80"
                 >
-                  Create an account
+                  {tAuth("createAccountLink")}
                 </Link>
               </div>
               <div>
                 <Link
                   href={resetLink as Route}
-                  className="text-text-muted hover:text-text transition-colors"
+                  className="text-text-muted transition-colors hover:text-text"
                 >
-                  Forgot password?
+                  {tAuth("forgotPassword")}
                 </Link>
               </div>
             </div>
