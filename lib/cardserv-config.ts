@@ -1,14 +1,23 @@
 import { isForceSuccessEnabled } from "@/lib/payments-force-success";
 
 export type CardServCurrency = "EUR" | "USD" | "GBP";
+export type CardServFlow = "redirect" | "h2h";
 
 type CardServConfig = {
+  integrationMode: "REDIRECT_FLOW" | "H2H_FLOW";
   requestorId: string;
-  token: string;
+  tokenCandidates: string[];
   currency: CardServCurrency;
   country: "DE" | "US" | "GB";
   baseUrl: string;
 };
+
+export function getCardServFlow(): CardServFlow {
+  const raw = (process.env.CARDSERV_FLOW || process.env.NEXT_PUBLIC_CARDSERV_FLOW || "redirect")
+    .trim()
+    .toLowerCase();
+  return raw === "h2h" ? "h2h" : "redirect";
+}
 
 function readRequired(name: string, value: string | undefined): string {
   const normalized = value?.trim();
@@ -16,14 +25,26 @@ function readRequired(name: string, value: string | undefined): string {
   return normalized;
 }
 
-function perCurrencyRequestor(currency: CardServCurrency): string | undefined {
-  const key = `CARDSERV_${currency}_REQUESTOR_ID` as const;
-  return process.env[key] || process.env.CARDSERV_REQUESTOR_ID;
+function collectTokenCandidates(currency: CardServCurrency): string[] {
+  const keys = [
+    `CARDSERV_${currency}_TOKEN`,
+    `CARDSERV_${currency}_FALLBACK_TOKEN`,
+    "CARDSERV_TOKEN",
+    "CARDSERV_FALLBACK_TOKEN",
+  ] as const;
+
+  const values = keys
+    .map((key) => process.env[key]?.trim())
+    .filter((value): value is string => Boolean(value));
+
+  return [...new Set(values)];
 }
 
-function perCurrencyToken(currency: CardServCurrency): string | undefined {
-  const key = `CARDSERV_${currency}_TOKEN` as const;
-  return process.env[key] || process.env.CARDSERV_TOKEN;
+function readRequestorId(currency: CardServCurrency) {
+  return (
+    process.env[`CARDSERV_${currency}_REQUESTOR_ID` as const]?.trim() ||
+    process.env.CARDSERV_REQUESTOR_ID?.trim()
+  );
 }
 
 export function getCardServConfig(currency: CardServCurrency): CardServConfig {
@@ -42,34 +63,35 @@ export function getCardServConfig(currency: CardServCurrency): CardServConfig {
     GBP: "GB",
   };
 
-  if (mode === "sandbox") {
-    const requestorId = readRequired(
-      "CARDSERV_SANDBOX_REQUESTOR_ID",
-      process.env.CARDSERV_SANDBOX_REQUESTOR_ID || process.env.CARDSERV_REQUESTOR_ID,
-    );
-    const token = readRequired(
-      "CARDSERV_SANDBOX_TOKEN",
-      process.env.CARDSERV_SANDBOX_TOKEN || process.env.CARDSERV_TOKEN,
-    );
+  const requestorId =
+    mode === "sandbox"
+      ? readRequired(
+          "CARDSERV_SANDBOX_REQUESTOR_ID",
+          process.env.CARDSERV_SANDBOX_REQUESTOR_ID?.trim() || readRequestorId(currency),
+        )
+      : readRequired(`CARDSERV_${currency}_REQUESTOR_ID`, readRequestorId(currency));
 
-    return {
-      requestorId,
-      token,
-      currency,
-      country: countryByCurrency[currency],
-      baseUrl,
-    };
+  const tokenCandidates =
+    mode === "sandbox"
+      ? [
+          ...new Set(
+            [
+              process.env.CARDSERV_SANDBOX_TOKEN?.trim(),
+              process.env.CARDSERV_SANDBOX_FALLBACK_TOKEN?.trim(),
+              ...collectTokenCandidates(currency),
+            ].filter((value): value is string => Boolean(value)),
+          ),
+        ]
+      : collectTokenCandidates(currency);
+
+  if (tokenCandidates.length === 0) {
+    throw new Error(`Missing CardServ token for ${currency}`);
   }
 
-  const requestorId = readRequired(
-    `CARDSERV_${currency}_REQUESTOR_ID`,
-    perCurrencyRequestor(currency),
-  );
-  const token = readRequired(`CARDSERV_${currency}_TOKEN`, perCurrencyToken(currency));
-
   return {
+    integrationMode: getCardServFlow() === "h2h" ? "H2H_FLOW" : "REDIRECT_FLOW",
     requestorId,
-    token,
+    tokenCandidates,
     currency,
     country: countryByCurrency[currency],
     baseUrl,

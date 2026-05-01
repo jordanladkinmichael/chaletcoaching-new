@@ -8,6 +8,7 @@ import type { CardServCurrency } from "@/lib/cardserv-config";
 import { prisma } from "@/lib/db";
 import { applyCardServGatewayUpdate } from "@/lib/payment-orders";
 import { isForceSuccessEnabled } from "@/lib/payments-force-success";
+import { logCardServEvent } from "@/lib/cardserv-observability";
 
 const BodySchema = z.object({
   orderMerchantId: z.string().min(4),
@@ -29,6 +30,11 @@ export async function POST(req: Request) {
 
   try {
     const { orderMerchantId } = BodySchema.parse(await req.json());
+    logCardServEvent("status.route_request", {
+      orderMerchantId,
+      userId: session.user.id,
+      forceSuccess: isForceSuccessEnabled(),
+    });
     const paymentOrders = (prisma as unknown as { paymentOrder: PaymentOrderLookup }).paymentOrder;
     const order = await paymentOrders.findUnique({ where: { orderMerchantId } });
 
@@ -93,6 +99,9 @@ export async function POST(req: Request) {
       newBalance: result.ok && "newBalance" in result ? result.newBalance : null,
     });
   } catch (error) {
+    logCardServEvent("status.route_error", {
+      error: error instanceof Error ? error.message : String(error),
+    });
     const message = error instanceof Error ? error.message : "Failed to fetch payment status";
     return NextResponse.json({ ok: false, error: message }, { status: 500 });
   }

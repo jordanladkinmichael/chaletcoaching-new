@@ -1,0 +1,208 @@
+{
+  "cardserv_logs": {
+    "merchant_order_id": "cc_1773343167080_ruc7f3",
+    "system_order_id": "164727112",
+    "upstream_order_id": "c8da36e153ba4e53a0e1c6546e709f34",
+    "sale_form_correlation_id": "00000000-0000-0000-0000-00009020f1db",
+    "status": "DECLINED",
+    "transaction_type": "SALE",
+    "order_amount": "10.00",
+    "order_currency": "EUR",
+    "redirect_url": "https://tqvilo.com/form/show-form/9787/164727112/01Fv-rQUFE-EESkh6cbcy8vPaZrkWDFX207AfJywh2Vpm3kJYxGm3jPyLBc2fQC8hW",
+    "error_code": 186542,
+    "error_message": "Terminal not Found",
+    "upstream_descriptor": "fit*wellness",
+    "merchant": {
+      "merchantId": 717,
+      "merchantName": "chaletcoaching.co.uk"
+    },
+    "card": {
+      "first_6": "520581",
+      "last_4": "9235",
+      "type": "MASTERCARD",
+      "holder": "Davids Petrovs-Dukats",
+      "expiry_month": 11,
+      "expiry_year": 2028,
+      "hashId": 16240886,
+      "issuer": "MOORWAND LTD",
+      "productCode": "MDS",
+      "productName": "DMC—Debit Mastercard",
+      "networkTypeCode": "Unknown",
+      "networkTypeName": "MASTERCARD Unknown"
+    },
+    "transactions": [
+      {
+        "type": "SALE",
+        "status": "DECLINED",
+        "amount": "10.00",
+        "created_system_timestamp": "2026.03.12 19:20:39 +0000"
+      }
+    ],
+    "timestamps": {
+      "statusCreatedTimestamp_sale_form": 1773343167712,
+      "statusCreatedTimestamp_webhook": 1773343242739,
+      "statusCreatedTimestamp_status": 1773343243370,
+      "statusCreatedTimestamp_result": 1773343243591
+    }
+  },
+  "my_db_logs": {
+    "id": "cmmnuqh130001zm44bnu3dw9j",
+    "userId": "cmlpinud10000v63a4qa40kmc",
+    "provider": "cardserv",
+    "packageId": "ENTERPRISE",
+    "packageName": "Custom",
+    "currency": "EUR",
+    "amountNet": 10,
+    "vatAmount": 0,
+    "amountGross": 10,
+    "tokens": 1000,
+    "status": "DECLINED",
+    "orderMerchantId": "cc_1773343167080_ruc7f3",
+    "orderSystemId": "164727112",
+    "redirectUrl": "https://tqvilo.com/form/show-form/9787/164727112/01Fv-rQUFE-EESkh6cbcy8vPaZrkWDFX207AfJywh2Vpm3kJYxGm3jPyLBc2fQC8hW",
+    "failureReason": "Terminal not Found",
+    "transactionId": null,
+    "finalizedAt": null,
+    "createdAt": "2026-03-12T19:19:27.082Z",
+    "updatedAt": "2026-03-12T19:20:43.733Z",
+    "user": {
+      "id": "cmlpinud10000v63a4qa40kmc",
+      "email": "aifitworld5@gmail.com",
+      "name": "Paul Intravaia",
+      "tokens": 14140
+    },
+    "rawSale": {
+      "saleForm": {
+        "correlationId": "00000000-0000-0000-0000-00009020f1db",
+        "orderSystemId": 164727112,
+        "orderMerchantId": "cc_1773343167080_ruc7f3",
+        "orderState": "PROCESSING",
+        "outputRedirectToUrl": "https://tqvilo.com/form/show-form/9787/164727112/01Fv-rQUFE-EESkh6cbcy8vPaZrkWDFX207AfJywh2Vpm3kJYxGm3jPyLBc2fQC8hW",
+        "statusCreatedTimestamp": 1773343167712
+      },
+      "status": {
+        "correlationId": "00000000-0000-0000-0000-00009020f1db",
+        "orderSystemId": 164727112,
+        "orderMerchantId": "cc_1773343167080_ruc7f3",
+        "orderState": "PROCESSING",
+        "outputRedirectToUrl": "https://tqvilo.com/form/show-form/9787/164727112/01Fv-rQUFE-EESkh6cbcy8vPaZrkWDFX207AfJywh2Vpm3kJYxGm3jPyLBc2fQC8hW",
+        "statusCreatedTimestamp": 1773343167712
+      }
+    },
+    "rawWebhook": {
+      "webhook": {
+        "correlationId": "00000000-0000-0000-0000-000090210339",
+        "orderSystemId": 164727112,
+        "orderMerchantId": "cc_1773343167080_ruc7f3",
+        "orderState": "DECLINED",
+        "transactionType": "SALE",
+        "orderAmount": "10.00",
+        "orderCurrencyCode": "EUR",
+        "cardFirstDigits": "520581",
+        "cardLastDigits": "9235",
+        "cardType": "MASTERCARD",
+        "cardHolderName": "Davids Petrovs-Dukats",
+        "cardExpiryMonth": 11,
+        "cardExpiryYear": 2028,
+        "cardHashId": 16240886,
+        "cardIssuerName": "MOORWAND LTD",
+        "orderUpstreamId": "c8da36e153ba4e53a0e1c6546e709f34",
+        "orderUpstreamDescriptor": "fit*wellness",
+        "errorCode": 186542,
+        "errorMessage": "Terminal not Found",
+        "statusCreatedTimestamp": 1773343242739,
+        "transactions": [
+          {
+            "type": "SALE",
+            "status": "DECLINED",
+            "amount": "10.00",
+            "createdSystemTimestamp": "2026.03.12 19:20:39 +0000"
+          }
+        ],
+        "cardPaymentNetworkProductCode": "MDS",
+        "cardPaymentNetworkProductName": "DMC—Debit Mastercard",
+        "cardPaymentNetworkTypeCode": "Unknown",
+        "cardPaymentNetworkTypeName": "MASTERCARD Unknown",
+        "merchantId": 717,
+        "merchantName": "chaletcoaching.co.uk"
+      },
+      "status": {
+        "correlationId": "00000000-0000-0000-0000-00009021037b",
+        "orderSystemId": 164727112,
+        "orderMerchantId": "cc_1773343167080_ruc7f3",
+        "orderState": "DECLINED",
+        "transactionType": "SALE",
+        "orderAmount": "10.00",
+        "orderCurrencyCode": "EUR",
+        "cardFirstDigits": "520581",
+        "cardLastDigits": "9235",
+        "cardType": "MASTERCARD",
+        "cardHolderName": "Davids Petrovs-Dukats",
+        "cardExpiryMonth": 11,
+        "cardExpiryYear": 2028,
+        "cardHashId": 16240886,
+        "cardIssuerName": "MOORWAND LTD",
+        "orderUpstreamId": "c8da36e153ba4e53a0e1c6546e709f34",
+        "orderUpstreamDescriptor": "fit*wellness",
+        "errorCode": 186542,
+        "errorMessage": "Terminal not Found",
+        "statusCreatedTimestamp": 1773343243370,
+        "transactions": [
+          {
+            "type": "SALE",
+            "status": "DECLINED",
+            "amount": "10.00",
+            "createdSystemTimestamp": "2026.03.12 19:20:39 +0000"
+          }
+        ],
+        "cardPaymentNetworkProductCode": "MDS",
+        "cardPaymentNetworkProductName": "DMC—Debit Mastercard",
+        "cardPaymentNetworkTypeCode": "Unknown",
+        "cardPaymentNetworkTypeName": "MASTERCARD Unknown",
+        "merchantId": 717,
+        "merchantName": "chaletcoaching.co.uk"
+      }
+    },
+    "rawResult": {
+      "form": {},
+      "status": {
+        "correlationId": "00000000-0000-0000-0000-000090210384",
+        "orderSystemId": 164727112,
+        "orderMerchantId": "cc_1773343167080_ruc7f3",
+        "orderState": "DECLINED",
+        "transactionType": "SALE",
+        "orderAmount": "10.00",
+        "orderCurrencyCode": "EUR",
+        "cardFirstDigits": "520581",
+        "cardLastDigits": "9235",
+        "cardType": "MASTERCARD",
+        "cardHolderName": "Davids Petrovs-Dukats",
+        "cardExpiryMonth": 11,
+        "cardExpiryYear": 2028,
+        "cardHashId": 16240886,
+        "cardIssuerName": "MOORWAND LTD",
+        "orderUpstreamId": "c8da36e153ba4e53a0e1c6546e709f34",
+        "orderUpstreamDescriptor": "fit*wellness",
+        "errorCode": 186542,
+        "errorMessage": "Terminal not Found",
+        "statusCreatedTimestamp": 1773343243591,
+        "transactions": [
+          {
+            "type": "SALE",
+            "status": "DECLINED",
+            "amount": "10.00",
+            "createdSystemTimestamp": "2026.03.12 19:20:39 +0000"
+          }
+        ],
+        "cardPaymentNetworkProductCode": "MDS",
+        "cardPaymentNetworkProductName": "DMC—Debit Mastercard",
+        "cardPaymentNetworkTypeCode": "Unknown",
+        "cardPaymentNetworkTypeName": "MASTERCARD Unknown",
+        "merchantId": 717,
+        "merchantName": "chaletcoaching.co.uk"
+      },
+      "forced": false
+    },
+    "rawStatus": null
+  }
+}

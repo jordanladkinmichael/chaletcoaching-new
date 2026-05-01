@@ -1,9 +1,11 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { motion } from "framer-motion";
+import type { Route } from "next";
+
 import SiteHeader from "@/components/site-header";
 import SiteFooter from "@/components/site-footer";
 import { Button } from "@/components/ui/button";
@@ -11,7 +13,6 @@ import { getAppFlowCopy, formatTokenAmount } from "@/lib/app-flow-copy";
 import { useLocale } from "@/lib/i18n/client";
 import { THEME } from "@/lib/theme";
 import { formatNumber } from "@/lib/tokens";
-import type { Route } from "next";
 
 interface CheckoutData {
   packageId: string;
@@ -24,7 +25,9 @@ interface CheckoutData {
   email?: string;
 }
 
-interface FormData {
+type CheckoutFlow = "redirect" | "h2h";
+
+type CardFormState = {
   cardNumber: string;
   expiry: string;
   cvv: string;
@@ -32,27 +35,22 @@ interface FormData {
   address: string;
   city: string;
   postalCode: string;
-}
-
-interface FormErrors {
-  cardNumber?: string;
-  expiry?: string;
-  cvv?: string;
-  name?: string;
-  address?: string;
-  city?: string;
-  postalCode?: string;
-}
+  countryCode: string;
+};
 
 export default function CheckoutPage() {
   const router = useRouter();
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
   const { locale } = useLocale();
   const copy = getAppFlowCopy(locale).checkout;
+
   const [checkout, setCheckout] = useState<CheckoutData | null>(null);
-  const [success] = useState(false);
+  const [message, setMessage] = useState("Preparing secure checkout...");
   const [loading, setLoading] = useState(false);
-  const [formData, setFormData] = useState<FormData>({
+  const startedRef = useRef(false);
+  const flow: CheckoutFlow =
+    process.env.NEXT_PUBLIC_CARDSERV_FLOW === "h2h" ? "h2h" : "redirect";
+  const [cardForm, setCardForm] = useState<CardFormState>({
     cardNumber: "",
     expiry: "",
     cvv: "",
@@ -60,8 +58,19 @@ export default function CheckoutPage() {
     address: "",
     city: "",
     postalCode: "",
+    countryCode: "DE",
   });
-  const [errors, setErrors] = useState<FormErrors>({});
+
+  async function resolvePublicIp() {
+    try {
+      const response = await fetch("https://api.ipify.org?format=json");
+      if (!response.ok) return undefined;
+      const data = (await response.json()) as { ip?: string };
+      return data.ip;
+    } catch {
+      return undefined;
+    }
+  }
 
   useEffect(() => {
     const data = localStorage.getItem("checkoutData");
@@ -69,90 +78,27 @@ export default function CheckoutPage() {
       router.push("/pricing");
       return;
     }
+
     try {
-      const parsed = JSON.parse(data);
-      setCheckout(parsed);
+      setCheckout(JSON.parse(data) as CheckoutData);
     } catch {
       router.push("/pricing");
     }
   }, [router]);
 
-  if (!checkout) return null;
+  useEffect(() => {
+    if (!session?.user) return;
+    setCardForm((current) => ({
+      ...current,
+      name: current.name || session.user.name || "",
+    }));
+  }, [session?.user]);
 
-  const subtotal = checkout.amount;
-  const total = checkout.amount;
+  const startPayment = React.useCallback(
+    async (card?: CardFormState) => {
+      if (!checkout || !session?.user) return;
 
-  const validateForm = (): boolean => {
-    const newErrors: FormErrors = {};
-
-    // Card number: 16 digits, formatted as XXXX XXXX XXXX XXXX
-    const cardNumberClean = formData.cardNumber.replace(/\s/g, "");
-    if (!cardNumberClean || cardNumberClean.length !== 16 || !/^\d+$/.test(cardNumberClean)) {
-      newErrors.cardNumber = copy.errors.cardNumber;
-    }
-
-    // Expiry: MM/YY format
-    if (!formData.expiry || !/^(0[1-9]|1[0-2])\/\d{2}$/.test(formData.expiry)) {
-      newErrors.expiry = copy.errors.expiry;
-    }
-
-    // CVV: 3 digits
-    if (!formData.cvv || formData.cvv.length !== 3 || !/^\d+$/.test(formData.cvv)) {
-      newErrors.cvv = copy.errors.cvv;
-    }
-
-    // Name
-    if (!formData.name.trim()) {
-      newErrors.name = copy.errors.name;
-    }
-
-    // Address
-    if (!formData.address.trim()) {
-      newErrors.address = copy.errors.address;
-    }
-
-    // City
-    if (!formData.city.trim()) {
-      newErrors.city = copy.errors.city;
-    }
-
-    // Postal code
-    if (!formData.postalCode.trim()) {
-      newErrors.postalCode = copy.errors.postalCode;
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handleCardNumberFormat = (value: string): string => {
-    return value
-      .replace(/\D/g, "")
-      .slice(0, 16)
-      .replace(/(\d{4})(?=\d)/g, "$1 ")
-      .trim();
-  };
-
-  const handleExpiryFormat = (value: string): string => {
-    const v = value.replace(/\D/g, "").slice(0, 4);
-    if (v.length >= 3) return `${v.slice(0, 2)}/${v.slice(2)}`;
-    return v;
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!validateForm()) {
-      return;
-    }
-
-    if (!session?.user) {
-      router.push("/auth/sign-in?returnTo=/checkout");
-      return;
-    }
-
-    setLoading(true);
-    try {
+      const publicIp = await resolvePublicIp();
       const res = await fetch("/api/cardserv/sale", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -160,23 +106,38 @@ export default function CheckoutPage() {
           packageId: checkout.packageId,
           currency: checkout.currency,
           amount: checkout.amount,
-          grossAmount: total,
+          grossAmount: checkout.amount,
           vatAmount: 0,
           tokens: checkout.tokens,
           description: checkout.description,
           email: session.user.email || checkout.email,
-          card: {
-            cardNumber: formData.cardNumber,
-            cvv: formData.cvv,
-            expiry: formData.expiry,
-            name: formData.name,
-            address: formData.address,
-            city: formData.city,
-            postalCode: formData.postalCode,
+          browser: {
+            ipAddress: publicIp,
+            acceptHeader: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+            colorDepth: window.screen?.colorDepth || 24,
+            screenHeight: window.screen?.height || 0,
+            screenWidth: window.screen?.width || 0,
+            timeZone: new Date().getTimezoneOffset(),
+            javaEnabled:
+              typeof navigator.javaEnabled === "function" ? navigator.javaEnabled() : false,
+            javascriptEnabled: true,
+            acceptLanguage: navigator.language,
+            userAgent: navigator.userAgent,
           },
-          address: formData.address,
-          city: formData.city,
-          postalCode: formData.postalCode,
+          ...(card
+            ? {
+                card: {
+                  cardNumber: card.cardNumber,
+                  expiry: card.expiry,
+                  cvv: card.cvv,
+                  name: card.name,
+                  address: card.address,
+                  city: card.city,
+                  postalCode: card.postalCode,
+                  countryCode: card.countryCode.toUpperCase(),
+                },
+              }
+            : {}),
         }),
       });
 
@@ -187,8 +148,6 @@ export default function CheckoutPage() {
 
       const orderMerchantId = data.orderMerchantId as string;
       localStorage.setItem("pendingOrderMerchantId", orderMerchantId);
-
-      // Checkout data is no longer needed after gateway handoff.
       localStorage.removeItem("checkoutData");
 
       if (data.redirectUrl) {
@@ -196,37 +155,55 @@ export default function CheckoutPage() {
         return;
       }
 
-      // If no external gateway redirect is returned, complete through callback handler.
-      window.location.href = `/api/cardserv/result?order=${encodeURIComponent(orderMerchantId)}`;
+      window.location.href = `/api/cardserv/result/${encodeURIComponent(orderMerchantId)}`;
+    },
+    [checkout, session?.user, copy.errors.initFailed],
+  );
+
+  useEffect(() => {
+    if (flow !== "redirect" || !checkout || status === "loading" || startedRef.current) {
       return;
-    } catch (err: unknown) {
-      const message =
-        err instanceof Error ? err.message : copy.errors.failed;
-      alert(message);
-    } finally {
+    }
+
+    if (!session?.user) {
+      startedRef.current = true;
+      router.push("/auth/sign-in?returnTo=/checkout");
+      return;
+    }
+
+    startedRef.current = true;
+    setLoading(true);
+    setMessage("Redirecting to secure payment page...");
+
+    void (async () => {
+      try {
+        await startPayment();
+      } catch (error) {
+        startedRef.current = false;
+        setLoading(false);
+        setMessage(error instanceof Error ? error.message : copy.errors.failed);
+      }
+    })();
+  }, [checkout, flow, router, session?.user, startPayment, status, copy.errors.failed]);
+
+  async function handleH2hSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    if (!checkout || !session?.user) return;
+
+    setLoading(true);
+    setMessage("Submitting card details securely...");
+
+    try {
+      await startPayment(cardForm);
+    } catch (error) {
       setLoading(false);
+      setMessage(error instanceof Error ? error.message : copy.errors.failed);
     }
-  };
+  }
 
-  const handleChange = (field: keyof FormData, value: string) => {
-    let formattedValue = value;
+  if (!checkout) return null;
 
-    if (field === "cardNumber") {
-      formattedValue = handleCardNumberFormat(value);
-    } else if (field === "expiry") {
-      formattedValue = handleExpiryFormat(value);
-    } else if (field === "cvv") {
-      formattedValue = value.replace(/\D/g, "").slice(0, 3);
-    }
-
-    setFormData((prev) => ({ ...prev, [field]: formattedValue }));
-    // Clear error when user starts typing
-    if (errors[field]) {
-      setErrors((prev) => ({ ...prev, [field]: undefined }));
-    }
-  };
-
-  const isAuthed = !!session?.user;
   const region = checkout.currency === "USD" ? "US" : checkout.currency === "GBP" ? "UK" : "EU";
 
   return (
@@ -234,11 +211,13 @@ export default function CheckoutPage() {
       <SiteHeader
         onOpenAuth={(mode) => {
           const currentPath = typeof window !== "undefined" ? window.location.pathname : "";
-          const returnTo = currentPath !== "/auth/sign-in" && currentPath !== "/auth/sign-up" && currentPath !== "/auth/reset-password"
-            ? currentPath
-            : "/dashboard";
+          const returnTo =
+            currentPath !== "/auth/sign-in" &&
+            currentPath !== "/auth/sign-up" &&
+            currentPath !== "/auth/reset-password"
+              ? currentPath
+              : "/dashboard";
           const query = returnTo ? `?returnTo=${encodeURIComponent(returnTo)}` : "";
-          // Map mode to correct path with hyphens
           const path = mode === "signin" ? "sign-in" : "sign-up";
           router.push(`/auth/${path}${query}` as Route);
         }}
@@ -260,7 +239,7 @@ export default function CheckoutPage() {
           initial={{ opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4 }}
-          className="mx-auto max-w-4xl"
+          className="mx-auto max-w-3xl"
         >
           <div
             className="rounded-2xl border overflow-hidden"
@@ -269,7 +248,6 @@ export default function CheckoutPage() {
               borderColor: THEME.border,
             }}
           >
-            {/* Header */}
             <div
               className="border-b px-8 py-6 flex justify-between items-center"
               style={{
@@ -278,231 +256,154 @@ export default function CheckoutPage() {
                 color: THEME["on-primary"],
               }}
             >
-              <h1 className="text-2xl font-semibold">
-                {success ? copy.thankYou : copy.title}
-              </h1>
-              {!success && <p className="text-sm opacity-90">{copy.securePayment}</p>}
+              <h1 className="text-2xl font-semibold">{copy.title}</h1>
+              <p className="text-sm opacity-90">
+                {flow === "h2h" ? "CardServ H2H" : "CardServ Redirect"}
+              </p>
             </div>
 
-            <div className="p-8">
-              {/* Success Message */}
-              {success ? (
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ duration: 0.5 }}
-                  className="text-center py-20"
-                >
-                  <h2
-                    className="text-3xl font-bold mb-4"
-                    style={{ color: THEME.primary }}
-                  >
-                    {copy.paymentSuccessful}
-                  </h2>
-                  <p className="opacity-80 max-w-md mx-auto">
-                    {copy.successBody}
-                  </p>
-                  <p className="mt-4 text-sm opacity-60">
-                    {copy.redirecting}
-                  </p>
-                </motion.div>
-              ) : (
-                // Payment Form + Summary
-                <div className="grid lg:grid-cols-2 gap-8">
-                  {/* Summary */}
+            <div className="p-8 space-y-8">
+              <div
+                className="rounded-xl border p-5 space-y-4"
+                style={{
+                  background: THEME.surface,
+                  borderColor: THEME.border,
+                }}
+              >
+                <div className="flex justify-between">
                   <div>
-                    <h2 className="text-xl font-semibold mb-4">{copy.orderSummary}</h2>
-
-                    <div
-                      className="rounded-xl border p-5 space-y-4"
-                      style={{
-                        background: THEME.surface,
-                        borderColor: THEME.border,
-                      }}
-                    >
-                      <div className="flex justify-between">
-                        <div>
-                          <p className="font-medium">
-                            {checkout.packageId === "ENTERPRISE"
-                              ? copy.customTopUp
-                              : checkout.description}
-                          </p>
-                          <p className="text-sm opacity-70">
-                            {formatTokenAmount(checkout.tokens, locale)}
-                          </p>
-                        </div>
-                        <p className="font-semibold">
-                          {subtotal.toFixed(2)} {checkout.currency}
-                        </p>
-                      </div>
-
-                      <div className="h-px" style={{ background: THEME.border }} />
-
-                      <div className="flex justify-between text-sm">
-                        <span className="opacity-70">{copy.subtotal}</span>
-                        <span className="font-medium">
-                          {subtotal.toFixed(2)} {checkout.currency}
-                        </span>
-                      </div>
-                      <div
-                        className="flex justify-between text-lg font-semibold border-t pt-3"
-                        style={{ borderColor: THEME.border }}
-                      >
-                        <span>{copy.total}</span>
-                        <span>
-                          {total.toFixed(2)} {checkout.currency}
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="mt-6 text-sm opacity-70 leading-relaxed">
-                      <p>
-                        <strong>{copy.purchaseTokens(formatNumber(checkout.tokens))}</strong>{" "}
-                        {copy.credited}
-                      </p>
-                      {checkout.email && (
-                        <p className="mt-2">
-                          {copy.confirmationEmail(checkout.email)}
-                        </p>
-                      )}
-                    </div>
+                    <p className="font-medium">
+                      {checkout.packageId === "ENTERPRISE"
+                        ? copy.customTopUp
+                        : checkout.description}
+                    </p>
+                    <p className="text-sm opacity-70">
+                      {formatTokenAmount(checkout.tokens, locale)}
+                    </p>
                   </div>
-
-                  {/* Payment Form */}
-                  <div>
-                    <h2 className="text-xl font-semibold mb-4">{copy.paymentDetails}</h2>
-
-                    <form onSubmit={handleSubmit} className="space-y-4">
-                      <div>
-                        <input
-                          type="text"
-                          placeholder={copy.placeholders.cardNumber}
-                          value={formData.cardNumber}
-                          onChange={(e) => handleChange("cardNumber", e.target.value)}
-                          className="w-full rounded-lg border px-3 py-2 bg-transparent"
-                          style={{ borderColor: THEME.border }}
-                        />
-                        {errors.cardNumber && (
-                          <div className="text-xs mt-1" style={{ color: THEME.danger }}>
-                            {errors.cardNumber}
-                          </div>
-                        )}
-                      </div>
-
-                      <div className="flex gap-3">
-                        <div className="w-1/2">
-                          <input
-                            type="text"
-                            placeholder={copy.placeholders.expiry}
-                            value={formData.expiry}
-                            onChange={(e) => handleChange("expiry", e.target.value)}
-                            className="w-full rounded-lg border px-3 py-2 bg-transparent"
-                            style={{ borderColor: THEME.border }}
-                          />
-                          {errors.expiry && (
-                            <div className="text-xs mt-1" style={{ color: THEME.danger }}>
-                              {errors.expiry}
-                            </div>
-                          )}
-                        </div>
-                        <div className="w-1/2">
-                          <input
-                            type="text"
-                            placeholder={copy.placeholders.cvv}
-                            value={formData.cvv}
-                            onChange={(e) => handleChange("cvv", e.target.value)}
-                            className="w-full rounded-lg border px-3 py-2 bg-transparent"
-                            style={{ borderColor: THEME.border }}
-                          />
-                          {errors.cvv && (
-                            <div className="text-xs mt-1" style={{ color: THEME.danger }}>
-                              {errors.cvv}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-
-                      <div>
-                        <input
-                          type="text"
-                          placeholder={copy.placeholders.name}
-                          value={formData.name}
-                          onChange={(e) => handleChange("name", e.target.value)}
-                          className="w-full rounded-lg border px-3 py-2 bg-transparent"
-                          style={{ borderColor: THEME.border }}
-                        />
-                        {errors.name && (
-                          <div className="text-xs mt-1" style={{ color: THEME.danger }}>
-                            {errors.name}
-                          </div>
-                        )}
-                      </div>
-
-                      <div>
-                        <input
-                          type="text"
-                          placeholder={copy.placeholders.address}
-                          value={formData.address}
-                          onChange={(e) => handleChange("address", e.target.value)}
-                          className="w-full rounded-lg border px-3 py-2 bg-transparent"
-                          style={{ borderColor: THEME.border }}
-                        />
-                        {errors.address && (
-                          <div className="text-xs mt-1" style={{ color: THEME.danger }}>
-                            {errors.address}
-                          </div>
-                        )}
-                      </div>
-
-                      <div className="flex gap-3">
-                        <div className="w-2/3">
-                          <input
-                            type="text"
-                            placeholder={copy.placeholders.city}
-                            value={formData.city}
-                            onChange={(e) => handleChange("city", e.target.value)}
-                            className="w-full rounded-lg border px-3 py-2 bg-transparent"
-                            style={{ borderColor: THEME.border }}
-                          />
-                          {errors.city && (
-                            <div className="text-xs mt-1" style={{ color: THEME.danger }}>
-                              {errors.city}
-                            </div>
-                          )}
-                        </div>
-                        <div className="w-1/3">
-                          <input
-                            type="text"
-                            placeholder={copy.placeholders.postalCode}
-                            value={formData.postalCode}
-                            onChange={(e) => handleChange("postalCode", e.target.value)}
-                            className="w-full rounded-lg border px-3 py-2 bg-transparent"
-                            style={{ borderColor: THEME.border }}
-                          />
-                          {errors.postalCode && (
-                            <div className="text-xs mt-1" style={{ color: THEME.danger }}>
-                              {errors.postalCode}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-
-                      <Button
-                        className="w-full mt-6"
-                        size="lg"
-                        type="submit"
-                        disabled={loading || !isAuthed}
-                        isLoading={loading}
-                      >
-                        {loading
-                          ? copy.processing
-                          : !isAuthed
-                            ? copy.signInContinue
-                            : copy.pay(total.toFixed(2), checkout.currency)}
-                      </Button>
-                    </form>
-                  </div>
+                  <p className="font-semibold">
+                    {checkout.amount.toFixed(2)} {checkout.currency}
+                  </p>
                 </div>
+              </div>
+
+              {flow === "redirect" ? (
+                <div className="text-center space-y-3">
+                  <div
+                    className={`mx-auto h-12 w-12 rounded-full border-4 border-t-transparent ${
+                      loading ? "animate-spin" : ""
+                    }`}
+                    style={{
+                      borderColor: `${THEME.primary} transparent ${THEME.primary} ${THEME.primary}`,
+                    }}
+                  />
+                  <h2 className="text-xl font-semibold">{copy.securePayment}</h2>
+                  <p className="opacity-70">
+                    Card details will be entered and processed on CardServ&apos;s hosted checkout
+                    page.
+                  </p>
+                  <p className="text-sm opacity-60">{message}</p>
+                </div>
+              ) : (
+                <form className="space-y-4" onSubmit={handleH2hSubmit}>
+                  <h2 className="text-xl font-semibold">{copy.paymentDetails}</h2>
+                  <p className="opacity-70">Card details will be sent directly to CardServ H2H.</p>
+                  <input
+                    className="w-full rounded-lg border px-4 py-3 bg-transparent"
+                    style={{ borderColor: THEME.border }}
+                    placeholder={copy.placeholders.cardNumber}
+                    value={cardForm.cardNumber}
+                    onChange={(event) =>
+                      setCardForm((current) => ({ ...current, cardNumber: event.target.value }))
+                    }
+                    required
+                  />
+                  <div className="grid grid-cols-2 gap-4">
+                    <input
+                      className="w-full rounded-lg border px-4 py-3 bg-transparent"
+                      style={{ borderColor: THEME.border }}
+                      placeholder={copy.placeholders.expiry}
+                      value={cardForm.expiry}
+                      onChange={(event) =>
+                        setCardForm((current) => ({ ...current, expiry: event.target.value }))
+                      }
+                      required
+                    />
+                    <input
+                      className="w-full rounded-lg border px-4 py-3 bg-transparent"
+                      style={{ borderColor: THEME.border }}
+                      placeholder={copy.placeholders.cvv}
+                      value={cardForm.cvv}
+                      onChange={(event) =>
+                        setCardForm((current) => ({ ...current, cvv: event.target.value }))
+                      }
+                      required
+                    />
+                  </div>
+                  <input
+                    className="w-full rounded-lg border px-4 py-3 bg-transparent"
+                    style={{ borderColor: THEME.border }}
+                    placeholder={copy.placeholders.name}
+                    value={cardForm.name}
+                    onChange={(event) =>
+                      setCardForm((current) => ({ ...current, name: event.target.value }))
+                    }
+                    required
+                  />
+                  <input
+                    className="w-full rounded-lg border px-4 py-3 bg-transparent"
+                    style={{ borderColor: THEME.border }}
+                    placeholder={copy.placeholders.address}
+                    value={cardForm.address}
+                    onChange={(event) =>
+                      setCardForm((current) => ({ ...current, address: event.target.value }))
+                    }
+                    required
+                  />
+                  <div className="grid grid-cols-3 gap-4">
+                    <input
+                      className="w-full rounded-lg border px-4 py-3 bg-transparent"
+                      style={{ borderColor: THEME.border }}
+                      placeholder={copy.placeholders.city}
+                      value={cardForm.city}
+                      onChange={(event) =>
+                        setCardForm((current) => ({ ...current, city: event.target.value }))
+                      }
+                      required
+                    />
+                    <input
+                      className="w-full rounded-lg border px-4 py-3 bg-transparent"
+                      style={{ borderColor: THEME.border }}
+                      placeholder={copy.placeholders.postalCode}
+                      value={cardForm.postalCode}
+                      onChange={(event) =>
+                        setCardForm((current) => ({ ...current, postalCode: event.target.value }))
+                      }
+                      required
+                    />
+                    <input
+                      className="w-full rounded-lg border px-4 py-3 bg-transparent"
+                      style={{ borderColor: THEME.border }}
+                      placeholder="Country"
+                      value={cardForm.countryCode}
+                      onChange={(event) =>
+                        setCardForm((current) => ({ ...current, countryCode: event.target.value }))
+                      }
+                      required
+                    />
+                  </div>
+                  <Button
+                    type="submit"
+                    className="w-full mt-2"
+                    size="lg"
+                    disabled={loading}
+                    isLoading={loading}
+                    style={{ background: THEME.primary, color: THEME["on-primary"] }}
+                  >
+                    {loading ? copy.processing : copy.pay(checkout.amount.toFixed(2), checkout.currency)}
+                  </Button>
+                  <p className="text-sm opacity-60">{message}</p>
+                </form>
               )}
             </div>
           </div>
@@ -513,4 +414,3 @@ export default function CheckoutPage() {
     </div>
   );
 }
-
